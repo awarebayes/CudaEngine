@@ -80,7 +80,7 @@ __global__ void d_parametric_circle(uint *od, int w, int h, int x_0, int y_0, in
 void bresenhamCircle(uint *od, int w, int h, int x_0, int y_0, int radius)
 {
 	int circumference = ceil((float)radius * 2.0f * M_PI);
-	d_parametric_circle<<<circumference / 32, 32>>>(od, w, h, x_0, y_0, radius, circumference);
+	d_parametric_circle<<<circumference / 32 + 1, 32>>>(od, w, h, x_0, y_0, radius, circumference);
 }
 
 
@@ -93,7 +93,6 @@ double main_cuda_launch(uint *dDest, int width, int height, StopWatchInterface *
 	dKernelTime = 0.0;
 	checkCudaErrors(cudaDeviceSynchronize());
 	sdkResetTimer(&timer);
-
 
 	bresenhamCircle(dDest, width, height, width/2, height/2, width/4);
 

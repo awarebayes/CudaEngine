@@ -51,8 +51,8 @@
 #include <cmath>
 
 // OpenGL Graphics includes
-#include <helper_gl.h>
 #include <GL/freeglut.h>
+#include <helper_gl.h>
 
 // CUDA utilities and system includes
 #include <cuda_runtime.h>
@@ -66,19 +66,9 @@
 #include "bpmloader.h"
 #include "kernel.cuh"
 
-#define MAX_EPSILON_ERROR 5.0f
-#define REFRESH_DELAY 10  // ms
-#define MIN_EUCLIDEAN_D 0.01f
-#define MAX_EUCLIDEAN_D 5.f
-#define MAX_FILTER_RADIUS 25
-
 const static char *sSDKsample = "CUDA Bilateral Filter";
 
 const char *image_filename = "nature_monte.bmp";
-// int iterations = 1;
-// float gaussian_delta = 4;
-// float euclidean_delta = 0.1f;
-// int filter_radius = 5;
 
 unsigned int width, height;
 unsigned int *hImage = NULL;
@@ -97,10 +87,70 @@ int fpsCount = 0;  // FPS count for averaging
 int fpsLimit = 1;  // FPS limit for sampling
 unsigned int g_TotalErrors = 0;
 bool g_bInteractive = false;
+const int REFRESH_DELAY = 10;
 
 #define GL_TEXTURE_TYPE GL_TEXTURE_2D
 
+void keyboard(unsigned char key, int /*x*/, int /*y*/) {
+	switch (key) {
+		case 27:
+#if defined(__APPLE__) || defined(MACOSX)
+			exit(EXIT_SUCCESS);
+#else
+			glutDestroyWindow(glutGetWindow());
+			return;
+#endif
+			break;
 
+		case 'a':
+		case 'A':
+			printf("> letter a is pressed! use me for input!");
+			break;
+		default:
+			break;
+	}
+
+	glutPostRedisplay();
+}
+
+void timerEvent(int value) {
+	if (glutGetWindow()) {
+		glutPostRedisplay();
+		glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
+	}
+}
+
+void reshape(int x, int y) {
+	glViewport(0, 0, x, y);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+}
+
+
+GLuint compileASMShader(GLenum program_type, const char *code) {
+	GLuint program_id;
+	glGenProgramsARB(1, &program_id);
+	glBindProgramARB(program_type, program_id);
+	glProgramStringARB(program_type, GL_PROGRAM_FORMAT_ASCII_ARB,
+	                   (GLsizei)strlen(code), (GLubyte *)code);
+
+	GLint error_pos;
+	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &error_pos);
+
+	if (error_pos != -1) {
+		const GLubyte *error_string;
+		error_string = glGetString(GL_PROGRAM_ERROR_STRING_ARB);
+		printf("Program error at position: %d\n%s\n", (int)error_pos, error_string);
+		return 0;
+	}
+
+	return program_id;
+}
 
 void computeFPS() {
 	fpsCount++;
@@ -127,13 +177,13 @@ void display() {
    // execute filter, writing results to pbo
    unsigned int *dResult;
 
-   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pbo_resource, 0));
+   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pbo_resource, nullptr));
    size_t num_bytes;
    checkCudaErrors(cudaGraphicsResourceGetMappedPointer(
 		   (void **)&dResult, &num_bytes, cuda_pbo_resource));
    main_cuda_launch(dResult, width, height, kernel_timer);
 
-   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0));
+   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
 
    // Common display code path
    {
@@ -175,52 +225,6 @@ void display() {
    computeFPS();
 }
 
-/*
-   right arrow to increase the gaussian delta
-   left arrow to decrease the gaussian delta
-   up arrow to increase the euclidean delta
-   down arrow to decrease the euclidean delta
-*/
-void keyboard(unsigned char key, int /*x*/, int /*y*/) {
-   switch (key) {
-	   case 27:
-#if defined(__APPLE__) || defined(MACOSX)
-		   exit(EXIT_SUCCESS);
-#else
-		   glutDestroyWindow(glutGetWindow());
-		   return;
-#endif
-		   break;
-
-	   case 'a':
-	   case 'A':
-		   g_bInteractive = !g_bInteractive;
-		   printf("> letter a is pressed! use me for input!");
-		   break;
-	   default:
-		   break;
-   }
-
-   glutPostRedisplay();
-}
-
-void timerEvent(int value) {
-   if (glutGetWindow()) {
-	   glutPostRedisplay();
-	   glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
-   }
-}
-
-void reshape(int x, int y) {
-   glViewport(0, 0, x, y);
-
-   glMatrixMode(GL_MODELVIEW);
-   glLoadIdentity();
-
-   glMatrixMode(GL_PROJECTION);
-   glLoadIdentity();
-   glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-}
 
 void initCuda() {
    // initialize gaussian mask
@@ -245,29 +249,9 @@ void cleanup() {
 
 // shader for displaying floating-point texture
 static const char *shader_code =
-	   "!!ARBfp1.0\n"
-	   "TEX result.color, fragment.texcoord, texture[0], 2D; \n"
-	   "END";
-
-GLuint compileASMShader(GLenum program_type, const char *code) {
-   GLuint program_id;
-   glGenProgramsARB(1, &program_id);
-   glBindProgramARB(program_type, program_id);
-   glProgramStringARB(program_type, GL_PROGRAM_FORMAT_ASCII_ARB,
-					  (GLsizei)strlen(code), (GLubyte *)code);
-
-   GLint error_pos;
-   glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &error_pos);
-
-   if (error_pos != -1) {
-	   const GLubyte *error_string;
-	   error_string = glGetString(GL_PROGRAM_ERROR_STRING_ARB);
-	   printf("Program error at position: %d\n%s\n", (int)error_pos, error_string);
-	   return 0;
-   }
-
-   return program_id;
-}
+		"!!ARBfp1.0\n"
+		"TEX result.color, fragment.texcoord, texture[0], 2D; \n"
+        "END";
 
 void initGLResources() {
    // create pixel buffer object
@@ -320,30 +304,31 @@ void loadImageData(int argc, char **argv) {
 }
 
 
+
 void initGL(int argc, char **argv) {
-   // initialize GLUT
-   glutInit(&argc, argv);
-   glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
-   glutInitWindowSize(width, height);
+	// initialize GLUT
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitWindowSize(width, height);
 
-   glutCreateWindow("CUDA Bilateral Filter");
-   glutDisplayFunc(display);
+	glutCreateWindow("CUDA Bresenham example");
+	glutDisplayFunc(display);
 
-   glutKeyboardFunc(keyboard);
-   glutReshapeFunc(reshape);
-   // glutIdleFunc(idle);
-   glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
+	glutKeyboardFunc(keyboard);
+	glutReshapeFunc(reshape);
+	// glutIdleFunc(idle);
+	glutTimerFunc(REFRESH_DELAY, timerEvent, 0);
 
-   if (!isGLVersionSupported(2, 0) ||
-	   !areGLExtensionsSupported(
-			   "GL_ARB_vertex_buffer_object GL_ARB_pixel_buffer_object")) {
-	   printf("Error: failed to get minimal extensions for demo\n");
-	   printf("This sample requires:\n");
-	   printf("  OpenGL version 2.0\n");
-	   printf("  GL_ARB_vertex_buffer_object\n");
-	   printf("  GL_ARB_pixel_buffer_object\n");
-	   exit(EXIT_FAILURE);
-   }
+	if (!isGLVersionSupported(2, 0) ||
+	    !areGLExtensionsSupported(
+			    "GL_ARB_vertex_buffer_object GL_ARB_pixel_buffer_object")) {
+		printf("Error: failed to get minimal extensions for demo\n");
+		printf("This sample requires:\n");
+		printf("  OpenGL version 2.0\n");
+		printf("  GL_ARB_vertex_buffer_object\n");
+		printf("  GL_ARB_pixel_buffer_object\n");
+		exit(EXIT_FAILURE);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -360,7 +345,11 @@ int main(int argc, char **argv) {
 #endif
 
    // load image to process
-   loadImageData(argc, argv);
+   // loadImageData(argc, argv);
+   hImage = static_cast<unsigned int *>(calloc(1920 * 1080 * 4, 1));
+   height = 1080;
+   width = 1920;
+
    devID = findCudaDevice(argc, (const char **)argv);
 
    // Default mode running with OpenGL visualization and in automatic mode
@@ -370,6 +359,8 @@ int main(int argc, char **argv) {
    // First initialize OpenGL context, so we can properly set the GL for CUDA.
    // This is necessary in order to achieve optimal performance with
    // OpenGL/CUDA interop.
+
+
    initGL(argc, (char **)argv);
 
    initCuda();

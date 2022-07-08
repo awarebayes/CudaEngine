@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(course_renderer CXX CUDA)
 
-set(CUDAToolkit_ROOT /opt/cuda)
-set(CMAKE_CUDA_COMPILER /opt/cuda/bin/nvcc)
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CXX_STANDARD 20)
 
