@@ -73,7 +73,6 @@ __global__ void d_parametric_circle(uint *od, int w, int h, int x_0, int y_0, in
 		return;
 
 	auto &target_pixel = od[y * w + x];
-	// get float4 inetnsity: rgbaIntToFloat(target_pixel);
 	target_pixel = rgbaFloatToInt(float4{1.0f, 1.0f, 1.0f, 1.0f});
 }
 

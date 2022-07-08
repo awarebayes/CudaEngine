@@ -63,7 +63,6 @@
 // Shared Library Test Functions
 #include <helper_functions.h>  // CUDA SDK Helper functions
 
-#include "bpmloader.h"
 #include "kernel.cuh"
 
 const static char *sSDKsample = "CUDA Bilateral Filter";
@@ -278,33 +277,6 @@ void initGLResources() {
    shader = compileASMShader(GL_FRAGMENT_PROGRAM_ARB, shader_code);
 }
 
-
-void loadImageData(int argc, char **argv) {
-	// load image (needed so we can get the width and height before we create the
-	// window
-	char *image_path = NULL;
-
-	if (argc >= 1) {
-		image_path = sdkFindFilePath(image_filename, argv[0]);
-	}
-
-	if (image_path == NULL) {
-		fprintf(stderr, "Error finding image file '%s'\n", image_filename);
-		exit(EXIT_FAILURE);
-	}
-
-	LoadBMPFile((uchar4 **)&hImage, &width, &height, image_path);
-
-	if (!hImage) {
-		fprintf(stderr, "Error opening file '%s'\n", image_path);
-		exit(EXIT_FAILURE);
-	}
-
-	printf("Loaded '%s', %d x %d pixels\n\n", image_path, width, height);
-}
-
-
-
 void initGL(int argc, char **argv) {
 	// initialize GLUT
 	glutInit(&argc, argv);
@@ -345,7 +317,6 @@ int main(int argc, char **argv) {
 #endif
 
    // load image to process
-   // loadImageData(argc, argv);
    hImage = static_cast<unsigned int *>(calloc(1920 * 1080 * 4, 1));
    height = 1080;
    width = 1920;
@@ -359,8 +330,6 @@ int main(int argc, char **argv) {
    // First initialize OpenGL context, so we can properly set the GL for CUDA.
    // This is necessary in order to achieve optimal performance with
    // OpenGL/CUDA interop.
-
-
    initGL(argc, (char **)argv);
 
    initCuda();
