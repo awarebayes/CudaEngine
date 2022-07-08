@@ -25,28 +25,6 @@
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
- Image bilateral filtering example
-
- This sample uses CUDA to perform a simple bilateral filter on an image
- and uses OpenGL to display the results.
-
- Bilateral filter is an edge-preserving nonlinear smoothing filter. There
- are three parameters distribute to the filter: gaussian delta, euclidean
- delta and iterations.
-
- When the euclidean delta increases, most of the fine texture will be
- filtered away, yet all contours are as crisp as in the original image.
- If the euclidean delta approximates to ∞, the filter becomes a normal
- gaussian filter. Fine texture will blur more with larger gaussian delta.
- Multiple iterations have the effect of flattening the colors in an
- image considerably, but without blurring edges, which produces a cartoon
- effect.
-
- To learn more details about this filter, please view C. Tomasi's "Bilateral
- Filtering for Gray and Color Images".
-
-*/
 
 #include <cmath>
 
