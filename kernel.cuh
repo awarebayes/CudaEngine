@@ -7,6 +7,6 @@
 
 #include <helper_functions.h>
 double main_cuda_launch(uint *dDest, int width, int height,
-                           StopWatchInterface *timer);
+                        StopWatchInterface *timer);
 
 #endif//COURSE_RENDERER_KERNEL_CUH

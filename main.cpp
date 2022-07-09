@@ -33,13 +33,13 @@
 #include <helper_gl.h>
 
 // CUDA utilities and system includes
-#include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
+#include <cuda_runtime.h>
 
-#include <helper_cuda.h>  // CUDA device initialization helper functions
+#include <helper_cuda.h>// CUDA device initialization helper functions
 
 // Shared Library Test Functions
-#include <helper_functions.h>  // CUDA SDK Helper functions
+#include <helper_functions.h>// CUDA SDK Helper functions
 
 #include "kernel.cuh"
 
@@ -50,9 +50,9 @@ const char *image_filename = "nature_monte.bmp";
 unsigned int width, height;
 unsigned int *hImage = NULL;
 
-GLuint pbo;                                      // OpenGL pixel buffer object
-struct cudaGraphicsResource *cuda_pbo_resource;  // handles OpenGL-CUDA exchange
-GLuint texid;                                    // texture
+GLuint pbo;                                    // OpenGL pixel buffer object
+struct cudaGraphicsResource *cuda_pbo_resource;// handles OpenGL-CUDA exchange
+GLuint texid;                                  // texture
 GLuint shader;
 
 StopWatchInterface *timer = NULL;
@@ -60,8 +60,8 @@ StopWatchInterface *kernel_timer = NULL;
 
 // Auto-Verification Code
 const int frameCheckNumber = 4;
-int fpsCount = 0;  // FPS count for averaging
-int fpsLimit = 1;  // FPS limit for sampling
+int fpsCount = 0;// FPS count for averaging
+int fpsLimit = 1;// FPS limit for sampling
 unsigned int g_TotalErrors = 0;
 bool g_bInteractive = false;
 const int REFRESH_DELAY = 10;
@@ -114,7 +114,7 @@ GLuint compileASMShader(GLenum program_type, const char *code) {
 	glGenProgramsARB(1, &program_id);
 	glBindProgramARB(program_type, program_id);
 	glProgramStringARB(program_type, GL_PROGRAM_FORMAT_ASCII_ARB,
-	                   (GLsizei)strlen(code), (GLubyte *)code);
+	                   (GLsizei) strlen(code), (GLubyte *) code);
 
 	GLint error_pos;
 	glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &error_pos);
@@ -122,7 +122,7 @@ GLuint compileASMShader(GLenum program_type, const char *code) {
 	if (error_pos != -1) {
 		const GLubyte *error_string;
 		error_string = glGetString(GL_PROGRAM_ERROR_STRING_ARB);
-		printf("Program error at position: %d\n%s\n", (int)error_pos, error_string);
+		printf("Program error at position: %d\n%s\n", (int) error_pos, error_string);
 		return 0;
 	}
 
@@ -141,7 +141,7 @@ void computeFPS() {
 
 		glutSetWindowTitle(fps);
 		fpsCount = 0;
-		fpsLimit = (int)MAX(ifps, 1.0f);
+		fpsLimit = (int) MAX(ifps, 1.0f);
 
 		sdkResetTimer(&timer);
 	}
@@ -149,110 +149,110 @@ void computeFPS() {
 
 // display results using OpenGL
 void display() {
-   sdkStartTimer(&timer);
+	sdkStartTimer(&timer);
 
-   // execute filter, writing results to pbo
-   unsigned int *dResult;
+	// execute filter, writing results to pbo
+	unsigned int *dResult;
 
-   checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pbo_resource, nullptr));
-   size_t num_bytes;
-   checkCudaErrors(cudaGraphicsResourceGetMappedPointer(
-		   (void **)&dResult, &num_bytes, cuda_pbo_resource));
-   main_cuda_launch(dResult, width, height, kernel_timer);
+	checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pbo_resource, nullptr));
+	size_t num_bytes;
+	checkCudaErrors(cudaGraphicsResourceGetMappedPointer(
+	        (void **) &dResult, &num_bytes, cuda_pbo_resource));
+	main_cuda_launch(dResult, width, height, kernel_timer);
 
-   checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
 
-   // Common display code path
-   {
-	   glClear(GL_COLOR_BUFFER_BIT);
+	// Common display code path
+	{
+		glClear(GL_COLOR_BUFFER_BIT);
 
-	   // load texture from pbo
-	   glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, pbo);
-	   glBindTexture(GL_TEXTURE_2D, texid);
-	   glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA,
-					   GL_UNSIGNED_BYTE, 0);
-	   glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+		// load texture from pbo
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, pbo);
+		glBindTexture(GL_TEXTURE_2D, texid);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA,
+		                GL_UNSIGNED_BYTE, 0);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
-	   // fragment program is required to display floating point texture
-	   glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, shader);
-	   glEnable(GL_FRAGMENT_PROGRAM_ARB);
-	   glDisable(GL_DEPTH_TEST);
+		// fragment program is required to display floating point texture
+		glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, shader);
+		glEnable(GL_FRAGMENT_PROGRAM_ARB);
+		glDisable(GL_DEPTH_TEST);
 
-	   glBegin(GL_QUADS);
-	   {
-		   glTexCoord2f(0, 0);
-		   glVertex2f(0, 0);
-		   glTexCoord2f(1, 0);
-		   glVertex2f(1, 0);
-		   glTexCoord2f(1, 1);
-		   glVertex2f(1, 1);
-		   glTexCoord2f(0, 1);
-		   glVertex2f(0, 1);
-	   }
-	   glEnd();
-	   glBindTexture(GL_TEXTURE_TYPE, 0);
-	   glDisable(GL_FRAGMENT_PROGRAM_ARB);
-   }
+		glBegin(GL_QUADS);
+		{
+			glTexCoord2f(0, 0);
+			glVertex2f(0, 0);
+			glTexCoord2f(1, 0);
+			glVertex2f(1, 0);
+			glTexCoord2f(1, 1);
+			glVertex2f(1, 1);
+			glTexCoord2f(0, 1);
+			glVertex2f(0, 1);
+		}
+		glEnd();
+		glBindTexture(GL_TEXTURE_TYPE, 0);
+		glDisable(GL_FRAGMENT_PROGRAM_ARB);
+	}
 
-   glutSwapBuffers();
-   glutReportErrors();
+	glutSwapBuffers();
+	glutReportErrors();
 
-   sdkStopTimer(&timer);
+	sdkStopTimer(&timer);
 
-   computeFPS();
+	computeFPS();
 }
 
 
 void initCuda() {
-   // initialize gaussian mask
-   sdkCreateTimer(&timer);
-   sdkCreateTimer(&kernel_timer);
+	// initialize gaussian mask
+	sdkCreateTimer(&timer);
+	sdkCreateTimer(&kernel_timer);
 }
 
 void cleanup() {
-   sdkDeleteTimer(&timer);
-   sdkDeleteTimer(&kernel_timer);
+	sdkDeleteTimer(&timer);
+	sdkDeleteTimer(&kernel_timer);
 
-   if (hImage) {
-	   free(hImage);
-   }
+	if (hImage) {
+		free(hImage);
+	}
 
-   cudaGraphicsUnregisterResource(cuda_pbo_resource);
+	cudaGraphicsUnregisterResource(cuda_pbo_resource);
 
-   glDeleteBuffers(1, &pbo);
-   glDeleteTextures(1, &texid);
-   glDeleteProgramsARB(1, &shader);
+	glDeleteBuffers(1, &pbo);
+	glDeleteTextures(1, &texid);
+	glDeleteProgramsARB(1, &shader);
 }
 
 // shader for displaying floating-point texture
 static const char *shader_code =
-		"!!ARBfp1.0\n"
-		"TEX result.color, fragment.texcoord, texture[0], 2D; \n"
+        "!!ARBfp1.0\n"
+        "TEX result.color, fragment.texcoord, texture[0], 2D; \n"
         "END";
 
 void initGLResources() {
-   // create pixel buffer object
-   glGenBuffers(1, &pbo);
-   glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, pbo);
-   glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, width * height * sizeof(GLubyte) * 4,
-				hImage, GL_STREAM_DRAW_ARB);
+	// create pixel buffer object
+	glGenBuffers(1, &pbo);
+	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, pbo);
+	glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, width * height * sizeof(GLubyte) * 4,
+	             hImage, GL_STREAM_DRAW_ARB);
 
-   glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
-   checkCudaErrors(cudaGraphicsGLRegisterBuffer(
-		   &cuda_pbo_resource, pbo, cudaGraphicsMapFlagsWriteDiscard));
+	checkCudaErrors(cudaGraphicsGLRegisterBuffer(
+	        &cuda_pbo_resource, pbo, cudaGraphicsMapFlagsWriteDiscard));
 
-   // create texture for display
-   glGenTextures(1, &texid);
-   glBindTexture(GL_TEXTURE_2D, texid);
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA,
-				GL_UNSIGNED_BYTE, NULL);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-   glBindTexture(GL_TEXTURE_2D, 0);
+	// create texture for display
+	glGenTextures(1, &texid);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA,
+	             GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
-   // load shader program
-   shader = compileASMShader(GL_FRAGMENT_PROGRAM_ARB, shader_code);
+	// load shader program
+	shader = compileASMShader(GL_FRAGMENT_PROGRAM_ARB, shader_code);
 }
 
 void initGL(int argc, char **argv) {
@@ -271,7 +271,7 @@ void initGL(int argc, char **argv) {
 
 	if (!isGLVersionSupported(2, 0) ||
 	    !areGLExtensionsSupported(
-			    "GL_ARB_vertex_buffer_object GL_ARB_pixel_buffer_object")) {
+	            "GL_ARB_vertex_buffer_object GL_ARB_pixel_buffer_object")) {
 		printf("Error: failed to get minimal extensions for demo\n");
 		printf("This sample requires:\n");
 		printf("  OpenGL version 2.0\n");
@@ -285,37 +285,37 @@ void initGL(int argc, char **argv) {
 // Program main
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv) {
-   // start logs
-   int devID;
-   char *ref_file = NULL;
-   printf("%s Starting...\n\n", argv[0]);
+	// start logs
+	int devID;
+	char *ref_file = NULL;
+	printf("%s Starting...\n\n", argv[0]);
 
 #if defined(__linux__)
-   setenv("DISPLAY", ":0", 0);
+	setenv("DISPLAY", ":0", 0);
 #endif
 
-   // load image to process
-   hImage = static_cast<unsigned int *>(calloc(1920 * 1080 * 4, 1));
-   height = 1080;
-   width = 1920;
+	// load image to process
+	hImage = static_cast<unsigned int *>(calloc(1920 * 1080 * 4, 1));
+	height = 1080;
+	width = 1920;
 
-   devID = findCudaDevice(argc, (const char **)argv);
+	devID = findCudaDevice(argc, (const char **) argv);
 
-   // Default mode running with OpenGL visualization and in automatic mode
-   // the output automatically changes animation
-   printf("\n");
+	// Default mode running with OpenGL visualization and in automatic mode
+	// the output automatically changes animation
+	printf("\n");
 
-   // First initialize OpenGL context, so we can properly set the GL for CUDA.
-   // This is necessary in order to achieve optimal performance with
-   // OpenGL/CUDA interop.
-   initGL(argc, (char **)argv);
+	// First initialize OpenGL context, so we can properly set the GL for CUDA.
+	// This is necessary in order to achieve optimal performance with
+	// OpenGL/CUDA interop.
+	initGL(argc, (char **) argv);
 
-   initCuda();
-   initGLResources();
+	initCuda();
+	initGLResources();
 
-   glutCloseFunc(cleanup);
+	glutCloseFunc(cleanup);
 
-   printf("Running Standard Demonstration with GLUT loop...\n\n");
-   // Main OpenGL loop that will run visualization for every vsync
-   glutMainLoop();
+	printf("Running Standard Demonstration with GLUT loop...\n\n");
+	// Main OpenGL loop that will run visualization for every vsync
+	glutMainLoop();
 }

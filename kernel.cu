@@ -32,28 +32,28 @@
 
 // Euclidean Distance (x, y, d) = exp((|x - y| / d)^2 / 2)
 __device__ float euclideanLen(float4 a, float4 b, float d) {
-  float mod = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y) +
-              (b.z - a.z) * (b.z - a.z);
+	float mod = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y) +
+	            (b.z - a.z) * (b.z - a.z);
 
-  return __expf(-mod / (2.f * d * d));
+	return __expf(-mod / (2.f * d * d));
 }
 
 __device__ uint rgbaFloatToInt(float4 rgba) {
-  rgba.x = __saturatef(fabs(rgba.x));  // clamp to [0.0, 1.0]
-  rgba.y = __saturatef(fabs(rgba.y));
-  rgba.z = __saturatef(fabs(rgba.z));
-  rgba.w = __saturatef(fabs(rgba.w));
-  return (uint(rgba.w * 255.0f) << 24) | (uint(rgba.z * 255.0f) << 16) |
-         (uint(rgba.y * 255.0f) << 8) | uint(rgba.x * 255.0f);
+	rgba.x = __saturatef(fabs(rgba.x));// clamp to [0.0, 1.0]
+	rgba.y = __saturatef(fabs(rgba.y));
+	rgba.z = __saturatef(fabs(rgba.z));
+	rgba.w = __saturatef(fabs(rgba.w));
+	return (uint(rgba.w * 255.0f) << 24) | (uint(rgba.z * 255.0f) << 16) |
+	       (uint(rgba.y * 255.0f) << 8) | uint(rgba.x * 255.0f);
 }
 
 __device__ float4 rgbaIntToFloat(uint c) {
-  float4 rgba;
-  rgba.x = (c & 0xff) * 0.003921568627f;          //  /255.0f;
-  rgba.y = ((c >> 8) & 0xff) * 0.003921568627f;   //  /255.0f;
-  rgba.z = ((c >> 16) & 0xff) * 0.003921568627f;  //  /255.0f;
-  rgba.w = ((c >> 24) & 0xff) * 0.003921568627f;  //  /255.0f;
-  return rgba;
+	float4 rgba;
+	rgba.x = (c & 0xff) * 0.003921568627f;        //  /255.0f;
+	rgba.y = ((c >> 8) & 0xff) * 0.003921568627f; //  /255.0f;
+	rgba.z = ((c >> 16) & 0xff) * 0.003921568627f;//  /255.0f;
+	rgba.w = ((c >> 24) & 0xff) * 0.003921568627f;//  /255.0f;
+	return rgba;
 }
 
 // column pass using coalesced global memory reads
@@ -62,10 +62,10 @@ __global__ void d_parametric_circle(uint *od, int w, int h, int x_0, int y_0, in
 	if (position >= total_pixels)
 		return;
 
-	float percent = (float)position / (float)total_pixels;
+	float percent = (float) position / (float) total_pixels;
 	float rad = M_PI * 2.0f * percent;
-	int x = int((float)x_0 + cos(rad) * (float)radius);
-	int y = int((float)y_0 + sin(rad) * (float)radius);
+	int x = int((float) x_0 + cos(rad) * (float) radius);
+	int y = int((float) y_0 + sin(rad) * (float) radius);
 
 	if (x >= w or x < 0)
 		return;
@@ -76,28 +76,27 @@ __global__ void d_parametric_circle(uint *od, int w, int h, int x_0, int y_0, in
 	target_pixel = rgbaFloatToInt(float4{1.0f, 1.0f, 1.0f, 1.0f});
 }
 
-void bresenhamCircle(uint *od, int w, int h, int x_0, int y_0, int radius)
-{
-	int circumference = ceil((float)radius * 2.0f * M_PI);
-	d_parametric_circle<<<circumference / 32 + 1, 32>>>(od, w, h, x_0, y_0, radius, circumference);
+void parametricCircle(uint *od, int w, int h, int x_0, int y_0, int radius) {
+	int circumference = ceil((float) radius * 2.0f * M_PI);
+	int n_grid = circumference / 32 + 1;
+	int n_block = 32;
+	d_parametric_circle<<<n_grid, n_block>>>(od, w, h, x_0, y_0, radius, circumference);
 }
 
 
-// RGBA version
 double main_cuda_launch(uint *dDest, int width, int height, StopWatchInterface *timer) {
-    // var for kernel computation timing
-    double dKernelTime;
-
+	// var for kernel computation timing
+	double dKernelTime;
 	// sync host and start kernel computation timer
 	dKernelTime = 0.0;
 	checkCudaErrors(cudaDeviceSynchronize());
 	sdkResetTimer(&timer);
 
-	bresenhamCircle(dDest, width, height, width/2, height/2, width/4);
+	parametricCircle(dDest, width, height, width / 2, height / 2, width / 4);
 
 	// sync host and stop computation timer
 	checkCudaErrors(cudaDeviceSynchronize());
-	dKernelTime += sdkGetTimerValue(&timer);
+	dKernelTime = sdkGetTimerValue(&timer);
 
-  return (dKernelTime / 1000.);
+	return dKernelTime / 1000.;
 }
