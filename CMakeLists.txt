@@ -11,11 +11,12 @@ include_directories(${GLUT_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
 find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 
-file(GLOB renderer_SRC
-        "*.cpp"
-        "*.cu"
+add_executable(course_renderer
+        src/kernel.cu
+        src/main.cpp
+        src/model/src/model.cpp
+        src/model/src/pool.cpp
         )
-add_executable(course_renderer ${renderer_SRC})
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

@@ -25,7 +25,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <helper_cuda.h>// CUDA device initialization helper functions
+#include "kernel.cuh"
+#include "model/inc/model.h"
+#include "model/inc/pool.h"
+#include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
 
@@ -56,8 +59,7 @@ __device__ float4 rgbaIntToFloat(uint c) {
 	return rgba;
 }
 
-// column pass using coalesced global memory reads
-__global__ void d_parametric_circle(uint *od, int w, int h, int x_0, int y_0, int radius, int total_pixels) {
+__global__ void d_parametric_circle(Image image, int x_0, int y_0, int radius, int total_pixels) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	if (position >= total_pixels)
 		return;
@@ -67,24 +69,104 @@ __global__ void d_parametric_circle(uint *od, int w, int h, int x_0, int y_0, in
 	int x = int((float) x_0 + cos(rad) * (float) radius);
 	int y = int((float) y_0 + sin(rad) * (float) radius);
 
-	if (x >= w or x < 0)
+	if (x >= image.width or x < 0)
 		return;
-	if (y >= h or y < 0)
+	if (y >= image.height or y < 0)
 		return;
 
-	auto &target_pixel = od[y * w + x];
+	auto &target_pixel = image.pixels[y * image.width + x];
 	target_pixel = rgbaFloatToInt(float4{1.0f, 1.0f, 1.0f, 1.0f});
 }
 
-void parametricCircle(uint *od, int w, int h, int x_0, int y_0, int radius) {
+void parametricCircle(Image &image, int x_0, int y_0, int radius) {
 	int circumference = ceil((float) radius * 2.0f * M_PI);
 	int n_grid = circumference / 32 + 1;
 	int n_block = 32;
-	d_parametric_circle<<<n_grid, n_block>>>(od, w, h, x_0, y_0, radius, circumference);
+	d_parametric_circle<<<n_grid, n_block>>>(image, x_0, y_0, radius, circumference);
+}
+
+template<typename T>
+__device__ void swap(T &x, T &y)
+{
+	T temp = x;
+	x = y;
+	y = temp;
+}
+
+__device__ void line(Image &image, int x0, int y0, int x1, int y1) {
+	bool steep = false;
+	if (std::abs(x0-x1)<std::abs(y0-y1)) {
+		swap(x0, y0);
+		swap(x1, y1);
+		steep = true;
+	}
+	if (x0>x1) {
+		swap(x0, x1);
+		swap(y0, y1);
+	}
+	__syncthreads();
+
+	uint color = rgbaFloatToInt(float4{1.0f, 1.0f, 1.0f, 1.0f});
+
+	for (int x=x0; x<=x1; x++) {
+		float t = (x-x0)/(float)(x1-x0);
+		int y = y0*(1.-t) + y1*t;
+		int x_draw = y * steep + x * (1 - steep);
+		int y_draw = x * steep + y * (1 - steep);
+		image.set(x_draw, y_draw, color);
+	}
+}
+
+__device__ void triangle(Image &image, int2 t0, int2 t1, int2 t2, float4 color)
+{
+	if (t0.y==t1.y && t0.y==t2.y) return; // i dont care about degenerate triangles
+	if (t0.y>t1.y) swap(t0, t1);
+	if (t0.y>t2.y) swap(t0, t2);
+	if (t1.y>t2.y) swap(t1, t2);
+	int total_height = t2.y-t0.y;
+	uint colori = rgbaFloatToInt(color);
+	for (int i=0; i<total_height; i++) {
+		bool second_half = i>t1.y-t0.y || t1.y==t0.y;
+		int segment_height = second_half ? t2.y-t1.y : t1.y-t0.y;
+		float alpha = (float)i/total_height;
+		float beta  = (float)(i-(second_half ? t1.y-t0.y : 0))/segment_height; // be careful: with above conditions no division by zero here
+		int2 A =               t0 + (t2-t0)*alpha;
+		int2 B = second_half ? t1 + (t2-t1)*beta : t0 + (t1-t0)*beta;
+		if (A.x>B.x) swap(A, B);
+		for (int j=A.x; j<=B.x; j++) {
+			image.set(j, t0.y+i, colori); // attention, due to int casts t0.y+i != A.y
+		}
+	}
+}
+
+__global__ void draw_faces(Image image, ModelRef model) {
+	int position = blockIdx.x * blockDim.x + threadIdx.x;
+	if (position >= model.n_faces)
+		return;
+	auto face = model.faces[position];
+	int2 screen_coords[3];
+	float3 world_coords[3];
+	int face_idx[3] = {face.x, face.y, face.z};
+	for (int j = 0; j < 3; j++)
+	{
+		float3 v0 = model.vertices[face_idx[j]];
+		float3 v1 = model.vertices[face_idx[(j + 1) % 3]];
+		int x0 = (v0.x + 1.0f) * image.width / 2.0f;
+		int y0 = (v0.y + 1.0f) * image.height / 2.0f;
+		int x1 = (v1.x + 1.0f) * image.width / 2.0f;
+		int y1 = (v1.y + 1.0f) * image.height / 2.0f;
+		line(image, x0, y0, x1, y1);
+		// printf("Line (%d %d) (%d %d)\n", x0, y0, x1, y1);
+		__syncthreads();
+	}
 }
 
 
-double main_cuda_launch(uint *dDest, int width, int height, StopWatchInterface *timer) {
+double main_cuda_launch(Image &image, StopWatchInterface *timer) {
+	auto mp = ModelPoolCreator().get();
+	ModelRef ref = mp->get("obj/african_head.myobj");
+
+
 	// var for kernel computation timing
 	double dKernelTime;
 	// sync host and start kernel computation timer
@@ -92,7 +174,9 @@ double main_cuda_launch(uint *dDest, int width, int height, StopWatchInterface *
 	checkCudaErrors(cudaDeviceSynchronize());
 	sdkResetTimer(&timer);
 
-	parametricCircle(dDest, width, height, width / 2, height / 2, width / 4);
+	int n_grid = ref.n_faces / 32 + 1;
+	int n_block = 32;
+	draw_faces<<<n_grid, n_block>>>(image, ref);
 
 	// sync host and stop computation timer
 	checkCudaErrors(cudaDeviceSynchronize());

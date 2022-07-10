@@ -158,7 +158,10 @@ void display() {
 	size_t num_bytes;
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer(
 	        (void **) &dResult, &num_bytes, cuda_pbo_resource));
-	main_cuda_launch(dResult, width, height, kernel_timer);
+
+	auto img = Image{dResult, (int)width, (int)height};
+
+	main_cuda_launch(img, kernel_timer);
 
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
 
