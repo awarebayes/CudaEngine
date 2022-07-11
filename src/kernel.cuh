@@ -10,6 +10,7 @@
 
 struct Image {
 	uint *pixels;
+	float *zbuffer;
 	int width;
 	int height;
 
@@ -28,6 +29,7 @@ struct Image {
 
 
 double main_cuda_launch(Image &image,
-                        StopWatchInterface *timer);
+                        StopWatchInterface *timer
+                        );
 
 #endif//COURSE_RENDERER_KERNEL_CUH

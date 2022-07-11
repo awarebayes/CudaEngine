@@ -28,11 +28,11 @@
 #include "kernel.cuh"
 #include "model/inc/model.h"
 #include "model/inc/pool.h"
+#include "util/stream_manager.h"
+#include <ctime>
 #include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
-#include <ctime>
-
 
 
 // Euclidean Distance (x, y, d) = exp((|x - y| / d)^2 / 2)
@@ -155,7 +155,8 @@ __device__ void triangle_old(int2 ts[3], Image &image, float4 color) {
 }
 
 
-__device__ float3 barycentric(int2 *pts, int2 P) {
+template <typename Tp>
+__device__ float3 barycentric(float3 *pts, Tp P) {
 	auto a = float3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
 	auto b = float3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
 	auto u = cross(a, b);
@@ -167,44 +168,90 @@ __device__ float3 barycentric(int2 *pts, int2 P) {
 	        };
 }
 
-__device__ void triangle(int2 pts[3], Image &image, float4 color) {
-	int2 bboxmin{image.width-1,  image.height-1};
-	int2 bboxmax{0, 0};
-	int2 clamp{image.width-1, image.height-1};
+__device__ static float atomicMax(float* address, float val)
+{
+	int* address_as_i = (int*) address;
+	int old = *address_as_i, assumed;
+	do {
+		assumed = old;
+		old = ::atomicCAS(address_as_i, assumed,
+		                  __float_as_int(::fmaxf(val, __int_as_float(assumed))));
+	} while (assumed != old);
+	return __int_as_float(old);
+}
+
+__device__ void triangle_zbuffer(float3 pts[3], Image &image) {
+	float2 bboxmin{float(image.width-1),  float(image.height-1)};
+	float2 bboxmax{0., 0.};
+	float2 clamp{float(image.width-1), float(image.height-1)};
 	for (int i=0; i<3; i++) {
-		bboxmin.x = max(0, min(bboxmin.x, pts[i].x));
-		bboxmin.y = max(0, min(bboxmin.y, pts[i].y));
+		bboxmin.x = max(0.0f, min(bboxmin.x, pts[i].x));
+		bboxmin.y = max(0.0f, min(bboxmin.y, pts[i].y));
+
+		bboxmax.x = min(clamp.x, max(bboxmax.x, pts[i].x));
+		bboxmax.y = min(clamp.y, max(bboxmax.y, pts[i].y));
+	}
+
+	float3 P{0, 0, 0};
+
+	for (P.x=floor(bboxmin.x); P.x<=bboxmax.x; P.x++) {
+		for (P.y=floor(bboxmin.y); P.y<=bboxmax.y; P.y++) {
+			auto bc_screen  = barycentric(pts, P);
+			float bc_screen_idx[3] = {bc_screen.x, bc_screen.y, bc_screen.z};
+			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
+				continue;
+			P.z = 0;
+			for (int i = 0; i < 3; i++)
+				P.z += pts[i].z * bc_screen_idx[i];
+			atomicMax(&image.zbuffer[int(P.x + P.y * image.width)], P.z);
+		}
+	}
+}
+
+
+__device__ void triangle(float3 pts[3], Image &image, float4 color) {
+	float2 bboxmin{float(image.width-1),  float(image.height-1)};
+	float2 bboxmax{0., 0.};
+	float2 clamp{float(image.width-1), float(image.height-1)};
+	for (int i=0; i<3; i++) {
+		bboxmin.x = max(0.0f, min(bboxmin.x, pts[i].x));
+		bboxmin.y = max(0.0f, min(bboxmin.y, pts[i].y));
 
 		bboxmax.x = min(clamp.x, max(bboxmax.x, pts[i].x));
 		bboxmax.y = min(clamp.y, max(bboxmax.y, pts[i].y));
 	}
 
 	auto colori = rgbaFloatToInt(color);
-	int2 P{0, 0};
+	float3 P{0, 0, 0};
 
-	__syncthreads();
-	for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
-		for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
+	for (P.x=floor(bboxmin.x); P.x <= bboxmax.x; P.x++) {
+		for (P.y=floor(bboxmin.y); P.y <= bboxmax.y; P.y++) {
 			auto bc_screen  = barycentric(pts, P);
-			if (bc_screen.x>=0 && bc_screen.y>=0 && bc_screen.z>=0)
-				image.set(P.x, P.y, colori);
+			float bc_screen_idx[3] = {bc_screen.x, bc_screen.y, bc_screen.z};
+			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
+				continue;
+			P.z = 0;
+			for (int i = 0; i < 3; i++)P.z += pts[i].z * bc_screen_idx[i];
+			if (image.zbuffer[int(P.x + P.y* image.width)] == P.z) {
+				image.set((int)P.x, (int)P.y, colori);
+			}
 		}
 	}
 }
 
-__global__ void draw_faces(Image image, ModelRef model) {
+__global__ void fill_zbuffer(Image image, ModelRef model) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	if (position >= model.n_faces)
 		return;
 	auto face = model.faces[position];
-	int2 screen_coords[3];
+	float3 screen_coords[3];
 	float3 world_coords[3];
 	float3 light_dir{0.0, 0.0, -1.0};
 	int face_idx[3] = {face.x, face.y, face.z};
 	for (int j = 0; j < 3; j++)
 	{
 		float3 v = model.vertices[face_idx[j]];
-		screen_coords[j] = int2{int((v.x + 1.0) * image.width / 2.0), int((v.y + 1.0) * image.height / 2.0)};
+		screen_coords[j] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
 		world_coords[j] = v;
 	}
 
@@ -212,11 +259,35 @@ __global__ void draw_faces(Image image, ModelRef model) {
 	n = normalize(n);
 	float intensity = dot(n, light_dir);
 	if (intensity > 0)
-		triangle(screen_coords, image, float4{1.0f, 1.0f, 1.0f, 1.0f} * intensity);
+		triangle_zbuffer(screen_coords, image);
 }
 
 
+__global__ void draw_faces(Image image, ModelRef model) {
+	int position = blockIdx.x * blockDim.x + threadIdx.x;
+	if (position >= model.n_faces)
+		return;
+	auto face = model.faces[position];
+	float3 screen_coords[3];
+	float3 world_coords[3];
+	float3 light_dir{0.0, 0.0, -1.0};
+	int face_idx[3] = {face.x, face.y, face.z};
+	for (int j = 0; j < 3; j++)
+	{
+		float3 v = model.vertices[face_idx[j]];
+		screen_coords[j] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
+		world_coords[j] = v;
+	}
+
+	float3 n = cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
+	n = normalize(n);
+	float intensity = dot(n, light_dir);
+	if (intensity > 0)
+		triangle(screen_coords, image,  float4{1.0f, 1.0f, 1.0f, 1.0f} * intensity);
+}
+
 double main_cuda_launch(Image &image, StopWatchInterface *timer) {
+	auto streams = SingletonCreator<StreamManager>().get();
 	auto mp = ModelPoolCreator().get();
 	ModelRef ref = mp->get("obj/african_head.myobj");
 
@@ -225,16 +296,22 @@ double main_cuda_launch(Image &image, StopWatchInterface *timer) {
 	double dKernelTime;
 	// sync host and start kernel computation timer
 	dKernelTime = 0.0;
-	checkCudaErrors(cudaDeviceSynchronize());
+
 	clock_t begin = clock();
 	sdkResetTimer(&timer);
 
+	streams->prepare_to_render();
+
 	int n_grid = ref.n_faces / 32 + 1;
 	int n_block = 32;
-	draw_faces<<<n_grid, n_block>>>(image, ref);
+
+	fill_zbuffer<<<n_grid, n_block, 0, streams->render>>>(image, ref);
+	draw_faces<<<n_grid, n_block, 0, streams->render>>>(image, ref);
 
 	// sync host and stop computation timer
-	checkCudaErrors(cudaDeviceSynchronize());
+
+	checkCudaErrors(cudaStreamSynchronize(streams->render));
+	checkCudaErrors(cudaMemsetAsync(image.zbuffer, 0.0f, image.width * image.height * sizeof(float), streams->zreset));
 	clock_t end = clock();
 	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 

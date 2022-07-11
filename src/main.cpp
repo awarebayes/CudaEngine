@@ -62,6 +62,7 @@ StopWatchInterface *kernel_timer = NULL;
 const int frameCheckNumber = 4;
 int fpsCount = 0;// FPS count for averaging
 int fpsLimit = 1;// FPS limit for sampling
+float *zBuffer = nullptr;
 unsigned int g_TotalErrors = 0;
 bool g_bInteractive = false;
 const int REFRESH_DELAY = 10;
@@ -159,7 +160,7 @@ void display() {
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer(
 	        (void **) &dResult, &num_bytes, cuda_pbo_resource));
 
-	auto img = Image{dResult, (int)width, (int)height};
+	auto img = Image{dResult, zBuffer, (int)width, (int)height};
 
 	main_cuda_launch(img, kernel_timer);
 
@@ -210,6 +211,8 @@ void initCuda() {
 	// initialize gaussian mask
 	sdkCreateTimer(&timer);
 	sdkCreateTimer(&kernel_timer);
+
+	cudaMalloc((void **)&zBuffer, sizeof(float) * width * height);
 }
 
 void cleanup() {
@@ -291,7 +294,8 @@ int main(int argc, char **argv) {
 	// start logs
 	int devID;
 	char *ref_file = NULL;
-	printf("%s Starting...\n\n", argv[0]);
+
+	printf("\nStarting...\n\n");
 
 #if defined(__linux__)
 	setenv("DISPLAY", ":0", 0);

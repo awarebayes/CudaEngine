@@ -6,6 +6,7 @@
 #define COURSE_RENDERER_POOL_H
 
 #include "model.h"
+#include "../../util/singleton.h"
 #include <string>
 #include <unordered_map>
 
@@ -19,12 +20,6 @@ public:
 	ModelRef get(const std::string &path);
 };
 
-class ModelPoolCreator
-{
-private:
-	static std::shared_ptr<ModelPool> singleton;
-public:
-	std::shared_ptr<ModelPool> get();
-};
+using ModelPoolCreator = SingletonCreator<ModelPool>;
 
 #endif//COURSE_RENDERER_POOL_H

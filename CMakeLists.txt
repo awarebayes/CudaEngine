@@ -16,11 +16,13 @@ add_executable(course_renderer
         src/main.cpp
         src/model/src/model.cpp
         src/model/src/pool.cpp
+        src/util/stream_manager.cpp src/util/singleton.h
         )
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON)
+        CUDA_SEPARABLE_COMPILATION ON
+        )
 
 target_link_libraries(course_renderer ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-target_link_libraries(${CMAKE_PROJECT_NAME} ${CUDA_LIBRARIES} -lcuda)
+target_link_libraries(${CMAKE_PROJECT_NAME} ${CUDA_LIBRARIES} -lcuda -L/usr/local/lib64)

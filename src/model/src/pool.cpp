@@ -9,11 +9,4 @@ ModelRef ModelPool::get(const std::string &path) {
 	return pool.at(path)->get_ref();
 }
 
-std::shared_ptr<ModelPool> ModelPoolCreator::singleton = std::shared_ptr<ModelPool>(nullptr);
-
-std::shared_ptr<ModelPool> ModelPoolCreator::get() {
-	if (!ModelPoolCreator::singleton)
-		ModelPoolCreator::singleton = std::make_shared<ModelPool>();
-	return ModelPoolCreator::singleton;
-}
 
