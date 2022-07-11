@@ -14,8 +14,8 @@ class Triangle:
     y: int
     z: int
 
-    def __init__(self, x, y, z):
-        self.x, self.y, self.z = list(sorted([x, y, z]))
+    #def __init__(self, x, y, z):
+    #    self.x, self.y, self.z = list(sorted([x, y, z]))
 
 
 def find_center(vertices):
@@ -31,7 +31,7 @@ def scale(vertices):
     max_coord_diff = np.max(diff)
 
     screen_dim = np.min([SCREEN_WIDTH, SCREEN_HEIGHT])
-    required_scale = screen_dim / max_coord_diff
+    required_scale = max_coord_diff
     required_scale *= SCALE_ADDITIONAL
 
     print("Scaling with", required_scale)
@@ -42,7 +42,7 @@ def scale(vertices):
 def parse(path):
     file = open(path, "r")
     vertices = []
-    triangles = set()
+    triangles = list()
 
     for line in file:
         splitted = line.split()
@@ -64,7 +64,7 @@ def parse(path):
             first_index = faces[0]
             faces = faces[1:]
             for i1, i2 in zip(faces, faces[1:]):
-                triangles.add(Triangle(first_index, i1, i2))
+                triangles.append(Triangle(first_index, i1, i2))
 
         if line_type == "v":
             vertex = list(map(float, splitted[1:]))
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     in_path, out_path = sys.argv[1:]
     vertices, lines = parse(in_path)
 
-    #vertices = find_center(vertices)
-    #vertices = scale(vertices)
+    vertices = find_center(vertices)
+    vertices = scale(vertices)
 
     save(out_path, vertices, lines)

@@ -53,8 +53,8 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 }
 
 Model::~Model() {
-	checkCudaErrors(cudaFree(faces));
-	checkCudaErrors(cudaFree(vertices));
+	checkCudaErrors(cudaFree((void*)faces));
+	checkCudaErrors(cudaFree((void*)vertices));
 }
 ModelRef Model::get_ref() const {
 	return ModelRef{ vertices, faces, n_vertices, n_faces };

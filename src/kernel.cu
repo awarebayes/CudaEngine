@@ -31,6 +31,8 @@
 #include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
+#include <ctime>
+
 
 
 // Euclidean Distance (x, y, d) = exp((|x - y| / d)^2 / 2)
@@ -117,24 +119,75 @@ __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 	}
 }
 
-__device__ void triangle(Image &image, int2 t0, int2 t1, int2 t2, float4 color)
-{
+
+
+
+__device__ void triangle_old(int2 ts[3], Image &image, float4 color) {
+	auto t0 = ts[0];
+	auto t1 = ts[1];
+	auto t2 = ts[2];
 	if (t0.y==t1.y && t0.y==t2.y) return; // i dont care about degenerate triangles
 	if (t0.y>t1.y) swap(t0, t1);
 	if (t0.y>t2.y) swap(t0, t2);
 	if (t1.y>t2.y) swap(t1, t2);
 	int total_height = t2.y-t0.y;
-	uint colori = rgbaFloatToInt(color);
+
+	auto t0f = float2{float(t0.x), float(t0.y)};
+	auto t1f = float2{float(t1.x), float(t1.y)};
+	auto t2f = float2{float(t2.x), float(t2.y)};
+	auto colori = rgbaFloatToInt(color);
+
+	__syncthreads();
+
 	for (int i=0; i<total_height; i++) {
 		bool second_half = i>t1.y-t0.y || t1.y==t0.y;
 		int segment_height = second_half ? t2.y-t1.y : t1.y-t0.y;
-		float alpha = (float)i/total_height;
-		float beta  = (float)(i-(second_half ? t1.y-t0.y : 0))/segment_height; // be careful: with above conditions no division by zero here
-		int2 A =               t0 + (t2-t0)*alpha;
-		int2 B = second_half ? t1 + (t2-t1)*beta : t0 + (t1-t0)*beta;
+		float alpha = (float)i/(float)total_height;
+		float beta  = (float)(i-(second_half ? t1.y-t0.y : 0))/(float)segment_height; // be careful: with above conditions no division by zero here
+		float2 A =               t0f + (t2f-t0f) * alpha;
+		float2 B = second_half ? t1f + (t2f-t1f)*beta : t0f + (t1f-t0f)*beta;
 		if (A.x>B.x) swap(A, B);
-		for (int j=A.x; j<=B.x; j++) {
+		for (int j=int(A.x); j<=int(B.x); j++) {
 			image.set(j, t0.y+i, colori); // attention, due to int casts t0.y+i != A.y
+		}
+		__syncthreads();
+	}
+}
+
+
+__device__ float3 barycentric(int2 *pts, int2 P) {
+	auto a = float3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
+	auto b = float3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
+	auto u = cross(a, b);
+	float flag = abs(u.z)<1;
+	return float3{
+	                -1.0f * flag + (1.0f - flag) * (1.f-(u.x+u.y)/u.z),
+	                 1.0f * flag + (1.0f - flag) * (u.y/u.z),
+	                 1.0f * flag + (1.0f - flag) * (u.x/u.z)
+	        };
+}
+
+__device__ void triangle(int2 pts[3], Image &image, float4 color) {
+	int2 bboxmin{image.width-1,  image.height-1};
+	int2 bboxmax{0, 0};
+	int2 clamp{image.width-1, image.height-1};
+	for (int i=0; i<3; i++) {
+		bboxmin.x = max(0, min(bboxmin.x, pts[i].x));
+		bboxmin.y = max(0, min(bboxmin.y, pts[i].y));
+
+		bboxmax.x = min(clamp.x, max(bboxmax.x, pts[i].x));
+		bboxmax.y = min(clamp.y, max(bboxmax.y, pts[i].y));
+	}
+
+	auto colori = rgbaFloatToInt(color);
+	int2 P{0, 0};
+
+	__syncthreads();
+	for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
+		for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
+			auto bc_screen  = barycentric(pts, P);
+			if (bc_screen.x>=0 && bc_screen.y>=0 && bc_screen.z>=0)
+				image.set(P.x, P.y, colori);
 		}
 	}
 }
@@ -146,19 +199,20 @@ __global__ void draw_faces(Image image, ModelRef model) {
 	auto face = model.faces[position];
 	int2 screen_coords[3];
 	float3 world_coords[3];
+	float3 light_dir{0.0, 0.0, -1.0};
 	int face_idx[3] = {face.x, face.y, face.z};
 	for (int j = 0; j < 3; j++)
 	{
-		float3 v0 = model.vertices[face_idx[j]];
-		float3 v1 = model.vertices[face_idx[(j + 1) % 3]];
-		int x0 = (v0.x + 1.0f) * image.width / 2.0f;
-		int y0 = (v0.y + 1.0f) * image.height / 2.0f;
-		int x1 = (v1.x + 1.0f) * image.width / 2.0f;
-		int y1 = (v1.y + 1.0f) * image.height / 2.0f;
-		line(image, x0, y0, x1, y1);
-		// printf("Line (%d %d) (%d %d)\n", x0, y0, x1, y1);
-		__syncthreads();
+		float3 v = model.vertices[face_idx[j]];
+		screen_coords[j] = int2{int((v.x + 1.0) * image.width / 2.0), int((v.y + 1.0) * image.height / 2.0)};
+		world_coords[j] = v;
 	}
+
+	float3 n = cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
+	n = normalize(n);
+	float intensity = dot(n, light_dir);
+	if (intensity > 0)
+		triangle(screen_coords, image, float4{1.0f, 1.0f, 1.0f, 1.0f} * intensity);
 }
 
 
@@ -166,12 +220,13 @@ double main_cuda_launch(Image &image, StopWatchInterface *timer) {
 	auto mp = ModelPoolCreator().get();
 	ModelRef ref = mp->get("obj/african_head.myobj");
 
-
 	// var for kernel computation timing
+	// sync host and start kernel computation timer
 	double dKernelTime;
 	// sync host and start kernel computation timer
 	dKernelTime = 0.0;
 	checkCudaErrors(cudaDeviceSynchronize());
+	clock_t begin = clock();
 	sdkResetTimer(&timer);
 
 	int n_grid = ref.n_faces / 32 + 1;
@@ -180,6 +235,10 @@ double main_cuda_launch(Image &image, StopWatchInterface *timer) {
 
 	// sync host and stop computation timer
 	checkCudaErrors(cudaDeviceSynchronize());
+	clock_t end = clock();
+	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+
+	printf("%f ms\n", elapsed_secs * 1000);
 	dKernelTime = sdkGetTimerValue(&timer);
 
 	return dKernelTime / 1000.;

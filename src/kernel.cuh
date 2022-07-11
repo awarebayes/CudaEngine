@@ -18,6 +18,12 @@ struct Image {
 		if (y < 0 or y >= height) return;
 		pixels[y * width + x] = value;
 	}
+
+	__device__ void add(int x, int y, uint value) const {
+		if (x < 0 or x >= width) return;
+		if (y < 0 or y >= height) return;
+		pixels[y * width + x] += value;
+	}
 };
 
 
