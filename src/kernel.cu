@@ -181,9 +181,6 @@ __device__ static float atomicMax(float* address, float val)
 }
 
 __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
-
-
-
 	float2 bboxmin{float(image.width-1),  float(image.height-1)};
 	float2 bboxmax{0., 0.};
 	float2 clamp{float(image.width-1), float(image.height-1)};
@@ -212,25 +209,28 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 }
 
 
-__device__ void triangle(ModelRef &model, int index[3], Image &image, float4 color) {
+__device__ void triangle(ModelRef &model, const int index[3], Image &image, float4 color) {
+	float3 light_dir{0.0, 0.0, -1.0};
 	float3 pts[3];
+	float3 normals[3];
 	for (int i = 0; i < 3; i++)
 	{
 		float3 v = model.vertices[index[i]];
+		normals[i] = model.normals[index[i]];
 		pts[i] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
 	}
+
 	float2 bboxmin{float(image.width-1),  float(image.height-1)};
 	float2 bboxmax{0., 0.};
 	float2 clamp{float(image.width-1), float(image.height-1)};
-	for (int i=0; i<3; i++) {
-		bboxmin.x = max(0.0f, min(bboxmin.x, pts[i].x));
-		bboxmin.y = max(0.0f, min(bboxmin.y, pts[i].y));
+	for (auto &pt : pts) {
+		bboxmin.x = max(0.0f, min(bboxmin.x, pt.x));
+		bboxmin.y = max(0.0f, min(bboxmin.y, pt.y));
 
-		bboxmax.x = min(clamp.x, max(bboxmax.x, pts[i].x));
-		bboxmax.y = min(clamp.y, max(bboxmax.y, pts[i].y));
+		bboxmax.x = min(clamp.x, max(bboxmax.x, pt.x));
+		bboxmax.y = min(clamp.y, max(bboxmax.y, pt.y));
 	}
 
-	auto colori = rgbaFloatToInt(color);
 	float3 P{0, 0, 0};
 
 	for (P.x=floor(bboxmin.x); P.x <= bboxmax.x; P.x++) {
@@ -240,8 +240,17 @@ __device__ void triangle(ModelRef &model, int index[3], Image &image, float4 col
 			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
 				continue;
 			P.z = 0;
-			for (int i = 0; i < 3; i++)P.z += pts[i].z * bc_screen_idx[i];
+			float3 N{};
+
+			for (int i = 0; i < 3; i++)
+			{
+				P.z += pts[i].z * bc_screen_idx[i];
+				N += normals[i] * bc_screen_idx[i];
+			}
 			if (image.zbuffer[int(P.x + P.y* image.width)] == P.z) {
+				float4 colorf = color * dot(light_dir, N);
+				colorf.w = 1.0f;
+				auto colori = rgbaFloatToInt(colorf);
 				image.set((int)P.x, (int)P.y, colori);
 			}
 		}
@@ -290,7 +299,7 @@ __global__ void draw_faces(Image image, ModelRef model) {
 	n = normalize(n);
 	float intensity = dot(n, light_dir);
 	if (intensity > 0)
-		triangle(model, vertex_idx, image,  float4{1.0f, 1.0f, 1.0f, 1.0f} * intensity);
+		triangle(model, vertex_idx, image,  float4{1.0f, 1.0f, 1.0f, 1.0f});
 }
 
 double main_cuda_launch(Image &image, StopWatchInterface *timer) {
