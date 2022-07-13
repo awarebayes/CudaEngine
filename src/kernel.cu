@@ -181,6 +181,9 @@ __device__ static float atomicMax(float* address, float val)
 }
 
 __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
+
+
+
 	float2 bboxmin{float(image.width-1),  float(image.height-1)};
 	float2 bboxmax{0., 0.};
 	float2 clamp{float(image.width-1), float(image.height-1)};
@@ -209,7 +212,15 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 }
 
 
-__device__ void triangle(float3 pts[3], Image &image, float4 color) {
+__device__ void triangle(ModelRef &model, int position, Image &image, float4 color) {
+	auto face = model.faces[position];
+	float3 pts[3];
+	int face_idx[3] = {face.x, face.y, face.z};
+	for (int i = 0; i < 3; i++)
+	{
+		float3 v = model.vertices[face_idx[i]];
+		pts[i] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
+	}
 	float2 bboxmin{float(image.width-1),  float(image.height-1)};
 	float2 bboxmax{0., 0.};
 	float2 clamp{float(image.width-1), float(image.height-1)};
@@ -268,14 +279,12 @@ __global__ void draw_faces(Image image, ModelRef model) {
 	if (position >= model.n_faces)
 		return;
 	auto face = model.faces[position];
-	float3 screen_coords[3];
 	float3 world_coords[3];
 	float3 light_dir{0.0, 0.0, -1.0};
 	int face_idx[3] = {face.x, face.y, face.z};
 	for (int j = 0; j < 3; j++)
 	{
 		float3 v = model.vertices[face_idx[j]];
-		screen_coords[j] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
 		world_coords[j] = v;
 	}
 
@@ -283,13 +292,13 @@ __global__ void draw_faces(Image image, ModelRef model) {
 	n = normalize(n);
 	float intensity = dot(n, light_dir);
 	if (intensity > 0)
-		triangle(screen_coords, image,  float4{1.0f, 1.0f, 1.0f, 1.0f} * intensity);
+		triangle(model, position, image,  float4{1.0f, 1.0f, 1.0f, 1.0f} * intensity);
 }
 
 double main_cuda_launch(Image &image, StopWatchInterface *timer) {
 	auto streams = SingletonCreator<StreamManager>().get();
 	auto mp = ModelPoolCreator().get();
-	ModelRef ref = mp->get("obj/african_head.myobj");
+	ModelRef ref = mp->get("obj/african_head.obj");
 
 	// var for kernel computation timing
 	// sync host and start kernel computation timer
