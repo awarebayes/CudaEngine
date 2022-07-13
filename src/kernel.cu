@@ -212,13 +212,11 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 }
 
 
-__device__ void triangle(ModelRef &model, int position, Image &image, float4 color) {
-	auto face = model.faces[position];
+__device__ void triangle(ModelRef &model, int index[3], Image &image, float4 color) {
 	float3 pts[3];
-	int face_idx[3] = {face.x, face.y, face.z};
 	for (int i = 0; i < 3; i++)
 	{
-		float3 v = model.vertices[face_idx[i]];
+		float3 v = model.vertices[index[i]];
 		pts[i] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
 	}
 	float2 bboxmin{float(image.width-1),  float(image.height-1)};
@@ -281,10 +279,10 @@ __global__ void draw_faces(Image image, ModelRef model) {
 	auto face = model.faces[position];
 	float3 world_coords[3];
 	float3 light_dir{0.0, 0.0, -1.0};
-	int face_idx[3] = {face.x, face.y, face.z};
+	int vertex_idx[3] = {face.x, face.y, face.z};
 	for (int j = 0; j < 3; j++)
 	{
-		float3 v = model.vertices[face_idx[j]];
+		float3 v = model.vertices[vertex_idx[j]];
 		world_coords[j] = v;
 	}
 
@@ -292,7 +290,7 @@ __global__ void draw_faces(Image image, ModelRef model) {
 	n = normalize(n);
 	float intensity = dot(n, light_dir);
 	if (intensity > 0)
-		triangle(model, position, image,  float4{1.0f, 1.0f, 1.0f, 1.0f} * intensity);
+		triangle(model, vertex_idx, image,  float4{1.0f, 1.0f, 1.0f, 1.0f} * intensity);
 }
 
 double main_cuda_launch(Image &image, StopWatchInterface *timer) {
