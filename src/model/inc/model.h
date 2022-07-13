@@ -13,6 +13,8 @@
 struct ModelRef
 {
 	float3 *vertices{};
+	float3 *normals{};
+	float2 *textures{};
 	int3 *faces{};
 	int n_vertices = 0;
 	int n_faces = 0;
@@ -20,7 +22,9 @@ struct ModelRef
 
 struct Model {
 	float3 *vertices;
-	int3 *faces;
+	float3 *normals{};
+	float2 *textures{};
+	int3 *faces{};
 	int n_vertices = 0;
 	int n_faces = 0;
 	explicit Model(const std::string &filename);

@@ -17,7 +17,7 @@ add_executable(course_renderer
         src/model/src/model.cpp
         src/model/src/pool.cpp
         src/util/stream_manager.cpp src/util/singleton.h
-        )
+        src/util/tiny_objloader.h src/util/tiny_objloader.cpp)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES
