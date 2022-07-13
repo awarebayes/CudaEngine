@@ -116,5 +116,8 @@ Model::~Model() {
 	checkCudaErrors(cudaFree(textures));
 }
 ModelRef Model::get_ref() const {
-	return ModelRef{ vertices, normals, textures, faces, n_vertices, n_faces };
+	return ModelRef{ vertices, normals, textures, faces, texture.get_ref(), n_vertices, n_faces };
+}
+void Model::load_texture(const std::string &filename) {
+	texture = Texture(filename);
 }

@@ -5,8 +5,8 @@
 #ifndef COURSE_RENDERER_KERNEL_CUH
 #define COURSE_RENDERER_KERNEL_CUH
 
-#include "model/inc/model.h"
-#include <helper_functions.h>
+#include "../../../Common/helper_functions.h"
+#include "../../model/inc/model.h"
 
 struct Image {
 	uint *pixels;

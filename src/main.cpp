@@ -41,7 +41,7 @@
 // Shared Library Test Functions
 #include <helper_functions.h>// CUDA SDK Helper functions
 
-#include "kernel.cuh"
+#include "kernels/inc/kernel.cuh"
 
 const static char *sSDKsample = "CUDA Bilateral Filter";
 

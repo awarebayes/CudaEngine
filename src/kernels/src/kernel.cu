@@ -25,14 +25,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "kernel.cuh"
-#include "model/inc/model.h"
-#include "model/inc/pool.h"
-#include "util/stream_manager.h"
+#include "../../model/inc/model.h"
+#include "../../model/inc/pool.h"
+#include "../../util/stream_manager.h"
+#include "../inc/kernel.cuh"
+#include <bit>
 #include <ctime>
 #include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
+#include <thrust/fill.h>
 
 
 // Euclidean Distance (x, y, d) = exp((|x - y| / d)^2 / 2)
@@ -192,15 +194,15 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 		bboxmax.y = min(clamp.y, max(bboxmax.y, pts[i].y));
 	}
 
-	float3 P{0, 0, 0};
 
+	float3 P{0, 0, 0};
 	for (P.x=floor(bboxmin.x); P.x<=bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y<=bboxmax.y; P.y++) {
+			P.z = 0;
 			auto bc_screen  = barycentric(pts, P);
 			float bc_screen_idx[3] = {bc_screen.x, bc_screen.y, bc_screen.z};
 			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
 				continue;
-			P.z = 0;
 			for (int i = 0; i < 3; i++)
 				P.z += pts[i].z * bc_screen_idx[i];
 			atomicMax(&image.zbuffer[int(P.x + P.y * image.width)], P.z);
@@ -264,7 +266,7 @@ __global__ void fill_zbuffer(Image image, ModelRef model) {
 	auto face = model.faces[position];
 	float3 screen_coords[3];
 	float3 world_coords[3];
-	float3 light_dir{0.0, 0.0, -1.0};
+	float3 look_dir{0.0, 0.0, -1.0};
 	int face_idx[3] = {face.x, face.y, face.z};
 	for (int j = 0; j < 3; j++)
 	{
@@ -275,7 +277,7 @@ __global__ void fill_zbuffer(Image image, ModelRef model) {
 
 	float3 n = cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
 	n = normalize(n);
-	float intensity = dot(n, light_dir);
+	float intensity = dot(n, look_dir);
 	if (intensity > 0)
 		triangle_zbuffer(screen_coords, image);
 }
@@ -324,10 +326,8 @@ double main_cuda_launch(Image &image, StopWatchInterface *timer) {
 	fill_zbuffer<<<n_grid, n_block, 0, streams->render>>>(image, ref);
 	draw_faces<<<n_grid, n_block, 0, streams->render>>>(image, ref);
 
-	// sync host and stop computation timer
-
 	checkCudaErrors(cudaStreamSynchronize(streams->render));
-	checkCudaErrors(cudaMemsetAsync(image.zbuffer, 0.0f, image.width * image.height * sizeof(float), streams->zreset));
+	thrust::fill(thrust::device, image.zbuffer, image.zbuffer + image.width * image.height, -FLT_MAX);
 	clock_t end = clock();
 	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 

@@ -11,18 +11,26 @@ include_directories(${GLUT_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
 find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 
+find_package( OpenCV REQUIRED )
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+
 add_executable(course_renderer
-        src/kernel.cu
+        src/kernels/src/kernel.cu
         src/main.cpp
         src/model/src/model.cpp
         src/model/src/pool.cpp
         src/util/stream_manager.cpp src/util/singleton.h
-        src/util/tiny_objloader.h src/util/tiny_objloader.cpp)
+        src/util/tiny_objloader.h src/util/tiny_objloader.cpp src/model/inc/texture.cuh src/model/src/texture.cu src/util/stb_image.h src/util/stb_image.cpp src/kernels/inc/util.cuh src/kernels/src/util.cu)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
         )
 
-target_link_libraries(course_renderer ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+set(CMAKE_CXX_COMPILE_FEATURES cxx_constexpr)
+target_link_libraries(${CMAKE_PROJECT_NAME})
+target_link_libraries(${CMAKE_PROJECT_NAME}  ${OPENGL_LIBRARIES})
+target_link_libraries(${CMAKE_PROJECT_NAME}  ${GLUT_LIBRARY})
 target_link_libraries(${CMAKE_PROJECT_NAME} ${CUDA_LIBRARIES} -lcuda -L/usr/local/lib64)
+
