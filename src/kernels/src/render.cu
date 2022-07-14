@@ -28,76 +28,18 @@
 #include "../../model/inc/model.h"
 #include "../../model/inc/pool.h"
 #include "../../util/stream_manager.h"
-#include "../inc/kernel.cuh"
-#include <bit>
+#include "../inc/render.cuh"
+#include "../inc/matrix.cuh"
+#include "../inc/util.cuh"
 #include <ctime>
 #include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
 #include <thrust/fill.h>
 
+__device__ __constant__ mat<4,4> viewport_matrix{};
+__device__ __constant__ mat<4,4> projection_matrix{};
 
-// Euclidean Distance (x, y, d) = exp((|x - y| / d)^2 / 2)
-__device__ float euclideanLen(float4 a, float4 b, float d) {
-	float mod = (b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y) +
-	            (b.z - a.z) * (b.z - a.z);
-
-	return __expf(-mod / (2.f * d * d));
-}
-
-__device__ uint rgbaFloatToInt(float4 rgba) {
-	rgba.x = __saturatef(fabs(rgba.x));// clamp to [0.0, 1.0]
-	rgba.y = __saturatef(fabs(rgba.y));
-	rgba.z = __saturatef(fabs(rgba.z));
-	rgba.w = __saturatef(fabs(rgba.w));
-	return (uint(rgba.w * 255.0f) << 24) | (uint(rgba.z * 255.0f) << 16) |
-	       (uint(rgba.y * 255.0f) << 8) | uint(rgba.x * 255.0f);
-}
-
-__device__ float4 rgbaIntToFloat(uint c) {
-	float4 rgba;
-	rgba.x = (c & 0xff) * 0.003921568627f;        //  /255.0f;
-	rgba.y = ((c >> 8) & 0xff) * 0.003921568627f; //  /255.0f;
-	rgba.z = ((c >> 16) & 0xff) * 0.003921568627f;//  /255.0f;
-	rgba.w = ((c >> 24) & 0xff) * 0.003921568627f;//  /255.0f;
-	return rgba;
-}
-
-__device__ float4 viewport;
-
-__global__ void d_parametric_circle(Image image, int x_0, int y_0, int radius, int total_pixels) {
-	int position = blockIdx.x * blockDim.x + threadIdx.x;
-	if (position >= total_pixels)
-		return;
-
-	float percent = (float) position / (float) total_pixels;
-	float rad = M_PI * 2.0f * percent;
-	int x = int((float) x_0 + cos(rad) * (float) radius);
-	int y = int((float) y_0 + sin(rad) * (float) radius);
-
-	if (x >= image.width or x < 0)
-		return;
-	if (y >= image.height or y < 0)
-		return;
-
-	auto &target_pixel = image.pixels[y * image.width + x];
-	target_pixel = rgbaFloatToInt(float4{1.0f, 1.0f, 1.0f, 1.0f});
-}
-
-void parametricCircle(Image &image, int x_0, int y_0, int radius) {
-	int circumference = ceil((float) radius * 2.0f * M_PI);
-	int n_grid = circumference / 32 + 1;
-	int n_block = 32;
-	d_parametric_circle<<<n_grid, n_block>>>(image, x_0, y_0, radius, circumference);
-}
-
-template<typename T>
-__device__ void swap(T &x, T &y)
-{
-	T temp = x;
-	x = y;
-	y = temp;
-}
 
 __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 	bool steep = false;
@@ -169,17 +111,6 @@ __device__ float3 barycentric(float3 *pts, Tp P) {
 	        };
 }
 
-__device__ static float atomicMax(float* address, float val)
-{
-	int* address_as_i = (int*) address;
-	int old = *address_as_i, assumed;
-	do {
-		assumed = old;
-		old = ::atomicCAS(address_as_i, assumed,
-		                  __float_as_int(::fmaxf(val, __int_as_float(assumed))));
-	} while (assumed != old);
-	return __int_as_float(old);
-}
 
 __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 	float2 bboxmin{float(image.width-1),  float(image.height-1)};
@@ -210,8 +141,9 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 }
 
 
-__device__ void triangle(ModelRef &model, const int index[3], Image &image) {
-	float3 light_dir{0.0, 0.0, -1.0};
+__device__ void triangle(DrawCallArgs &args, const int index[3], Image &image) {
+	auto &model = args.model;
+	auto &light_dir = args.light_dir;
 	float3 pts[3];
 	float3 normals[3];
 	float2 textures[3];
@@ -269,8 +201,12 @@ __device__ void triangle(ModelRef &model, const int index[3], Image &image) {
 	}
 }
 
-__global__ void fill_zbuffer(Image image, ModelRef model) {
+__global__ void fill_zbuffer(DrawCallArgs args) {
+
+	auto &model = args.model;
+	auto &image = args.image;
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
+
 	if (position >= model.n_faces)
 		return;
 	auto face = model.faces[position];
@@ -293,13 +229,16 @@ __global__ void fill_zbuffer(Image image, ModelRef model) {
 }
 
 
-__global__ void draw_faces(Image image, ModelRef model) {
+__global__ void draw_faces(DrawCallArgs args) {
+	auto &model = args.model;
+	auto &image = args.image;
+
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	if (position >= model.n_faces)
 		return;
 	auto face = model.faces[position];
 	float3 world_coords[3];
-	float3 light_dir{0.0, 0.0, -1.0};
+	auto &look_dir = args.look_dir;
 	int vertex_idx[3] = {face.x, face.y, face.z};
 	for (int j = 0; j < 3; j++)
 	{
@@ -309,15 +248,14 @@ __global__ void draw_faces(Image image, ModelRef model) {
 
 	float3 n = cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
 	n = normalize(n);
-	float intensity = dot(n, light_dir);
+	float intensity = dot(n, look_dir);
 	if (intensity > 0)
-		triangle(model, vertex_idx, image);
+		triangle(args, vertex_idx, image);
 }
 
-double main_cuda_launch(Image &image, StopWatchInterface *timer) {
+
+double main_cuda_launch(const DrawCallArgs &args, StopWatchInterface *timer) {
 	auto streams = SingletonCreator<StreamManager>().get();
-	auto mp = ModelPoolCreator().get();
-	ModelRef ref = mp->get("obj/african_head.obj");
 
 	// var for kernel computation timing
 	// sync host and start kernel computation timer
@@ -330,11 +268,13 @@ double main_cuda_launch(Image &image, StopWatchInterface *timer) {
 
 	streams->prepare_to_render();
 
-	int n_grid = ref.n_faces / 32 + 1;
+	auto &model = args.model;
+	auto &image = args.image;
+	int n_grid = model.n_faces / 32 + 1;
 	int n_block = 32;
 
-	fill_zbuffer<<<n_grid, n_block, 0, streams->render>>>(image, ref);
-	draw_faces<<<n_grid, n_block, 0, streams->render>>>(image, ref);
+	fill_zbuffer<<<n_grid, n_block, 0, streams->render>>>(args);
+	draw_faces<<<n_grid, n_block, 0, streams->render>>>(args);
 
 	checkCudaErrors(cudaStreamSynchronize(streams->render));
 	thrust::fill(thrust::device, image.zbuffer, image.zbuffer + image.width * image.height, -FLT_MAX);

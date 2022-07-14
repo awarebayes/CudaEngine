@@ -16,12 +16,17 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 
 add_executable(course_renderer
-        src/kernels/src/kernel.cu
+        src/kernels/src/render.cu
         src/main.cpp
         src/model/src/model.cpp
         src/model/src/pool.cpp
-        src/util/stream_manager.cpp src/util/singleton.h
-        src/util/tiny_objloader.h src/util/tiny_objloader.cpp src/model/inc/texture.cuh src/model/src/texture.cu src/util/stb_image.h src/util/stb_image.cpp src/kernels/inc/util.cuh src/kernels/src/util.cu src/kernels/inc/matrix.cuh src/kernels/src/matrix.cu)
+        src/util/stream_manager.cpp
+        src/util/tiny_objloader.cpp
+        src/model/src/texture.cu
+        src/util/stb_image.cpp
+        src/kernels/src/util.cu
+        src/kernels/src/matrix.cu
+        )
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

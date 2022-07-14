@@ -45,8 +45,6 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 
 	bool has_textures = false;
 
-
-
 	size_t index_offset = 0;
 	for (unsigned char num_face_vertice : shapes[0].mesh.num_face_vertices) {
 		auto fv = size_t(num_face_vertice);

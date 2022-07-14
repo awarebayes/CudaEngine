@@ -41,7 +41,7 @@
 // Shared Library Test Functions
 #include <helper_functions.h>// CUDA SDK Helper functions
 
-#include "kernels/inc/kernel.cuh"
+#include "kernels/inc/render.cuh"
 #include "model/inc/pool.h"
 
 const static char *sSDKsample = "CUDA Bilateral Filter";
@@ -162,8 +162,12 @@ void display() {
 	        (void **) &dResult, &num_bytes, cuda_pbo_resource));
 
 	auto img = Image{dResult, zBuffer, (int)width, (int)height};
+	auto mp = ModelPoolCreator().get();
+	ModelRef ref = mp->get("obj/african_head.obj");
 
-	main_cuda_launch(img, kernel_timer);
+	DrawCallArgs args = {.image=img, .model=ref, .light_dir = {0.0, 0.0, -1.0}, .camera_pos={0.0, 0.0, -3.0}, .look_dir={0.0, 0.0, -1.0}};
+
+	main_cuda_launch(args, kernel_timer);
 
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
 
