@@ -26,7 +26,7 @@ struct Texture
 
 	Texture() = default;
 	explicit Texture(const std::string &filename);
-	~Texture();
+	void free() const;
 
 	[[nodiscard]] TextureRef get_ref() const;
 };

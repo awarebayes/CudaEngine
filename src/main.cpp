@@ -42,6 +42,7 @@
 #include <helper_functions.h>// CUDA SDK Helper functions
 
 #include "kernels/inc/kernel.cuh"
+#include "model/inc/pool.h"
 
 const static char *sSDKsample = "CUDA Bilateral Filter";
 
@@ -285,6 +286,10 @@ void initGL(int argc, char **argv) {
 		printf("  GL_ARB_pixel_buffer_object\n");
 		exit(EXIT_FAILURE);
 	}
+
+	auto mp = ModelPoolCreator().get();
+	auto model = mp->get_mut("obj/african_head.obj");
+	model->load_texture("obj/african_head_diffuse.tga");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

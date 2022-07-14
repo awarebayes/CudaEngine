@@ -13,9 +13,6 @@
 
 Model::Model(const std::string &filename) : vertices(), faces() {
 
-	// temp("obj/cube.myobj");
-
-
 	tinyobj::ObjReaderConfig reader_config;
 	reader_config.mtl_search_path = "./";
 	tinyobj::ObjReader reader;

@@ -63,6 +63,8 @@ __device__ float4 rgbaIntToFloat(uint c) {
 	return rgba;
 }
 
+__device__ float4 viewport;
+
 __global__ void d_parametric_circle(Image image, int x_0, int y_0, int radius, int total_pixels) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	if (position >= total_pixels)
@@ -120,9 +122,6 @@ __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 		image.set(x_draw, y_draw, color);
 	}
 }
-
-
-
 
 __device__ void triangle_old(int2 ts[3], Image &image, float4 color) {
 	auto t0 = ts[0];
@@ -211,16 +210,20 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 }
 
 
-__device__ void triangle(ModelRef &model, const int index[3], Image &image, float4 color) {
+__device__ void triangle(ModelRef &model, const int index[3], Image &image) {
 	float3 light_dir{0.0, 0.0, -1.0};
 	float3 pts[3];
 	float3 normals[3];
+	float2 textures[3];
 	for (int i = 0; i < 3; i++)
 	{
 		float3 v = model.vertices[index[i]];
 		normals[i] = model.normals[index[i]];
+		textures[i] = model.textures[index[i]];
 		pts[i] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
 	}
+
+	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
 
 	float2 bboxmin{float(image.width-1),  float(image.height-1)};
 	float2 bboxmax{0., 0.};
@@ -241,15 +244,22 @@ __device__ void triangle(ModelRef &model, const int index[3], Image &image, floa
 			float bc_screen_idx[3] = {bc_screen.x, bc_screen.y, bc_screen.z};
 			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
 				continue;
-			P.z = 0;
-			float3 N{};
 
+			P.z = 0;
 			for (int i = 0; i < 3; i++)
-			{
 				P.z += pts[i].z * bc_screen_idx[i];
-				N += normals[i] * bc_screen_idx[i];
-			}
+
 			if (image.zbuffer[int(P.x + P.y* image.width)] == P.z) {
+				float3 N{};
+				float2 T{};
+				for (int i = 0; i < 3; i++)
+				{
+					N += normals[i] * bc_screen_idx[i];
+					T += textures[i] * bc_screen_idx[i];
+				}
+				uchar3 color_u = model.texture.get_uv(T.x, T.y);
+				float4 color = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
+
 				float4 colorf = color * dot(light_dir, N);
 				colorf.w = 1.0f;
 				auto colori = rgbaFloatToInt(colorf);
@@ -301,7 +311,7 @@ __global__ void draw_faces(Image image, ModelRef model) {
 	n = normalize(n);
 	float intensity = dot(n, light_dir);
 	if (intensity > 0)
-		triangle(model, vertex_idx, image,  float4{1.0f, 1.0f, 1.0f, 1.0f});
+		triangle(model, vertex_idx, image);
 }
 
 double main_cuda_launch(Image &image, StopWatchInterface *timer) {

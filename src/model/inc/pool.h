@@ -18,6 +18,7 @@ public:
 	ModelPool() = default;
 	~ModelPool() = default;
 	ModelRef get(const std::string &path);
+	std::shared_ptr<Model> get_mut(const std::string &path);
 };
 
 using ModelPoolCreator = SingletonCreator<ModelPool>;
