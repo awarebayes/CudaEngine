@@ -91,8 +91,6 @@ __device__ void triangle(DrawCallArgs &args, int3 &index, Image &image) {
 
 	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
 
-	dbg_print(view_matrix);
-
 	for (int i = 0; i < 3; i++)
 	{
 		float3 v = model.vertices[at(index, i)];

@@ -41,6 +41,9 @@
 // Shared Library Test Functions
 #include <helper_functions.h>// CUDA SDK Helper functions
 
+#include "imgui.h"
+#include "imgui_impl_glut.h"
+#include "imgui_impl_opengl3.h"
 #include "kernels/inc/render.cuh"
 #include "model/inc/pool.h"
 
@@ -64,9 +67,9 @@ const int frameCheckNumber = 4;
 int fpsCount = 0;// FPS count for averaging
 int fpsLimit = 1;// FPS limit for sampling
 float *zBuffer = nullptr;
-unsigned int g_TotalErrors = 0;
-bool g_bInteractive = false;
 const int REFRESH_DELAY = 10;
+
+
 
 #define GL_TEXTURE_TYPE GL_TEXTURE_2D
 
@@ -298,6 +301,14 @@ void initGL(int argc, char **argv) {
 		printf("  GL_ARB_pixel_buffer_object\n");
 		exit(EXIT_FAILURE);
 	}
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO();
+	(void)io;
+	ImGui::StyleColorsLight();
+	assert(ImGui_ImplGLUT_Init());
+	assert(ImGui_ImplOpenGL3_Init("#version 330"));
 
 	auto mp = ModelPoolCreator().get();
 	auto model = mp->get_mut("obj/african_head.obj");

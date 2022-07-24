@@ -14,8 +14,17 @@ include_directories(${CUDA_INCLUDE_DIRS})
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
 
+include_directories(Common/imgui)
+
 
 add_executable(course_renderer
+        Common/imgui/imgui.cpp
+        Common/imgui/imgui_draw.cpp
+        Common/imgui/imgui_impl_opengl3.cpp
+        Common/imgui/imgui_impl_glut.cpp
+        Common/imgui/imgui_tables.cpp
+        Common/imgui/imgui_widgets.cpp
+
         src/main.cpp
         src/model/src/model.cpp
         src/model/src/pool.cpp
