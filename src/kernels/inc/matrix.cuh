@@ -64,9 +64,20 @@ __device__ __host__ mat<n,n>  identity_matrix()
 	return result;
 }
 
-__device__ __host__ float3 m2v(const mat<4,1> &m);
+__device__ __host__ __forceinline__ float3 m2v(const mat<4,1> &m)
+{
+	float w = m.at(3, 0);
+	return {
+			m.at(0, 0) / w,
+			m.at(1, 0) / w,
+			m.at(2, 0) / w
+	};
+}
 
-__device__ __host__ mat<4, 1> v2m(const float3 &v);
+__device__ __host__ __forceinline__ mat<4, 1> v2m(const float3 &v)
+{
+	return {v.x, v.y, v.z, 1.0f};
+}
 
 __device__ __host__ mat<4, 4> viewport(int x, int y, int w, int h, int depth);
 

@@ -4,20 +4,6 @@
 
 #include "../inc/matrix.cuh"
 
-__device__ __host__ float3 m2v(const mat<4,1> &m)
-{
-	float3 result{};
-	float w = m.at(3, 0);
-	result.x = m.at(0, 0) / w;
-	result.y = m.at(1, 0) / w;
-	result.z = m.at(2, 0) / w;
-	return result;
-}
-
-__device__ __host__ mat<4, 1> v2m(const float3 &v)
-{
-	return {v.x, v.y, v.z, 1.0f};
-}
 
 
 __device__ __host__ mat<4, 4> viewport(int x, int y, int w, int h, int depth)
