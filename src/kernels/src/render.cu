@@ -50,7 +50,7 @@ __device__ __forceinline__ float3 barycentric(float3 *pts, Tp P) {
 	                -1.0f * flag + (1.0f - flag) * (1.f-(u.x+u.y)/u.z),
 	                 1.0f * flag + (1.0f - flag) * (u.y/u.z),
 	                 1.0f * flag + (1.0f - flag) * (u.x/u.z)
-	        };
+	};
 }
 
 
@@ -90,6 +90,8 @@ __device__ void triangle(DrawCallArgs &args, int3 &index, Image &image) {
 	float2 textures[3];
 
 	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
+
+	dbg_print(view_matrix);
 
 	for (int i = 0; i < 3; i++)
 	{
@@ -135,7 +137,7 @@ __device__ void triangle(DrawCallArgs &args, int3 &index, Image &image) {
 				uchar3 color_u = model.texture.get_uv(T.x, T.y);
 				float4 color = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
 
-				float4 colorf = color * dot(light_dir, N);
+				float4 colorf = color; // * dot(light_dir, N);
 				colorf.w = 1.0f;
 				auto colori = rgbaFloatToInt(colorf);
 				image.set((int)P.x, (int)P.y, colori);
@@ -154,11 +156,14 @@ __global__ void fill_zbuffer(DrawCallArgs args) {
 	auto face = model.faces[position];
 	float3 screen_coords[3];
 	float3 world_coords[3];
-	float3 &look_dir = args.look_dir;
+	float3 look_dir = args.look_at - args.camera_pos;
+
+	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
+
 	for (int j = 0; j < 3; j++)
 	{
 		float3 v = model.vertices[at(face, j)];
-		screen_coords[j] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
+		screen_coords[j] = m2v(dot(transform_mat, v2m(v)));
 		world_coords[j] = v;
 	}
 
@@ -179,7 +184,7 @@ __global__ void draw_faces(DrawCallArgs args) {
 		return;
 	auto face = model.faces[position];
 	float3 world_coords[3];
-	auto &look_dir = args.look_dir;
+	auto look_dir = args.look_at - args.camera_pos;
 	for (int j = 0; j < 3; j++)
 	{
 		float3 v = model.vertices[at(face, j)];
@@ -215,6 +220,13 @@ void update_device_parameters(const DrawCallArgs &args)
 	        &Projection,
 	        sizeof(mat<4,4>)
 	        );
+
+	mat<4,4> View = lookat(args.camera_pos, args.look_at, {0, 1, 0});
+	cudaMemcpyToSymbol(
+        view_matrix,
+        &View,
+        sizeof(mat<4,4>)
+        );
 }
 
 double main_cuda_launch(const DrawCallArgs &args, StopWatchInterface *timer) {

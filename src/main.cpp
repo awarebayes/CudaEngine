@@ -168,9 +168,10 @@ void display() {
 	DrawCallArgs args = {
 	        .image=img,
 	        .model=ref,
+	        .model_matrix = identity_matrix<4>(),
 	        .light_dir={0.0, 0.0, -1.0},
-	        .camera_pos={0.0, 0.0, 3.0},
-	        .look_dir={0.0, 0.0, -1.0}
+	        .camera_pos={0.0, -1.0, 3.0},
+	        .look_at={0.0, 0.0, 0.0}
 	};
 
 	main_cuda_launch(args, kernel_timer);

@@ -34,7 +34,7 @@ struct DrawCallArgs {
 	mat<4, 4> model_matrix{};
 	float3 light_dir{};
 	float3 camera_pos{};
-	float3 look_dir{};
+	float3 look_at{};
 };
 
 void render_init(int width, int height);
