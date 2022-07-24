@@ -4,7 +4,7 @@
 
 #include "../inc/matrix.cuh"
 
-__device__ __host__ float3 m2v(const mat<4,4> &m)
+__device__ __host__ float3 m2v(const mat<4,1> &m)
 {
 	float3 result{};
 	float w = m.at(3, 0);
@@ -30,6 +30,22 @@ __device__ __host__ mat<4, 4> viewport(int x, int y, int w, int h, int depth)
 	result.at(1, 3) = (float)y + (float)h / 2.0f;
 	result.at(2, 3) = (float)depth / 2.0f;
 	return result;
+}
+
+
+__device__ __host__ void dbg_print(const mat<4, 1> &mat)
+{
+                printf(
+	                    "DBG PRINT\n"
+                        "%f\n"
+                        "%f\n"
+                        "%f\n"
+                        "%f\n\n",
+	                    mat.at(0, 0),
+	                    mat.at(0, 1),
+	                    mat.at(0, 2),
+	                    mat.at(0, 3)
+                );
 }
 
 __device__ __host__ void dbg_print(const mat<4, 4> &mat)

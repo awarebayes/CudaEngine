@@ -11,14 +11,15 @@ struct mat{
         float data[n*m] = {0, };
 	    const int rows = n;
 	    const int cols = m;
-	    __host__ __device__ __forceinline__ float &at(int i, int j) { return data[i * n + j]; };
-		[[nodiscard]] __host__ __device__ __forceinline__ float at(int i, int j) const { return data[i * n + j]; };
+	    __host__ __device__ __forceinline__ float &at(int i, int j) { return data[i * m + j]; };
+		[[nodiscard]] __host__ __device__ __forceinline__ float at(int i, int j) const { return data[i * m + j]; };
 };
 
 
 template<int n, int m, int l>
-__device__ __host__ __forceinline__ mat<n, l> dot(const mat<n, m> &self, const mat<m, l> &other){
-	mat<n, l> result{};
+__device__ __host__ __forceinline__
+mat<n, l> dot(const mat<n, m> &self, const mat<m, l> &other){
+	mat<n, l> result{0, };
 	for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < l; ++j) {
 			for (int k = 0; k < m; ++k) {
@@ -26,6 +27,7 @@ __device__ __host__ __forceinline__ mat<n, l> dot(const mat<n, m> &self, const m
 			}
 		}
 	}
+	return result;
 }
 
 
@@ -36,6 +38,7 @@ __device__ __host__ __forceinline__ mat<m, n> transpose(const mat<n, m> &self)
 	for (int i = 0; i < n; ++i)
 		for (int j = 0; j < m; ++j)
 			result.at(j, i) = self.at(i, j);
+	return result;
 }
 
 __device__ __host__ __forceinline__ mat<3, 3> inverse(mat<3, 3> &self)
@@ -49,6 +52,7 @@ __device__ __host__ __forceinline__ mat<3, 3> inverse(mat<3, 3> &self)
 		for(int j=0;j<3;j++)
 			result.at(i, j) = ((self.at((i+1)%3, (j+1)%3) * self.at((i+2)%3, (j+2)%3)) -
 			                   (self.at((i+1)%3, (j+2)%3)*self.at((i+2)%3, (j+1)%3)) / determinant);
+	return result;
 }
 
 template<int n>
@@ -67,5 +71,6 @@ __device__ __host__ mat<4, 1> v2m(const float3 &v);
 __device__ __host__ mat<4, 4> viewport(int x, int y, int w, int h, int depth);
 
 __device__ __host__ void dbg_print(const mat<4, 4> &mat);
+__device__ __host__ void dbg_print(const mat<4, 1> &mat);
 
 #endif//COURSE_RENDERER_MATRIX_CUH

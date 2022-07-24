@@ -1,30 +1,3 @@
-/* Copyright (c) 2022, NVIDIA CORPORATION. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *  * Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *  * Neither the name of NVIDIA CORPORATION nor the names of its
- *    contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 #include "../../model/inc/model.h"
 #include "../../model/inc/pool.h"
 #include "../../util/stream_manager.h"
@@ -147,13 +120,13 @@ __device__ void triangle(DrawCallArgs &args, const int index[3], Image &image) {
 	float3 pts[3];
 	float3 normals[3];
 	float2 textures[3];
+
 	for (int i = 0; i < 3; i++)
 	{
 		float3 v = model.vertices[index[i]];
 		normals[i] = model.normals[index[i]];
 		textures[i] = model.textures[index[i]];
-		pts[i] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
-		// pts[i] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
+		pts[i] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
 	}
 
 	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
@@ -204,9 +177,13 @@ __device__ void triangle(DrawCallArgs &args, const int index[3], Image &image) {
 
 __global__ void fill_zbuffer(DrawCallArgs args) {
 
+
 	auto &model = args.model;
 	auto &image = args.image;
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
+
+	auto temp = m2v(dot(dot(viewport_matrix, projection_matrix), v2m({0.5, 0.5, 0.5})));
+	printf("RES: %f %f %f \n", temp.x, temp.y, temp.z);
 
 	if (position >= model.n_faces)
 		return;
@@ -218,8 +195,7 @@ __global__ void fill_zbuffer(DrawCallArgs args) {
 	for (int j = 0; j < 3; j++)
 	{
 		float3 v = model.vertices[face_idx[j]];
-		screen_coords[j] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
-		// screen_coords[j] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
+		screen_coords[j] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
 		world_coords[j] = v;
 	}
 
@@ -258,8 +234,6 @@ __global__ void draw_faces(DrawCallArgs args) {
 
 void render_init(int width, int height)
 {
-	width = 800;
-	height = 800; // fixme
 	int depth = 255;
 	mat<4,4> ViewPort = viewport(width/8, height/8, width*3/4, height*3/4, depth);
 	cudaMemcpyToSymbol(
