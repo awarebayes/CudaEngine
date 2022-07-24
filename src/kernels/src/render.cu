@@ -11,7 +11,7 @@
 #include <thrust/fill.h>
 
 __device__ __constant__ mat<4,4> viewport_matrix{};
-__device__ __constant__ mat<4,4> projection_matrix{};
+__device__ mat<4,4> projection_matrix{};
 
 
 __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
@@ -181,9 +181,6 @@ __global__ void fill_zbuffer(DrawCallArgs args) {
 	auto &model = args.model;
 	auto &image = args.image;
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
-
-	auto temp = m2v(dot(dot(viewport_matrix, projection_matrix), v2m({0.5, 0.5, 0.5})));
-	printf("RES: %f %f %f \n", temp.x, temp.y, temp.z);
 
 	if (position >= model.n_faces)
 		return;
