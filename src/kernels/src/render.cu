@@ -38,41 +38,9 @@ __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 	}
 }
 
-__device__ void triangle_old(int2 ts[3], Image &image, float4 color) {
-	auto t0 = ts[0];
-	auto t1 = ts[1];
-	auto t2 = ts[2];
-	if (t0.y==t1.y && t0.y==t2.y) return; // i dont care about degenerate triangles
-	if (t0.y>t1.y) swap(t0, t1);
-	if (t0.y>t2.y) swap(t0, t2);
-	if (t1.y>t2.y) swap(t1, t2);
-	int total_height = t2.y-t0.y;
-
-	auto t0f = float2{float(t0.x), float(t0.y)};
-	auto t1f = float2{float(t1.x), float(t1.y)};
-	auto t2f = float2{float(t2.x), float(t2.y)};
-	auto colori = rgbaFloatToInt(color);
-
-	__syncthreads();
-
-	for (int i=0; i<total_height; i++) {
-		bool second_half = i>t1.y-t0.y || t1.y==t0.y;
-		int segment_height = second_half ? t2.y-t1.y : t1.y-t0.y;
-		float alpha = (float)i/(float)total_height;
-		float beta  = (float)(i-(second_half ? t1.y-t0.y : 0))/(float)segment_height; // be careful: with above conditions no division by zero here
-		float2 A =               t0f + (t2f-t0f) * alpha;
-		float2 B = second_half ? t1f + (t2f-t1f)*beta : t0f + (t1f-t0f)*beta;
-		if (A.x>B.x) swap(A, B);
-		for (int j=int(A.x); j<=int(B.x); j++) {
-			image.set(j, t0.y+i, colori); // attention, due to int casts t0.y+i != A.y
-		}
-		__syncthreads();
-	}
-}
-
 
 template <typename Tp>
-__device__ float3 barycentric(float3 *pts, Tp P) {
+__device__ __forceinline__ float3 barycentric(float3 *pts, Tp P) {
 	auto a = float3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
 	auto b = float3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
 	auto u = cross(a, b);
@@ -97,7 +65,6 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 		bboxmax.y = min(clamp.y, max(bboxmax.y, pts[i].y));
 	}
 
-
 	float3 P{0, 0, 0};
 	for (P.x=floor(bboxmin.x); P.x<=bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y<=bboxmax.y; P.y++) {
@@ -114,19 +81,21 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 }
 
 
-__device__ void triangle(DrawCallArgs &args, const int index[3], Image &image) {
+__device__ void triangle(DrawCallArgs &args, int3 &index, Image &image) {
 	auto &model = args.model;
 	auto &light_dir = args.light_dir;
 	float3 pts[3];
 	float3 normals[3];
 	float2 textures[3];
 
+	// mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
+
 	for (int i = 0; i < 3; i++)
 	{
-		float3 v = model.vertices[index[i]];
-		normals[i] = model.normals[index[i]];
-		textures[i] = model.textures[index[i]];
-		pts[i] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
+		float3 v = model.vertices[at(index, i)];
+		normals[i] = model.normals[at(index, i)];
+		textures[i] = model.textures[at(index, i)];
+		pts[i] = m2v(dot(transform_mat, v2m(v)));
 	}
 
 	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
@@ -147,21 +116,20 @@ __device__ void triangle(DrawCallArgs &args, const int index[3], Image &image) {
 	for (P.x=floor(bboxmin.x); P.x <= bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y <= bboxmax.y; P.y++) {
 			auto bc_screen  = barycentric(pts, P);
-			float bc_screen_idx[3] = {bc_screen.x, bc_screen.y, bc_screen.z};
 			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
 				continue;
 
 			P.z = 0;
 			for (int i = 0; i < 3; i++)
-				P.z += pts[i].z * bc_screen_idx[i];
+				P.z += pts[i].z * at(bc_screen, i);
 
 			if (image.zbuffer[int(P.x + P.y* image.width)] == P.z) {
 				float3 N{};
 				float2 T{};
 				for (int i = 0; i < 3; i++)
 				{
-					N += normals[i] * bc_screen_idx[i];
-					T += textures[i] * bc_screen_idx[i];
+					N += normals[i] * at(bc_screen, i);
+					T += textures[i] * at(bc_screen, i);
 				}
 				uchar3 color_u = model.texture.get_uv(T.x, T.y);
 				float4 color = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
@@ -176,8 +144,6 @@ __device__ void triangle(DrawCallArgs &args, const int index[3], Image &image) {
 }
 
 __global__ void fill_zbuffer(DrawCallArgs args) {
-
-
 	auto &model = args.model;
 	auto &image = args.image;
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
@@ -187,11 +153,10 @@ __global__ void fill_zbuffer(DrawCallArgs args) {
 	auto face = model.faces[position];
 	float3 screen_coords[3];
 	float3 world_coords[3];
-	float3 look_dir{0.0, 0.0, -1.0};
-	int face_idx[3] = {face.x, face.y, face.z};
+	float3 &look_dir = args.look_dir;
 	for (int j = 0; j < 3; j++)
 	{
-		float3 v = model.vertices[face_idx[j]];
+		float3 v = model.vertices[at(face, j)];
 		screen_coords[j] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
 		world_coords[j] = v;
 	}
@@ -214,10 +179,9 @@ __global__ void draw_faces(DrawCallArgs args) {
 	auto face = model.faces[position];
 	float3 world_coords[3];
 	auto &look_dir = args.look_dir;
-	int vertex_idx[3] = {face.x, face.y, face.z};
 	for (int j = 0; j < 3; j++)
 	{
-		float3 v = model.vertices[vertex_idx[j]];
+		float3 v = model.vertices[at(face, j)];
 		world_coords[j] = v;
 	}
 
@@ -225,7 +189,7 @@ __global__ void draw_faces(DrawCallArgs args) {
 	n = normalize(n);
 	float intensity = dot(n, look_dir);
 	if (intensity > 0)
-		triangle(args, vertex_idx, image);
+		triangle(args, face, image);
 }
 
 

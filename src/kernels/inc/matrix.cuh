@@ -5,6 +5,7 @@
 #ifndef COURSE_RENDERER_MATRIX_CUH
 #define COURSE_RENDERER_MATRIX_CUH
 #include <cstdio>
+#include <cassert>
 
 template<int n, int m>
 struct mat{
@@ -79,9 +80,20 @@ __device__ __host__ __forceinline__ mat<4, 1> v2m(const float3 &v)
 	return {v.x, v.y, v.z, 1.0f};
 }
 
+template<typename T>
+__device__ __host__ __forceinline__ constexpr auto at(const T &self, int index)
+{
+	if (index == 0) return self.x;
+	else if (index == 1) return self.y;
+	else if (index == 2) return self.z;
+	else { assert(false); }
+}
+
 __device__ __host__ mat<4, 4> viewport(int x, int y, int w, int h, int depth);
 
 __device__ __host__ void dbg_print(const mat<4, 4> &mat);
 __device__ __host__ void dbg_print(const mat<4, 1> &mat);
+
+mat<4,4> lookat(float3 eye, float3 center, float3 up);
 
 #endif//COURSE_RENDERER_MATRIX_CUH
