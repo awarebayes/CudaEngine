@@ -23,6 +23,7 @@ add_executable(course_renderer
         Common/imgui/imgui_impl_opengl3.cpp
         Common/imgui/imgui_impl_glut.cpp
         Common/imgui/imgui_tables.cpp
+        Common/imgui/imgui_demo.cpp
         Common/imgui/imgui_widgets.cpp
 
         src/main.cpp

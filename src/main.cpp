@@ -182,36 +182,48 @@ void display() {
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
 
 	// Common display code path
+
+	ImGuiIO& io = ImGui::GetIO();
+	glViewport(0, 0, (GLsizei)io.DisplaySize.x, (GLsizei)io.DisplaySize.y);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGLUT_NewFrame();
+
+
+	// load texture from pbo
+	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, pbo);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA,
+	                GL_UNSIGNED_BYTE, 0);
+	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+
+	// fragment program is required to display floating point texture
+	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, shader);
+	glEnable(GL_FRAGMENT_PROGRAM_ARB);
+	glDisable(GL_DEPTH_TEST);
+	static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+
+	glBegin(GL_QUADS);
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		// load texture from pbo
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, pbo);
-		glBindTexture(GL_TEXTURE_2D, texid);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA,
-		                GL_UNSIGNED_BYTE, 0);
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
-
-		// fragment program is required to display floating point texture
-		glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, shader);
-		glEnable(GL_FRAGMENT_PROGRAM_ARB);
-		glDisable(GL_DEPTH_TEST);
-
-		glBegin(GL_QUADS);
-		{
-			glTexCoord2f(0, 0);
-			glVertex2f(0, 0);
-			glTexCoord2f(1, 0);
-			glVertex2f(1, 0);
-			glTexCoord2f(1, 1);
-			glVertex2f(1, 1);
-			glTexCoord2f(0, 1);
-			glVertex2f(0, 1);
-		}
-		glEnd();
-		glBindTexture(GL_TEXTURE_TYPE, 0);
-		glDisable(GL_FRAGMENT_PROGRAM_ARB);
+		glTexCoord2f(0, 0);
+		glVertex2f(-1, -1);
+		glTexCoord2f(1, 0);
+		glVertex2f(1, -1);
+		glTexCoord2f(1, 1);
+		glVertex2f(1, 1);
+		glTexCoord2f(0, 1);
+		glVertex2f(-1, 1);
 	}
+	glEnd();
+	glBindTexture(GL_TEXTURE_TYPE, 0);
+	glDisable(GL_FRAGMENT_PROGRAM_ARB);
+
+	ImGui::ShowDemoWindow();
+
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 	glutSwapBuffers();
 	glutReportErrors();
@@ -240,6 +252,10 @@ void cleanup() {
 	}
 
 	cudaGraphicsUnregisterResource(cuda_pbo_resource);
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGLUT_Shutdown();
+	ImGui::DestroyContext();
 
 	glDeleteBuffers(1, &pbo);
 	glDeleteTextures(1, &texid);
@@ -306,8 +322,15 @@ void initGL(int argc, char **argv) {
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
 	(void)io;
+
+	io.DisplaySize.x = width;
+	io.DisplaySize.y = height;
+
+
 	ImGui::StyleColorsLight();
 	assert(ImGui_ImplGLUT_Init());
+	ImGui_ImplGLUT_InstallFuncs();
+
 	assert(ImGui_ImplOpenGL3_Init("#version 330"));
 
 	auto mp = ModelPoolCreator().get();
