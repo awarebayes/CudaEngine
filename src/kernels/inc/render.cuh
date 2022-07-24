@@ -35,6 +35,7 @@ struct DrawCallArgs {
 	float3 look_dir{};
 };
 
+void render_init(int width, int height);
 
 double main_cuda_launch(
         const DrawCallArgs &args,

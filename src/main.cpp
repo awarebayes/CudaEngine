@@ -165,7 +165,13 @@ void display() {
 	auto mp = ModelPoolCreator().get();
 	ModelRef ref = mp->get("obj/african_head.obj");
 
-	DrawCallArgs args = {.image=img, .model=ref, .light_dir = {0.0, 0.0, -1.0}, .camera_pos={0.0, 0.0, -3.0}, .look_dir={0.0, 0.0, -1.0}};
+	DrawCallArgs args = {
+	        .image=img,
+	        .model=ref,
+	        .light_dir={0.0, 0.0, -1.0},
+	        .camera_pos={0.0, 0.0, 3.0},
+	        .look_dir={0.0, 0.0, -1.0}
+	};
 
 	main_cuda_launch(args, kernel_timer);
 
@@ -218,6 +224,7 @@ void initCuda() {
 	sdkCreateTimer(&kernel_timer);
 
 	cudaMalloc((void **)&zBuffer, sizeof(float) * width * height);
+	render_init(width, height);
 }
 
 void cleanup() {

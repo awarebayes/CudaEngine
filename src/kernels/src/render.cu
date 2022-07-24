@@ -153,6 +153,7 @@ __device__ void triangle(DrawCallArgs &args, const int index[3], Image &image) {
 		normals[i] = model.normals[index[i]];
 		textures[i] = model.textures[index[i]];
 		pts[i] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
+		// pts[i] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
 	}
 
 	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
@@ -218,6 +219,7 @@ __global__ void fill_zbuffer(DrawCallArgs args) {
 	{
 		float3 v = model.vertices[face_idx[j]];
 		screen_coords[j] = float3{float((v.x + 1.0) * image.width / 2.0), float((v.y + 1.0) * image.height / 2.0), v.z};
+		// screen_coords[j] = m2v(dot(dot(viewport_matrix, projection_matrix), v2m(v)));
 		world_coords[j] = v;
 	}
 
@@ -254,6 +256,31 @@ __global__ void draw_faces(DrawCallArgs args) {
 }
 
 
+void render_init(int width, int height)
+{
+	width = 800;
+	height = 800; // fixme
+	int depth = 255;
+	mat<4,4> ViewPort = viewport(width/8, height/8, width*3/4, height*3/4, depth);
+	cudaMemcpyToSymbol(
+	        viewport_matrix,
+	        &ViewPort,
+	        sizeof(mat<4,4>)
+	        );
+}
+
+void update_device_parameters(const DrawCallArgs &args)
+{
+	mat<4,4> Projection = identity_matrix<4>();
+
+	Projection.at(3, 2) = -1.f / args.camera_pos.z;
+	cudaMemcpyToSymbol(
+	        projection_matrix,
+	        &Projection,
+	        sizeof(mat<4,4>)
+	        );
+}
+
 double main_cuda_launch(const DrawCallArgs &args, StopWatchInterface *timer) {
 	auto streams = SingletonCreator<StreamManager>().get();
 
@@ -266,6 +293,7 @@ double main_cuda_launch(const DrawCallArgs &args, StopWatchInterface *timer) {
 	clock_t begin = clock();
 	sdkResetTimer(&timer);
 
+	update_device_parameters(args);
 	streams->prepare_to_render();
 
 	auto &model = args.model;

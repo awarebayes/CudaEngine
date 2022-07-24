@@ -16,7 +16,6 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 
 add_executable(course_renderer
-        src/kernels/src/render.cu
         src/main.cpp
         src/model/src/model.cpp
         src/model/src/pool.cpp
@@ -26,6 +25,7 @@ add_executable(course_renderer
         src/util/stb_image.cpp
         src/kernels/src/util.cu
         src/kernels/src/matrix.cu
+        src/kernels/src/render.cu
         )
 target_include_directories(course_renderer PRIVATE ./Common)
 
