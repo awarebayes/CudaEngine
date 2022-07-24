@@ -12,6 +12,7 @@
 
 __device__ __constant__ mat<4,4> viewport_matrix{};
 __device__ mat<4,4> projection_matrix{};
+__device__ mat<4,4> view_matrix{};
 
 
 __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
@@ -44,7 +45,7 @@ __device__ __forceinline__ float3 barycentric(float3 *pts, Tp P) {
 	auto a = float3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
 	auto b = float3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
 	auto u = cross(a, b);
-	float flag = abs(u.z)<1;
+	float flag = abs(u.z) < 1;
 	return float3{
 	                -1.0f * flag + (1.0f - flag) * (1.f-(u.x+u.y)/u.z),
 	                 1.0f * flag + (1.0f - flag) * (u.y/u.z),
@@ -88,7 +89,7 @@ __device__ void triangle(DrawCallArgs &args, int3 &index, Image &image) {
 	float3 normals[3];
 	float2 textures[3];
 
-	// mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
+	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
 
 	for (int i = 0; i < 3; i++)
 	{

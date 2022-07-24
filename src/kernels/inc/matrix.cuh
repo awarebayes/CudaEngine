@@ -10,8 +10,8 @@
 template<int n, int m>
 struct mat{
         float data[n*m] = {0, };
-	    const int rows = n;
-	    const int cols = m;
+	    __host__ __device__ __forceinline__ constexpr int rows() { return n; };
+	    __host__ __device__ __forceinline__ constexpr int cols() { return m; };
 	    __host__ __device__ __forceinline__ float &at(int i, int j) { return data[i * m + j]; };
 		[[nodiscard]] __host__ __device__ __forceinline__ float at(int i, int j) const { return data[i * m + j]; };
 };
@@ -94,6 +94,6 @@ __device__ __host__ mat<4, 4> viewport(int x, int y, int w, int h, int depth);
 __device__ __host__ void dbg_print(const mat<4, 4> &mat);
 __device__ __host__ void dbg_print(const mat<4, 1> &mat);
 
-mat<4,4> lookat(float3 eye, float3 center, float3 up);
+__device__ __host__ mat<4,4> lookat(float3 eye, float3 center, float3 up);
 
 #endif//COURSE_RENDERER_MATRIX_CUH

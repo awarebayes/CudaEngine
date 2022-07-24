@@ -7,6 +7,7 @@
 
 #include "../../../Common/helper_functions.h"
 #include "../../model/inc/model.h"
+#include "matrix.cuh"
 
 struct Image {
 	uint *pixels;
@@ -30,6 +31,7 @@ struct Image {
 struct DrawCallArgs {
 	Image image{};
 	ModelRef model{};
+	mat<4, 4> model_matrix{};
 	float3 light_dir{};
 	float3 camera_pos{};
 	float3 look_dir{};
