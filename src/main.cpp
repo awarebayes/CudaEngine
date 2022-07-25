@@ -69,6 +69,10 @@ int fpsLimit = 1;// FPS limit for sampling
 float *zBuffer = nullptr;
 const int REFRESH_DELAY = 10;
 
+float3 camera_pos{0, -1, 3};
+float3 light_dir{0, 0, 3};
+float3 look_dir{0, 0, 0};
+
 
 
 #define GL_TEXTURE_TYPE GL_TEXTURE_2D
@@ -164,32 +168,39 @@ void display() {
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer(
 	        (void **) &dResult, &num_bytes, cuda_pbo_resource));
 
-	auto img = Image{dResult, zBuffer, (int)width, (int)height};
+	auto img = Image{dResult, zBuffer, (int) width, (int) height};
 	auto mp = ModelPoolCreator().get();
 	ModelRef ref = mp->get("obj/african_head.obj");
 
-	DrawCallArgs args = {
-	        .image=img,
-	        .model=ref,
-	        .model_matrix = identity_matrix<4>(),
-	        .light_dir={0.0, 0.0, -1.0},
-	        .camera_pos={0.0, -1.0, 3.0},
-	        .look_at={0.0, 0.0, 0.0}
-	};
-
-	main_cuda_launch(args, kernel_timer);
-
-	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
-
-	// Common display code path
-
-	ImGuiIO& io = ImGui::GetIO();
-	glViewport(0, 0, (GLsizei)io.DisplaySize.x, (GLsizei)io.DisplaySize.y);
+	ImGuiIO &io = ImGui::GetIO();
+	glViewport(0, 0, (GLsizei) io.DisplaySize.x, (GLsizei) io.DisplaySize.y);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGLUT_NewFrame();
 
+	{
+		ImGui::Begin("Camera Controls");
+		ImGui::SliderFloat3("Camera XYZ", &camera_pos.x, -10, 10);
+		ImGui::SliderFloat3("Look dir", &look_dir.x, -10, 10);
+		ImGui::SliderFloat3("Light dir XYZ", &light_dir.x, -10, 10);
+
+		DrawCallArgs args = {
+		        .image = img,
+		        .model = ref,
+		        .model_matrix = identity_matrix<4>(),
+		        .light_dir = light_dir,
+		        .camera_pos = camera_pos,
+		        .look_at = look_dir
+		};
+
+
+		main_cuda_launch(args, kernel_timer);
+
+		ImGui::End();
+	}
+
+	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
 
 	// load texture from pbo
 	glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, pbo);
@@ -202,8 +213,6 @@ void display() {
 	glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, shader);
 	glEnable(GL_FRAGMENT_PROGRAM_ARB);
 	glDisable(GL_DEPTH_TEST);
-	static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-	glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 
 	glBegin(GL_QUADS);
 	{
@@ -220,7 +229,6 @@ void display() {
 	glBindTexture(GL_TEXTURE_TYPE, 0);
 	glDisable(GL_FRAGMENT_PROGRAM_ARB);
 
-	ImGui::ShowDemoWindow();
 
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

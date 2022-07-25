@@ -132,10 +132,11 @@ __device__ void triangle(DrawCallArgs &args, int3 &index, Image &image) {
 					N += normals[i] * at(bc_screen, i);
 					T += textures[i] * at(bc_screen, i);
 				}
+
 				uchar3 color_u = model.texture.get_uv(T.x, T.y);
 				float4 color = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
 
-				float4 colorf = color; // * dot(light_dir, N);
+				float4 colorf = color * max(dot(light_dir, N), 0.0f);
 				colorf.w = 1.0f;
 				auto colori = rgbaFloatToInt(colorf);
 				image.set((int)P.x, (int)P.y, colori);
@@ -247,6 +248,7 @@ double main_cuda_launch(const DrawCallArgs &args, StopWatchInterface *timer) {
 	int n_grid = model.n_faces / 32 + 1;
 	int n_block = 32;
 
+	cudaMemsetAsync((void *)args.image.pixels, 0, args.image.width * args.image.height * sizeof(uint), streams->render);
 	fill_zbuffer<<<n_grid, n_block, 0, streams->render>>>(args);
 	draw_faces<<<n_grid, n_block, 0, streams->render>>>(args);
 
