@@ -36,7 +36,7 @@ add_executable(course_renderer
         src/kernels/src/util.cu
         src/kernels/src/matrix.cu
         src/kernels/src/render.cu
-        )
+        src/kernels/inc/shader.cuh src/kernels/inc/shader_impl.cuh)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

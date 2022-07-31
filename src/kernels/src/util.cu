@@ -14,14 +14,6 @@ __device__ float euclideanLen(float4 a, float4 b, float d) {
 	return __expf(-mod / (2.f * d * d));
 }
 
-__device__ uint rgbaFloatToInt(float4 rgba) {
-	rgba.x = __saturatef(fabs(rgba.x));// clamp to [0.0, 1.0]
-	rgba.y = __saturatef(fabs(rgba.y));
-	rgba.z = __saturatef(fabs(rgba.z));
-	rgba.w = __saturatef(fabs(rgba.w));
-	return (uint(rgba.w * 255.0f) << 24) | (uint(rgba.z * 255.0f) << 16) |
-	       (uint(rgba.y * 255.0f) << 8) | uint(rgba.x * 255.0f);
-}
 
 __device__ float4 rgbaIntToFloat(uint c) {
 	float4 rgba;
