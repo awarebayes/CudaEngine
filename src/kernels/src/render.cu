@@ -82,9 +82,9 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 }
 
 
-__device__ void triangle(DrawCallArgs &args, int3 &index, Image &image) {
+__device__ void triangle(DrawCallArgs &args, int position, Image &image) {
 	auto &model = args.model;
-	auto &light_dir = args.light_dir;
+	auto light_dir = args.light_dir;
 	float3 pts[3];
 	float3 normals[3];
 	float2 textures[3];
@@ -93,9 +93,11 @@ __device__ void triangle(DrawCallArgs &args, int3 &index, Image &image) {
 
 	for (int i = 0; i < 3; i++)
 	{
-		float3 v = model.vertices[at(index, i)];
-		normals[i] = model.normals[at(index, i)];
-		textures[i] = model.textures[at(index, i)];
+		auto face = model.faces[position];
+		int index = at(face, i);
+		float3 v = model.vertices[index];
+		normals[i] = model.normals[index];
+		textures[i] = model.textures[index];
 		pts[i] = m2v(dot(transform_mat, v2m(v)));
 	}
 
@@ -194,7 +196,7 @@ __global__ void draw_faces(DrawCallArgs args) {
 	n = normalize(n);
 	float intensity = dot(n, look_dir);
 	if (intensity > 0)
-		triangle(args, face, image);
+		triangle(args, position, image);
 }
 
 
