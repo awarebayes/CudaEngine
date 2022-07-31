@@ -1,8 +1,9 @@
 #include "../../model/inc/model.h"
 #include "../../model/inc/pool.h"
 #include "../../util/stream_manager.h"
-#include "../inc/render.cuh"
 #include "../inc/matrix.cuh"
+#include "../inc/render.cuh"
+#include "../inc/shader_impl.cuh"
 #include "../inc/util.cuh"
 #include <ctime>
 #include <helper_cuda.h>
@@ -85,21 +86,17 @@ __device__ void triangle_zbuffer(float3 pts[3], Image &image) {
 __device__ void triangle(DrawCallArgs &args, int position, Image &image) {
 	auto &model = args.model;
 	auto light_dir = args.light_dir;
-	float3 pts[3];
-	float3 normals[3];
-	float2 textures[3];
 
 	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
+	auto sh = Shader(model, light_dir);
+	sh.uniform_M = transform_mat;
 
 	for (int i = 0; i < 3; i++)
-	{
-		auto face = model.faces[position];
-		int index = at(face, i);
-		float3 v = model.vertices[index];
-		normals[i] = model.normals[index];
-		textures[i] = model.textures[index];
-		pts[i] = m2v(dot(transform_mat, v2m(v)));
-	}
+		sh.vertex(position, i);
+
+	auto &pts = sh.pts;
+	auto &normals = sh.normals;
+	auto &textures = sh.textures;
 
 	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
 
@@ -127,21 +124,9 @@ __device__ void triangle(DrawCallArgs &args, int position, Image &image) {
 				P.z += pts[i].z * at(bc_screen, i);
 
 			if (image.zbuffer[int(P.x + P.y* image.width)] == P.z) {
-				float3 N{};
-				float2 T{};
-				for (int i = 0; i < 3; i++)
-				{
-					N += normals[i] * at(bc_screen, i);
-					T += textures[i] * at(bc_screen, i);
-				}
-
-				uchar3 color_u = model.texture.get_uv(T.x, T.y);
-				float4 color = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
-
-				float4 colorf = color * max(dot(light_dir, N), 0.0f);
-				colorf.w = 1.0f;
-				auto colori = rgbaFloatToInt(colorf);
-				image.set((int)P.x, (int)P.y, colori);
+				uint color;
+				sh.fragment(bc_screen, color);
+				image.set((int)P.x, (int)P.y, color);
 			}
 		}
 	}

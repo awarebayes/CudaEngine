@@ -26,13 +26,14 @@ struct Shader {
 
 	__device__ __forceinline__ float4 vertex(int iface, int nthvert)
 	{
-		auto &face = model.faces[iface];
+		auto face = model.faces[iface];
 		int index = at(face, nthvert);
-		auto &v = model.vertices[index];
+		float3 v = model.vertices[index];
 
 		normals[nthvert] = model.normals[index];
 		textures[nthvert] = model.textures[index];
 		pts[nthvert] = m2v(dot(uniform_M, v2m(v)));
+
 		return float4{ pts[nthvert].x, pts[nthvert].y, pts[nthvert].z, 1.0f};
 	}
 
