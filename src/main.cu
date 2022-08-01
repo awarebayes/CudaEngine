@@ -26,15 +26,12 @@
 */
 
 
-#include <cmath>
-
 // OpenGL Graphics includes
 #include <GL/freeglut.h>
 #include <helper_gl.h>
 
 // CUDA utilities and system includes
 #include <cuda_gl_interop.h>
-#include <cuda_runtime.h>
 
 #include <helper_cuda.h>// CUDA device initialization helper functions
 
@@ -69,9 +66,9 @@ int fpsLimit = 1;// FPS limit for sampling
 float *zBuffer = nullptr;
 const int REFRESH_DELAY = 10;
 
-float3 camera_pos{0, -1, 3};
-float3 light_dir{0, 0, 3};
-float3 look_dir{0, 0, 0};
+glm::vec3 camera_pos{0, -1, 3};
+glm::vec3 light_dir{0, 0, 3};
+glm::vec3 look_dir{0, 0, 0};
 
 
 
@@ -188,7 +185,7 @@ void display() {
 		DrawCallArgs args = {
 		        .image = img,
 		        .model = ref,
-		        .model_matrix = identity_matrix<4>(),
+		        .model_matrix = glm::mat4(1.0f),
 		        .light_dir = light_dir,
 		        .camera_pos = camera_pos,
 		        .look_at = look_dir

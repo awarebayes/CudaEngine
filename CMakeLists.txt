@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(course_renderer CXX CUDA)
+project(course_renderer C CUDA)
 
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CXX_STANDARD 20)
@@ -20,25 +20,25 @@ include_directories(Common/imgui)
 
 
 add_executable(course_renderer
-        Common/imgui/imgui.cpp
-        Common/imgui/imgui_draw.cpp
-        Common/imgui/imgui_impl_opengl3.cpp
-        Common/imgui/imgui_impl_glut.cpp
-        Common/imgui/imgui_tables.cpp
-        Common/imgui/imgui_demo.cpp
-        Common/imgui/imgui_widgets.cpp
+        Common/imgui/imgui.cu
+        Common/imgui/imgui_draw.cu
+        Common/imgui/imgui_impl_opengl3.cu
+        Common/imgui/imgui_impl_glut.cu
+        Common/imgui/imgui_tables.cu
+        Common/imgui/imgui_demo.cu
+        Common/imgui/imgui_widgets.cu
 
-        src/main.cpp
-        src/model/src/model.cpp
-        src/model/src/pool.cpp
-        src/util/stream_manager.cpp
-        src/util/tiny_objloader.cpp
+        src/main.cu
+        src/model/src/model.cu
+        src/model/src/pool.cu
+        src/util/stream_manager.cu
+        src/util/tiny_objloader.cu
         src/model/src/texture.cu
-        src/util/stb_image.cpp
+        src/util/stb_image.cu
         src/kernels/src/util.cu
         src/kernels/src/matrix.cu
         src/kernels/src/render.cu
-        src/kernels/inc/shader.cuh src/kernels/inc/shader_impl.cuh)
+        )
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

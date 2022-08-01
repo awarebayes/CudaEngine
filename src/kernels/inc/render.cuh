@@ -9,6 +9,10 @@
 #include "../../model/inc/model.h"
 #include "matrix.cuh"
 
+#define GLM_FORCE_CUDA 1
+#include <cuda.h>
+#include <glm/glm.hpp>
+
 struct Image {
 	uint *pixels;
 	float *zbuffer;
@@ -31,10 +35,10 @@ struct Image {
 struct DrawCallArgs {
 	Image image{};
 	ModelRef model{};
-	mat<4, 4> model_matrix{};
-	float3 light_dir{};
-	float3 camera_pos{};
-	float3 look_at{};
+	glm::mat4 model_matrix{};
+	glm::vec3 light_dir{};
+	glm::vec3 camera_pos{};
+	glm::vec3 look_at{};
 };
 
 void render_init(int width, int height);

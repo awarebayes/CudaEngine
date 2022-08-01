@@ -5,6 +5,10 @@
 #ifndef COURSE_RENDERER_KERNELS_UTIL_CUH
 #define COURSE_RENDERER_KERNELS_UTIL_CUH
 
+#define GLM_FORCE_CUDA 1
+#include <cuda.h>
+#include <glm/glm.hpp>
+
 template<typename T>
 __device__ __forceinline__ void swap(T &x, T &y)
 {
@@ -18,7 +22,7 @@ __device__ uint rgbaFloatToInt(float4 rgba);
 __device__ float4 rgbaIntToFloat(uint c);
 __device__ float atomicMax(float* address, float val);
 
-__device__ __forceinline__ uint rgbaFloatToInt(float4 rgba) {
+__device__ __forceinline__ uint rgbaFloatToInt(glm::vec4 rgba) {
 	rgba.x = __saturatef(fabs(rgba.x));// clamp to [0.0, 1.0]
 	rgba.y = __saturatef(fabs(rgba.y));
 	rgba.z = __saturatef(fabs(rgba.z));

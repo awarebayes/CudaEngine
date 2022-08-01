@@ -7,6 +7,10 @@
 #include <cstdio>
 #include <cassert>
 
+#define GLM_FORCE_CUDA 1
+#include <cuda.h>
+#include <glm/glm.hpp>
+
 template<int n, int m>
 struct mat{
         float data[n*m] = {0, };
@@ -89,11 +93,11 @@ __device__ __host__ __forceinline__ constexpr auto at(const T &self, int index)
 	else { assert(false); }
 }
 
-__device__ __host__ mat<4, 4> viewport(int x, int y, int w, int h, int depth);
+__device__ __host__ glm::mat4 viewport(int x, int y, int w, int h, int depth);
 
 __device__ __host__ void dbg_print(const mat<4, 4> &mat);
 __device__ __host__ void dbg_print(const mat<4, 1> &mat);
 
-__device__ __host__ mat<4,4> lookat(float3 eye, float3 center, float3 up);
+__device__ __host__ glm::mat4 lookat(glm::vec3 eye, glm::vec3 center, glm::vec3 up);
 
 #endif//COURSE_RENDERER_MATRIX_CUH
