@@ -170,7 +170,7 @@ void display() {
 
 	auto img = Image{dResult, zBuffer, (int) width, (int) height};
 	auto mp = ModelPoolCreator().get();
-	ModelRef ref = mp->get("obj/african_head.obj");
+	ModelRef ref = mp->get("obj/diablo_pose/diablo_pose.obj");
 
 	ImGuiIO &io = ImGui::GetIO();
 	glViewport(0, 0, (GLsizei) io.DisplaySize.x, (GLsizei) io.DisplaySize.y);
@@ -342,8 +342,8 @@ void initGL(int argc, char **argv) {
 	assert(ImGui_ImplOpenGL3_Init("#version 330"));
 
 	auto mp = ModelPoolCreator().get();
-	auto model = mp->get_mut("obj/african_head.obj");
-	model->load_texture("obj/african_head_diffuse.tga");
+	auto model = mp->get_mut("obj/diablo_pose/diablo_pose.obj");
+	model->load_texture("obj/diablo_pose/diablo_pose_diffuse.tga");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

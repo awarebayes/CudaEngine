@@ -87,9 +87,11 @@ __device__ void triangle(DrawCallArgs &args, int position, Image &image) {
 	auto &model = args.model;
 	auto light_dir = args.light_dir;
 
+
 	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
+
 	auto sh = Shader(model, light_dir);
-	sh.uniform_M = transform_mat;
+	sh.transform_M = transform_mat;
 
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i);

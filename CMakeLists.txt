@@ -11,6 +11,8 @@ include_directories(${GLUT_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
 find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
 
+find_package(glm REQUIRED)
+
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -45,6 +47,7 @@ set_target_properties(course_renderer PROPERTIES
 
 set(CMAKE_CXX_COMPILE_FEATURES cxx_constexpr)
 target_link_libraries(${CMAKE_PROJECT_NAME})
+target_link_libraries(${CMAKE_PROJECT_NAME} glm)
 target_link_libraries(${CMAKE_PROJECT_NAME}  ${OPENGL_LIBRARIES})
 target_link_libraries(${CMAKE_PROJECT_NAME}  ${GLUT_LIBRARY})
 target_link_libraries(${CMAKE_PROJECT_NAME} ${CUDA_LIBRARIES} -lcuda -L/usr/local/lib64)

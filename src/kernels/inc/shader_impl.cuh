@@ -12,8 +12,7 @@
 #include <helper_math.h>
 
 struct Shader {
-	mat<4,4> uniform_M;   //  Projection*ModelView
-	mat<4,4> uniform_MIT; // (Projection*ModelView).invert_transpose()
+	mat<4,4> transform_M;   //  Projection*ModelView
 
 	ModelRef &model;
 
@@ -32,12 +31,13 @@ struct Shader {
 
 		normals[nthvert] = model.normals[index];
 		textures[nthvert] = model.textures[index];
-		pts[nthvert] = m2v(dot(uniform_M, v2m(v)));
+
+		pts[nthvert] = m2v(dot(transform_M, v2m(v)));
 
 		return float4{ pts[nthvert].x, pts[nthvert].y, pts[nthvert].z, 1.0f};
 	}
 
-	__device__ bool fragment(float3 bar, uint &output_color)
+	__device__ __forceinline__ bool fragment(float3 bar, uint &output_color)
 	{
 		float3 N{};
 		float2 T{};
@@ -50,7 +50,9 @@ struct Shader {
 		uchar3 color_u = model.texture.get_uv(T.x, T.y);
 		float4 color_f = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
 
-		float4 colorf = color_f * max(dot(light_dir, N), 0.0f);
+		// auto light_dir_ = m2v(dot(uniform_M,v2m(light_dir)));
+
+		float4 colorf = color_f * clamp(dot(light_dir, N), 0.0f, 1.0f);
 		colorf.w = 1.0f;
 		output_color = rgbaFloatToInt(colorf);
 		return false;                              // no, we do not discard this pixel
