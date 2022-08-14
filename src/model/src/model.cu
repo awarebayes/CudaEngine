@@ -41,7 +41,7 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 	std::vector<glm::vec3> vertices_host{uvertices};
 	std::vector<glm::vec3> normals_host{uvertices};
 	std::vector<glm::vec2> textures_host{uvertices};
-	std::vector<int3> faces_host{};
+	std::vector<glm::ivec3> faces_host{};
 
 	bool has_textures = false;
 

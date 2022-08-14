@@ -145,7 +145,7 @@ __global__ void fill_zbuffer(DrawCallArgs args) {
 	glm::vec3 world_coords[3];
 	glm::vec3 look_dir = args.look_at - args.camera_pos;
 
-	glm::mat4 transform_mat = viewport_matrix * projection_matrix * args.model_matrix * view_matrix;
+	glm::mat4 transform_mat = ((viewport_matrix * projection_matrix) * args.model_matrix) * view_matrix;
 
 	for (int j = 0; j < 3; j++)
 	{
@@ -156,6 +156,7 @@ __global__ void fill_zbuffer(DrawCallArgs args) {
 
 	glm::vec3 n = cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
 	n = normalize(n);
+
 	float intensity = dot(n, look_dir);
 	if (intensity > 0)
 		triangle_zbuffer(screen_coords, image);
@@ -180,6 +181,9 @@ __global__ void draw_faces(DrawCallArgs args) {
 
 	glm::vec3 n = cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
 	n = normalize(n);
+
+
+
 	float intensity = dot(n, look_dir);
 	if (intensity > 0)
 		triangle(args, position, image);
