@@ -46,6 +46,7 @@
 #include "imgui_impl_opengl3.h"
 #include "kernels/inc/render.cuh"
 #include "model/inc/pool.h"
+#include "helper_math.h"
 
 const static char *sSDKsample = "CUDA Bilateral Filter";
 
@@ -71,7 +72,7 @@ const int REFRESH_DELAY = 10;
 
 float3 camera_pos{0, -1, 3};
 float3 light_dir{0, 0, 3};
-float3 look_dir{0, 0, 0};
+float3 look_dir{0, 1, -3};
 
 
 
@@ -191,7 +192,7 @@ void display() {
 		        .model_matrix = identity_matrix<4>(),
 		        .light_dir = light_dir,
 		        .camera_pos = camera_pos,
-		        .look_at = look_dir
+		        .look_at = camera_pos + look_dir,
 		};
 
 
