@@ -3,6 +3,7 @@
 //
 #include "../../kernels/inc/render.cuh"
 #include "../../kernels/inc/shader_impl.cuh"
+#include "../../util/const.h"
 #include "rasterizer.h"
 
 extern __device__ __constant__ mat<4,4> viewport_matrix;
@@ -37,6 +38,9 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelRef &model, int position, 
 	}
 
 	float3 P{0, 0, 0};
+
+	if ((bboxmax.x - bboxmin.x)  * (bboxmax.y - bboxmin.y) > MAX_PIXELS_PER_KERNEL)
+		return;
 
 	for (P.x=floor(bboxmin.x); P.x <= bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y <= bboxmax.y; P.y++) {

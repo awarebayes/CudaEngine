@@ -5,6 +5,7 @@
 #include "../../kernels/inc/render.cuh"
 #include "../../kernels/inc/shader_impl.cuh"
 #include "../../model/inc/model.h"
+#include "../../util/const.h"
 #include "../../util/stream_manager.h"
 #include "zbuffer.h"
 #include "zfiller.h"
@@ -27,6 +28,9 @@ __device__ void triangle_zbuffer(float3 pts[3], ZBuffer &zbuffer) {
 		bboxmax.x = min(clamp.x, max(bboxmax.x, pts[i].x));
 		bboxmax.y = min(clamp.y, max(bboxmax.y, pts[i].y));
 	}
+
+	if ((bboxmax.x - bboxmin.x)  * (bboxmax.y - bboxmin.y) > MAX_PIXELS_PER_KERNEL)
+		return;
 
 	float3 P{0, 0, 0};
 	for (P.x=floor(bboxmin.x); P.x<=bboxmax.x; P.x++) {

@@ -1,0 +1,10 @@
+//
+// Created by dev on 8/28/22.
+//
+
+#ifndef COURSE_RENDERER_CONST_H
+#define COURSE_RENDERER_CONST_H
+
+const int MAX_PIXELS_PER_KERNEL = 1000;
+
+#endif//COURSE_RENDERER_CONST_H
