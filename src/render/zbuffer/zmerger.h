@@ -5,11 +5,11 @@
 #ifndef COURSE_RENDERER_ZMERGER_H
 #define COURSE_RENDERER_ZMERGER_H
 
-#include "../zbuffer/zbuffer.h"
-#include "synchronizable.h"
+#include "../draw_caller/synchronizable.h"
+#include "zbuffer.h"
 #include <driver_types.h>
-#include <vector>
 #include <memory>
+#include <vector>
 
 class ZMerger : public Synchronizable {
 private:

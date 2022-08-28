@@ -5,12 +5,12 @@
 #include "../../kernels/inc/render.cuh"
 #include "../../kernels/inc/shader_impl.cuh"
 #include "../../model/inc/model.h"
-#include "../../render/zbuffer/zbuffer.h"
 #include "../../util/stream_manager.h"
+#include "zbuffer.h"
 #include "zfiller.h"
+#include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
-#include <helper_cuda.h>
 
 extern __device__ __constant__ mat<4,4> viewport_matrix;
 extern __device__ mat<4,4> projection_matrix;

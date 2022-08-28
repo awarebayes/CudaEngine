@@ -5,11 +5,11 @@
 #ifndef COURSE_RENDERER_DRAW_CALLER_H
 #define COURSE_RENDERER_DRAW_CALLER_H
 
-#include "image_resetter.h"
-#include "rasterizer.h"
-#include "zfiller.h"
-#include "zmerger.h"
 #include "../../util/singleton.h"
+#include "../image_resetter/image_resetter.h"
+#include "../zbuffer/zfiller.h"
+#include "../zbuffer/zmerger.h"
+#include "rasterizer.h"
 
 class DrawCaller
 {

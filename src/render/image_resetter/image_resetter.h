@@ -6,7 +6,7 @@
 #define COURSE_RENDERER_IMAGE_RESETTER_H
 
 #include "../../kernels/inc/render.cuh"
-#include "synchronizable.h"
+#include "../draw_caller/synchronizable.h"
 #include <driver_types.h>
 class ImageResetter : public Synchronizable {
 private:

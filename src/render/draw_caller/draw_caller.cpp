@@ -31,12 +31,13 @@ void DrawCaller::draw(DrawCallArgs &args, Image &image)
 	auto zbuffers = get_z_buffers();
 	// parallel dispatch and sync
 	parallel_reduce_merge(z_mergers, zbuffers, (int)streams_to_use);
-
 	auto final_zbuffer = get_final_z_buffer();
 
+	// dispatch
 	for (size_t i = 0; i < args.models.size(); i++)
 		rasterizers[i]->async_rasterize(args, args.models[i], image, final_zbuffer);
 
+	// sync
 	for (size_t i = 0; i < streams_to_use; i++)
 		rasterizers[i]->await();
 

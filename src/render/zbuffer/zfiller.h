@@ -5,7 +5,8 @@
 #ifndef COURSE_RENDERER_ZFILLER_H
 #define COURSE_RENDERER_ZFILLER_H
 
-#include "synchronizable.h"
+#include "../draw_caller/synchronizable.h"
+#include "zbuffer.h"
 
 class ZFiller : public Synchronizable {
 private:
@@ -18,7 +19,5 @@ public:
 	void resize(int height, int width);
 	void resize(Image &image);
 };
-
-
 
 #endif//COURSE_RENDERER_ZFILLER_H
