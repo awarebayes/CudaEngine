@@ -5,10 +5,10 @@
 #ifndef COURSE_RENDERER_SINGLETON_H
 #define COURSE_RENDERER_SINGLETON_H
 
+#include <memory>
 template <typename T>
 class SingletonCreator
 {
-private:
 public:
 	std::shared_ptr<T> get()
 	{

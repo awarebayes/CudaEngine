@@ -41,6 +41,7 @@
 // Shared Library Test Functions
 #include <helper_functions.h>// CUDA SDK Helper functions
 
+#include "camera/camera.h"
 #include "helper_math.h"
 #include "imgui.h"
 #include "imgui_impl_glut.h"
@@ -49,11 +50,7 @@
 #include "model/inc/pool.h"
 #include "render/draw_caller/draw_caller.h"
 
-const static char *sSDKsample = "CUDA Bilateral Filter";
-
-const char *image_filename = "nature_monte.bmp";
 StopWatchInterface *timer = NULL;
-
 unsigned int width, height;
 unsigned int *hImage = NULL;
 
@@ -69,9 +66,9 @@ int fpsCount = 0;// FPS count for averaging
 int fpsLimit = 1;// FPS limit for sampling
 const int REFRESH_DELAY = 10;
 
-float3 camera_pos{0, -1, 3};
+// float3 camera_pos{0, -1, 3};
+// float3 look_dir{0, 1, -3};
 float3 light_dir{0, 0, 3};
-float3 look_dir{0, 1, -3};
 
 
 
@@ -182,26 +179,30 @@ void display() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGLUT_NewFrame();
 
+	auto camera = CameraSingleton().get();
 	{
-		ImGui::Begin("Camera Controls");
-		ImGui::SliderFloat3("Camera XYZ", &camera_pos.x, -10, 10);
-		ImGui::SliderFloat3("Look dir", &look_dir.x, -10, 10);
+
+		camera->display_menu();
+
+		ImGui::Begin("Scene controls Controls");
 		ImGui::SliderFloat3("Light dir XYZ", &light_dir.x, -10, 10);
+		ImGui::End();
 
 		DrawCallArgs args = {
-		        .models = {ref},
-		        .base = {
-		                .model_matrix = identity_matrix<4>(),
+		        .models = {
+		                ModelArgs{ identity_matrix<4>(), ref}
+		        },
+
+				.base = {
 		                .light_dir = light_dir,
-		                .camera_pos = camera_pos,
-		                .look_at = camera_pos + look_dir,
+		                .camera_pos = camera->position,
+		                .look_at = camera->position + camera->get_look_direction(),
 		        },
 		};
 
 		update_device_parameters(args);
 		draw_caller->draw(args, img);
 
-		ImGui::End();
 	}
 
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
@@ -249,7 +250,6 @@ void display() {
 void initCuda() {
 	// initialize gaussian mask
 	sdkCreateTimer(&timer);
-
 	render_init(width, height);
 }
 
@@ -329,7 +329,7 @@ void initGL(int argc, char **argv) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
-	(void)io;
+	(void) io;
 
 	io.DisplaySize.x = width;
 	io.DisplaySize.y = height;
@@ -340,10 +340,17 @@ void initGL(int argc, char **argv) {
 	ImGui_ImplGLUT_InstallFuncs();
 
 	assert(ImGui_ImplOpenGL3_Init("#version 330"));
+}
 
+void init_my_classes()
+{
 	auto mp = ModelPoolCreator().get();
 	auto model = mp->get_mut("obj/african_head.obj");
 	model->load_texture("obj/african_head_diffuse.tga");
+
+	auto camera = CameraSingleton().get();
+	camera->position = float3{0, -1, 3};
+	camera->ypr = float3{-90, 0, 0};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351,8 +358,6 @@ void initGL(int argc, char **argv) {
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv) {
 	// start logs
-	int devID;
-	char *ref_file = NULL;
 
 	printf("\nStarting...\n\n");
 
@@ -365,7 +370,6 @@ int main(int argc, char **argv) {
 	height = 1080;
 	width = 1920;
 
-	devID = findCudaDevice(argc, (const char **) argv);
 
 	// Default mode running with OpenGL visualization and in automatic mode
 	// the output automatically changes animation
@@ -378,6 +382,7 @@ int main(int argc, char **argv) {
 
 	initCuda();
 	initGLResources();
+	init_my_classes();
 
 	glutCloseFunc(cleanup);
 

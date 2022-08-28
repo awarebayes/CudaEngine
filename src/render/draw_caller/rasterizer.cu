@@ -10,10 +10,13 @@ extern __device__ __constant__ mat<4,4> viewport_matrix;
 extern __device__ mat<4,4> projection_matrix;
 extern __device__ mat<4,4> view_matrix;
 
-__device__ void triangle(DrawCallBaseArgs &args, ModelRef &model, int position, Image &image, ZBuffer &zbuffer) {
+__device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
 	auto light_dir = args.light_dir;
 
-	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
+	auto &model = model_args.model;
+	auto &model_matrix = model_args.model_matrix;
+	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), model_matrix), view_matrix);
+
 	auto sh = Shader(model, light_dir);
 	sh.uniform_M = transform_mat;
 
@@ -39,9 +42,7 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelRef &model, int position, 
 
 	float3 P{0, 0, 0};
 
-	if ((bboxmax.x - bboxmin.x)  * (bboxmax.y - bboxmin.y) > MAX_PIXELS_PER_KERNEL)
-		return;
-
+	int cnt = 0;
 	for (P.x=floor(bboxmin.x); P.x <= bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y <= bboxmax.y; P.y++) {
 			auto bc_screen  = barycentric(pts, P);
@@ -57,15 +58,20 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelRef &model, int position, 
 				sh.fragment(bc_screen, color);
 				image.set((int)P.x, (int)P.y, color);
 			}
+
+			cnt++;
+			if (cnt > MAX_PIXELS_PER_KERNEL)
+				return;
 		}
 	}
 
 }
 
 
-__global__ void draw_faces(DrawCallBaseArgs args, ModelRef model, Image image, ZBuffer zbuffer) {
+__global__ void draw_faces(DrawCallBaseArgs args, ModelArgs model_args, Image image, ZBuffer zbuffer) {
 
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
+	auto model = model_args.model;
 	if (position >= model.n_faces)
 		return;
 
@@ -84,13 +90,16 @@ __global__ void draw_faces(DrawCallBaseArgs args, ModelRef model, Image image, Z
 	n = normalize(n);
 	float intensity = dot(n, look_dir);
 	if (intensity > 0)
-		triangle(args, model, position, image, zbuffer);
+		triangle(args, model_args, position, image, zbuffer);
 }
 
-void Rasterizer::async_rasterize(DrawCallArgs &args, ModelRef model, Image image, ZBuffer zbuffer)
+void Rasterizer::async_rasterize(DrawCallArgs &args, int model_index, Image image, ZBuffer zbuffer)
 {
+
+	auto &model_args = args.models[model_index];
+	auto &model = model_args.model;
 	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = dim3(32);
-	draw_faces<<<n_grid, n_block, 0, stream>>>(args.base, model, image, zbuffer);
+	draw_faces<<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
 }
 

@@ -30,14 +30,19 @@ struct Image {
 
 struct DrawCallBaseArgs
 {
-	mat<4, 4> model_matrix{};
 	float3 light_dir{};
 	float3 camera_pos{};
 	float3 look_at{};
 };
 
+struct ModelArgs
+{
+	mat<4, 4> model_matrix{};
+	ModelRef model;
+};
+
 struct DrawCallArgs {
-	std::vector<ModelRef> models{};
+	std::vector<ModelArgs> models{};
 	DrawCallBaseArgs base{};
 };
 

@@ -11,7 +11,7 @@
 class Rasterizer : public Synchronizable {
 public:
 	Rasterizer() = default;
-	void async_rasterize(DrawCallArgs &args, ModelRef model, Image image, ZBuffer zbuffer);
+	void async_rasterize(DrawCallArgs &args, int model_index, Image image, ZBuffer zbuffer);
 };
 
 #endif//COURSE_RENDERER_RASTERIZER_H

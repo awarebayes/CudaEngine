@@ -13,7 +13,7 @@ private:
 	OwnedZBuffer zbuffer{};
 public:
 	ZFiller() = default;
-	void async_zbuf(DrawCallArgs &args, ModelRef model);
+	void async_zbuf(DrawCallArgs &args, int model_index);
 	void async_reset();
 	ZBuffer get_zbuffer();
 	void resize(int height, int width);

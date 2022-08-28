@@ -4,13 +4,9 @@
 #include "../../kernels/inc/matrix.cuh"
 #include "../../kernels/inc/render.cuh"
 #include "../../kernels/inc/shader_impl.cuh"
-#include "../../model/inc/model.h"
 #include "../../util/const.h"
-#include "../../util/stream_manager.h"
 #include "zbuffer.h"
 #include "zfiller.h"
-#include <helper_cuda.h>
-#include <helper_functions.h>
 #include <helper_math.h>
 
 extern __device__ __constant__ mat<4,4> viewport_matrix;
@@ -29,10 +25,9 @@ __device__ void triangle_zbuffer(float3 pts[3], ZBuffer &zbuffer) {
 		bboxmax.y = min(clamp.y, max(bboxmax.y, pts[i].y));
 	}
 
-	if ((bboxmax.x - bboxmin.x)  * (bboxmax.y - bboxmin.y) > MAX_PIXELS_PER_KERNEL)
-		return;
 
 	float3 P{0, 0, 0};
+	int cnt = 0;
 	for (P.x=floor(bboxmin.x); P.x<=bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y<=bboxmax.y; P.y++) {
 			P.z = 0;
@@ -43,22 +38,29 @@ __device__ void triangle_zbuffer(float3 pts[3], ZBuffer &zbuffer) {
 			for (int i = 0; i < 3; i++)
 				P.z += pts[i].z * bc_screen_idx[i];
 			atomicMax(&zbuffer.zbuffer[int(P.x + P.y * zbuffer.width)], P.z);
+			cnt++;
+			if (cnt > MAX_PIXELS_PER_KERNEL)
+				return;
 		}
 	}
 }
 
-__global__ void fill_zbuffer(DrawCallBaseArgs args, ModelRef model, ZBuffer buffer) {
+__global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffer buffer) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
+
+	auto &model = model_args.model;
 
 	if (position >= model.n_faces)
 		return;
+
+	auto &model_matrix = model_args.model_matrix;
 
 	auto face = model.faces[position];
 	float3 screen_coords[3];
 	float3 world_coords[3];
 	float3 look_dir = args.look_at - args.camera_pos;
 
-	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), args.model_matrix), view_matrix);
+	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), model_matrix), view_matrix);
 
 	for (int j = 0; j < 3; j++)
 	{
@@ -83,10 +85,12 @@ __global__ void set_kernel(ZBuffer buffer, float set_to)
 	buffer.zbuffer[x + y * buffer.width] = set_to; // -FLT_MAX is bad, use cam_z
 }
 
-void ZFiller::async_zbuf(DrawCallArgs &args, ModelRef model) {
+void ZFiller::async_zbuf(DrawCallArgs &args, int model_index) {
+	auto &model_args = args.models[model_index];
+	auto &model = model_args.model;
 	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = 32;
-	fill_zbuffer<<<n_grid, n_block, 0, stream>>>(args.base, model, zbuffer);
+	fill_zbuffer<<<n_grid, n_block, 0, stream>>>(args.base, model_args, zbuffer);
 }
 
 ZBuffer ZFiller::get_zbuffer() {
