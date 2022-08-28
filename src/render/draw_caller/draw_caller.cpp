@@ -35,7 +35,7 @@ void DrawCaller::draw(DrawCallArgs &args, Image &image)
 
 	// dispatch
 	for (size_t i = 0; i < args.models.size(); i++)
-		rasterizers[i]->async_rasterize(args, i, image, final_zbuffer);
+		rasterizers[i % rasterizers.size()]->async_rasterize(args, i, image, final_zbuffer);
 
 	// sync
 	for (size_t i = 0; i < streams_to_use; i++)

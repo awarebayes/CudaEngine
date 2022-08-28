@@ -37,7 +37,7 @@ add_executable(course_renderer
         src/kernels/src/matrix.cu
         src/kernels/src/render.cu
         src/kernels/inc/shader.cuh src/kernels/inc/shader_impl.cuh
-        src/camera/camera.cu
+        src/camera/camera.cpp
         src/render/draw_caller/draw_caller.cpp
         src/render/profiling_timer/profiling_timer.cpp
         src/render/zbuffer/zbuffer.cpp

@@ -96,4 +96,6 @@ __device__ __host__ void dbg_print(const mat<4, 1> &mat);
 
 __device__ __host__ mat<4,4> lookat(float3 eye, float3 center, float3 up);
 
+__host__ mat<4,4> offset(float3 xyz);
+
 #endif//COURSE_RENDERER_MATRIX_CUH

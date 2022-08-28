@@ -17,7 +17,7 @@ __global__ void set_kernel(ZBuffer z1, ZBuffer z2)
 }
 
 void ZMerger::async_merge(ZBuffer &z1, ZBuffer &z2) {
-	assert(z1.width == z2.height);
+	assert(z1.width == z2.width);
 	assert(z1.height == z2.height);
 	assert(z1.zbuffer != nullptr);
 	assert(z2.zbuffer != nullptr);

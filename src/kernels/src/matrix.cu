@@ -63,3 +63,12 @@ __device__ __host__ mat<4,4> lookat(float3 eye, float3 center, float3 up)
 	}
 	return dot(Minv, Tr);
 }
+
+__host__ mat<4,4> offset(float3 xyz)
+{
+	mat<4,4> result = identity_matrix<4>();
+	result.at(0, 3) = xyz.x;
+	result.at(1, 3) = xyz.y;
+	result.at(2, 3) = xyz.z;
+	return result;
+}

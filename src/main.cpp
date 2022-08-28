@@ -69,7 +69,7 @@ const int REFRESH_DELAY = 10;
 // float3 camera_pos{0, -1, 3};
 // float3 look_dir{0, 1, -3};
 float3 light_dir{0, 0, 3};
-
+float3 offsetsss{0, 0, 0};
 
 
 #define GL_TEXTURE_TYPE GL_TEXTURE_2D
@@ -186,13 +186,20 @@ void display() {
 
 		ImGui::Begin("Scene controls Controls");
 		ImGui::SliderFloat3("Light dir XYZ", &light_dir.x, -10, 10);
+		ImGui::SliderFloat3("Offset test", &offsetsss.x, -10, 10);
 		ImGui::End();
 
-		DrawCallArgs args = {
-		        .models = {
-		                ModelArgs{ identity_matrix<4>(), ref}
-		        },
+		std::vector<ModelArgs> models{};
+		for (int i = 0; i < 100; i++)
+		{
+			for (int j = 0; j < 100; j++)
+			{
+				models.emplace_back(ModelArgs{offset(float3{float(i-50) * 1.5f, float(j / 2), -10.0f * j}), ref});
+			}
+		}
 
+		DrawCallArgs args = {
+		        .models = models,
 				.base = {
 		                .light_dir = light_dir,
 		                .camera_pos = camera->position,
@@ -350,7 +357,7 @@ void init_my_classes()
 
 	auto camera = CameraSingleton().get();
 	camera->position = float3{0, -1, 3};
-	camera->ypr = float3{-90, 0, 0};
+	camera->yaw_pitch = float2{-90, 0};
 }
 
 ////////////////////////////////////////////////////////////////////////////////

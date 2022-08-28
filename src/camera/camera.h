@@ -6,11 +6,12 @@
 #define COURSE_RENDERER_CAMERA_H
 
 #include "../util/singleton.h"
+#include <vector_types.h>
 
 struct Camera
 {
 	float3 position{};
-	float3 ypr{}; // yaw pitch roll
+	float2 yaw_pitch{}; // yaw pitch roll
 
 
 	[[nodiscard]] float3 get_look_direction() const;
