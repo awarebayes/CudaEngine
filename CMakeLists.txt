@@ -36,7 +36,17 @@ add_executable(course_renderer
         src/kernels/src/util.cu
         src/kernels/src/matrix.cu
         src/kernels/src/render.cu
-        src/kernels/inc/shader.cuh src/kernels/inc/shader_impl.cuh)
+        src/kernels/inc/shader.cuh src/kernels/inc/shader_impl.cuh
+        src/camera/camera.cu
+        src/render/draw_caller/draw_caller.cpp
+        src/render/profiling_timer/profiling_timer.cpp
+        src/render/zbuffer/zbuffer.cpp
+        src/render/draw_caller/zfiller.cu
+        src/render/draw_caller/rasterizer.cu
+        src/render/draw_caller/image_resetter.cpp
+        src/render/draw_caller/zmerger.cu
+        src/render/draw_caller/synchronizable.cpp
+        )
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

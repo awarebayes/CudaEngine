@@ -8,10 +8,10 @@
 #include "../../../Common/helper_functions.h"
 #include "../../model/inc/model.h"
 #include "matrix.cuh"
+#include <helper_math.h>
 
 struct Image {
 	uint *pixels;
-	float *zbuffer;
 	int width;
 	int height;
 
@@ -28,20 +28,34 @@ struct Image {
 	}
 };
 
-struct DrawCallArgs {
-	Image image{};
-	ModelRef model{};
+struct DrawCallBaseArgs
+{
 	mat<4, 4> model_matrix{};
 	float3 light_dir{};
 	float3 camera_pos{};
 	float3 look_at{};
 };
 
+struct DrawCallArgs {
+	std::vector<ModelRef> models{};
+	DrawCallBaseArgs base{};
+};
+
 void render_init(int width, int height);
 
-double main_cuda_launch(
-        const DrawCallArgs &args,
-        StopWatchInterface *timer
-        );
+void update_device_parameters(const DrawCallArgs &args);
+
+template <typename Tp>
+__device__ __forceinline__ float3 barycentric(float3 *pts, Tp P) {
+	auto a = float3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
+	auto b = float3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
+	auto u = cross(a, b);
+	float flag = abs(u.z) < 1;
+	return float3{
+			-1.0f * flag + (1.0f - flag) * (1.f-(u.x+u.y)/u.z),
+			1.0f * flag + (1.0f - flag) * (u.y/u.z),
+			1.0f * flag + (1.0f - flag) * (u.x/u.z)
+	};
+}
 
 #endif//COURSE_RENDERER_RENDER_CUH

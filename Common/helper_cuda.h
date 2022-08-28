@@ -579,6 +579,7 @@ static const char *_cudaGetErrorEnum(NppStatus error) {
 }
 #endif
 
+
 template <typename T>
 void check(T result, char const *const func, const char *const file,
            int const line) {

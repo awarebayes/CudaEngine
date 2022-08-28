@@ -41,16 +41,18 @@
 // Shared Library Test Functions
 #include <helper_functions.h>// CUDA SDK Helper functions
 
+#include "helper_math.h"
 #include "imgui.h"
 #include "imgui_impl_glut.h"
 #include "imgui_impl_opengl3.h"
 #include "kernels/inc/render.cuh"
 #include "model/inc/pool.h"
-#include "helper_math.h"
+#include "render/draw_caller/draw_caller.h"
 
 const static char *sSDKsample = "CUDA Bilateral Filter";
 
 const char *image_filename = "nature_monte.bmp";
+StopWatchInterface *timer = NULL;
 
 unsigned int width, height;
 unsigned int *hImage = NULL;
@@ -60,14 +62,11 @@ struct cudaGraphicsResource *cuda_pbo_resource;// handles OpenGL-CUDA exchange
 GLuint texid;                                  // texture
 GLuint shader;
 
-StopWatchInterface *timer = NULL;
-StopWatchInterface *kernel_timer = NULL;
 
 // Auto-Verification Code
 const int frameCheckNumber = 4;
 int fpsCount = 0;// FPS count for averaging
 int fpsLimit = 1;// FPS limit for sampling
-float *zBuffer = nullptr;
 const int REFRESH_DELAY = 10;
 
 float3 camera_pos{0, -1, 3};
@@ -169,8 +168,11 @@ void display() {
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer(
 	        (void **) &dResult, &num_bytes, cuda_pbo_resource));
 
-	auto img = Image{dResult, zBuffer, (int) width, (int) height};
+	auto img = Image{dResult, (int) width, (int) height};
 	auto mp = ModelPoolCreator().get();
+
+	auto draw_caller = DrawCallerSigleton().get();
+
 	ModelRef ref = mp->get("obj/african_head.obj");
 
 	ImGuiIO &io = ImGui::GetIO();
@@ -187,16 +189,17 @@ void display() {
 		ImGui::SliderFloat3("Light dir XYZ", &light_dir.x, -10, 10);
 
 		DrawCallArgs args = {
-		        .image = img,
-		        .model = ref,
-		        .model_matrix = identity_matrix<4>(),
-		        .light_dir = light_dir,
-		        .camera_pos = camera_pos,
-		        .look_at = camera_pos + look_dir,
+		        .models = {ref},
+		        .base = {
+		                .model_matrix = identity_matrix<4>(),
+		                .light_dir = light_dir,
+		                .camera_pos = camera_pos,
+		                .look_at = camera_pos + look_dir,
+		        },
 		};
 
-
-		main_cuda_launch(args, kernel_timer);
+		update_device_parameters(args);
+		draw_caller->draw(args, img);
 
 		ImGui::End();
 	}
@@ -246,16 +249,12 @@ void display() {
 void initCuda() {
 	// initialize gaussian mask
 	sdkCreateTimer(&timer);
-	sdkCreateTimer(&kernel_timer);
 
-	cudaMalloc((void **)&zBuffer, sizeof(float) * width * height);
 	render_init(width, height);
 }
 
 void cleanup() {
 	sdkDeleteTimer(&timer);
-	sdkDeleteTimer(&kernel_timer);
-
 	if (hImage) {
 		free(hImage);
 	}

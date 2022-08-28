@@ -18,20 +18,19 @@ __device__ __host__ mat<4, 4> viewport(int x, int y, int w, int h, int depth)
 	return result;
 }
 
-
 __device__ __host__ void dbg_print(const mat<4, 1> &mat)
 {
-                printf(
-	                    "DBG PRINT\n"
-                        "%f\n"
-                        "%f\n"
-                        "%f\n"
-                        "%f\n\n",
-	                    mat.at(0, 0),
-	                    mat.at(0, 1),
-	                    mat.at(0, 2),
-	                    mat.at(0, 3)
-                );
+	printf(
+	        "DBG PRINT\n"
+	        "%f\n"
+	        "%f\n"
+	        "%f\n"
+	        "%f\n\n",
+	        mat.at(0, 0),
+	        mat.at(0, 1),
+	        mat.at(0, 2),
+	        mat.at(0, 3)
+	        );
 }
 
 __device__ __host__ void dbg_print(const mat<4, 4> &mat)

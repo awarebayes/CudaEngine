@@ -37,6 +37,7 @@ struct Shader {
 		return float4{ pts[nthvert].x, pts[nthvert].y, pts[nthvert].z, 1.0f};
 	}
 
+
 	__device__ bool fragment(float3 bar, uint &output_color)
 	{
 		float3 N{};
