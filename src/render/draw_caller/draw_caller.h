@@ -14,7 +14,7 @@
 class DrawCaller
 {
 private:
-	int n_streams = 16;
+	int n_streams = 64;
 	std::vector<std::shared_ptr<Rasterizer>> rasterizers{};
 	std::vector<std::shared_ptr<ZFiller>> zfillers{};
 	std::vector<std::shared_ptr<ZMerger>> z_mergers{};

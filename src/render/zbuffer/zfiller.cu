@@ -10,8 +10,8 @@
 #include <helper_math.h>
 
 extern __device__ __constant__ mat<4,4> viewport_matrix;
-extern __device__ mat<4,4> projection_matrix;
-extern __device__ mat<4,4> view_matrix;
+// extern __device__ mat<4,4> projection_matrix;
+// extern __device__ mat<4,4> view_matrix;
 
 __device__ void triangle_zbuffer(float3 pts[3], ZBuffer &zbuffer) {
 	float2 bboxmin{float(zbuffer.width-1),  float(zbuffer.height-1)};
@@ -60,7 +60,7 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 	float3 world_coords[3];
 	float3 look_dir = args.look_at - args.camera_pos;
 
-	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), model_matrix), view_matrix);
+	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, args.projection_matrix), model_matrix), args.view_matrix);
 
 	for (int j = 0; j < 3; j++)
 	{

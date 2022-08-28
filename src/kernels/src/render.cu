@@ -8,8 +8,8 @@
 #include <helper_math.h>
 
 __device__ __constant__ mat<4,4> viewport_matrix{};
-__device__ mat<4,4> projection_matrix{};
-__device__ mat<4,4> view_matrix{};
+// __device__ mat<4,4> projection_matrix{};
+// __device__ mat<4,4> view_matrix{};
 
 
 __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
@@ -50,18 +50,21 @@ void render_init(int width, int height)
 void update_device_parameters(const DrawCallArgs &args)
 {
 	mat<4,4> Projection = identity_matrix<4>();
-
 	Projection.at(3, 2) = -1.f / args.base.camera_pos.z;
+	/*
 	cudaMemcpyToSymbol(
 	        projection_matrix,
 	        &Projection,
 	        sizeof(mat<4,4>)
 	        );
+	        */
 
 	mat<4,4> View = lookat(args.base.camera_pos, args.base.look_at, {0, 1, 0});
+	/*
 	cudaMemcpyToSymbol(
         view_matrix,
         &View,
         sizeof(mat<4,4>)
         );
+        */
 }

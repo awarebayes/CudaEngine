@@ -33,6 +33,8 @@ struct DrawCallBaseArgs
 	float3 light_dir{};
 	float3 camera_pos{};
 	float3 look_at{};
+	mat<4, 4> view_matrix{};
+	mat<4, 4> projection_matrix{};
 };
 
 struct ModelArgs

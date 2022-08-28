@@ -5,7 +5,7 @@
 #include <cassert>
 #include <helper_math.h>
 
-__global__ void set_kernel(ZBuffer z1, ZBuffer z2)
+__global__ void max_merge_kernel(ZBuffer z1, ZBuffer z2)
 {
 	const int x = blockIdx.x * blockDim.x + threadIdx.x;
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -24,7 +24,7 @@ void ZMerger::async_merge(ZBuffer &z1, ZBuffer &z2) {
 	assert(z1.zbuffer != z2.zbuffer);
 	const dim3 block(16,16);
 	const dim3 grid(divUp(z1.width, block.x), divUp(z1.height, block.y));
-	set_kernel<<<grid, block, 0, stream>>>(z1, z2);
+	max_merge_kernel<<<grid, block, 0, stream>>>(z1, z2);
 }
 
 void parallel_reduce_merge_helper(std::vector<std::shared_ptr<ZMerger>> &mergers, std::vector<ZBuffer> &zbuffers, int active, int step, int stride) {

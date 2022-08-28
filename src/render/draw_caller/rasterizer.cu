@@ -7,15 +7,13 @@
 #include "rasterizer.h"
 
 extern __device__ __constant__ mat<4,4> viewport_matrix;
-extern __device__ mat<4,4> projection_matrix;
-extern __device__ mat<4,4> view_matrix;
 
 __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
 	auto light_dir = args.light_dir;
 
 	auto &model = model_args.model;
 	auto &model_matrix = model_args.model_matrix;
-	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, projection_matrix), model_matrix), view_matrix);
+	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, args.projection_matrix), model_matrix), args.view_matrix);
 
 	auto sh = Shader(model, light_dir);
 	sh.uniform_M = transform_mat;

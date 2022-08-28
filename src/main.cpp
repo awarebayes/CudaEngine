@@ -204,10 +204,12 @@ void display() {
 		                .light_dir = light_dir,
 		                .camera_pos = camera->position,
 		                .look_at = camera->position + camera->get_look_direction(),
+		                .view_matrix = camera->get_view_matrix(),
+		                .projection_matrix = camera->get_projection_matrix(),
 		        },
 		};
 
-		update_device_parameters(args);
+		// update_device_parameters(args);
 		draw_caller->draw(args, img);
 
 	}
@@ -252,7 +254,6 @@ void display() {
 
 	computeFPS();
 }
-
 
 void initCuda() {
 	// initialize gaussian mask
