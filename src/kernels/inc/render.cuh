@@ -43,14 +43,21 @@ struct ModelArgs
 	ModelRef model;
 };
 
+
+
 struct DrawCallArgs {
 	std::vector<ModelArgs> models{};
 	DrawCallBaseArgs base{};
 };
 
-void render_init(int width, int height);
+struct StoredModel
+{
+	float3 position{};
+	ModelRef model{};
+	ModelArgs to_args();
+};
 
-void update_device_parameters(const DrawCallArgs &args);
+void update_viewport(int width, int height);
 
 template <typename Tp>
 __device__ __forceinline__ float3 barycentric(float3 *pts, Tp P) {

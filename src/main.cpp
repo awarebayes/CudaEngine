@@ -49,6 +49,7 @@
 #include "kernels/inc/render.cuh"
 #include "model/inc/pool.h"
 #include "render/draw_caller/draw_caller.h"
+#include "render/scene/scene.h"
 
 StopWatchInterface *timer = NULL;
 unsigned int width, height;
@@ -66,9 +67,6 @@ int fpsCount = 0;// FPS count for averaging
 int fpsLimit = 1;// FPS limit for sampling
 const int REFRESH_DELAY = 10;
 
-// float3 camera_pos{0, -1, 3};
-// float3 look_dir{0, 1, -3};
-float3 light_dir{0, 0, 3};
 float3 offsetsss{0, 0, 0};
 
 
@@ -169,8 +167,8 @@ void display() {
 	auto mp = ModelPoolCreator().get();
 
 	auto draw_caller = DrawCallerSigleton().get();
+	auto scene = SceneSingleton().get();
 
-	ModelRef ref = mp->get("obj/african_head.obj");
 
 	ImGuiIO &io = ImGui::GetIO();
 	glViewport(0, 0, (GLsizei) io.DisplaySize.x, (GLsizei) io.DisplaySize.y);
@@ -179,40 +177,15 @@ void display() {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGLUT_NewFrame();
 
-	auto camera = CameraSingleton().get();
-	{
-
-		camera->display_menu();
-
-		ImGui::Begin("Scene controls Controls");
-		ImGui::SliderFloat3("Light dir XYZ", &light_dir.x, -10, 10);
-		ImGui::SliderFloat3("Offset test", &offsetsss.x, -10, 10);
-		ImGui::End();
-
-		std::vector<ModelArgs> models{};
-		for (int i = 0; i < 100; i++)
-		{
-			for (int j = 0; j < 100; j++)
-			{
-				models.emplace_back(ModelArgs{offset(float3{float(i-50) * 1.5f, float(j / 2), -10.0f * j}), ref});
-			}
-		}
-
-		DrawCallArgs args = {
-		        .models = models,
-				.base = {
-		                .light_dir = light_dir,
-		                .camera_pos = camera->position,
-		                .look_at = camera->position + camera->get_look_direction(),
-		                .view_matrix = camera->get_view_matrix(),
-		                .projection_matrix = camera->get_projection_matrix(),
-		        },
-		};
-
-		// update_device_parameters(args);
-		draw_caller->draw(args, img);
-
+	for (int i = 0; i < scene->get_n_models(); i++) {
+		auto &model = scene->get_model(i);
+		int posx = i / 100;
+		int posy = i % 1000;
+		model.position.y = std::sin(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posy * 0.01) * 0.4 + std::cos(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posx * 0.01) * 0.2;
 	}
+
+	scene->display_menu();
+	draw_caller->draw(scene->get_draw_call_args(), img);
 
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
 
@@ -258,7 +231,7 @@ void display() {
 void initCuda() {
 	// initialize gaussian mask
 	sdkCreateTimer(&timer);
-	render_init(width, height);
+	update_viewport(width, height);
 }
 
 void cleanup() {
@@ -356,9 +329,19 @@ void init_my_classes()
 	auto model = mp->get_mut("obj/african_head.obj");
 	model->load_texture("obj/african_head_diffuse.tga");
 
-	auto camera = CameraSingleton().get();
-	camera->position = float3{0, -1, 3};
-	camera->yaw_pitch = float2{-90, 0};
+	auto scene = SceneSingleton().get();
+
+	Camera camera;
+	camera.position = float3{0, -1, 3};
+	camera.yaw_pitch = float2{-90, 0};
+
+	ModelRef ref = mp->get("obj/african_head.obj");
+
+	for (int i = 0; i < 20; i++)
+		for (int j = 0; j < 20; j++)
+			scene->add_model(StoredModel{float3{float(i-10) * 1.5f, float(j / 2), -10.0f * j}, ref});
+
+	scene->set_camera(camera);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

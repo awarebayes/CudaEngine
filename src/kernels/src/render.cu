@@ -1,10 +1,7 @@
 #include "../../model/inc/model.h"
 #include "../../render/zbuffer/zbuffer.h"
 #include "../../util/stream_manager.h"
-#include "../inc/matrix.cuh"
-#include "../inc/render.cuh"
 #include "../inc/shader_impl.cuh"
-#include <helper_functions.h>
 #include <helper_math.h>
 
 __device__ __constant__ mat<4,4> viewport_matrix{};
@@ -36,7 +33,7 @@ __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 	}
 }
 
-void render_init(int width, int height)
+void update_viewport(int width, int height)
 {
 	int depth = 255;
 	mat<4,4> ViewPort = viewport(width/8, height/8, width*3/4, height*3/4, depth);
@@ -46,25 +43,9 @@ void render_init(int width, int height)
 	        sizeof(mat<4,4>)
 	        );
 }
-
-void update_device_parameters(const DrawCallArgs &args)
-{
-	mat<4,4> Projection = identity_matrix<4>();
-	Projection.at(3, 2) = -1.f / args.base.camera_pos.z;
-	/*
-	cudaMemcpyToSymbol(
-	        projection_matrix,
-	        &Projection,
-	        sizeof(mat<4,4>)
-	        );
-	        */
-
-	mat<4,4> View = lookat(args.base.camera_pos, args.base.look_at, {0, 1, 0});
-	/*
-	cudaMemcpyToSymbol(
-        view_matrix,
-        &View,
-        sizeof(mat<4,4>)
-        );
-        */
+ModelArgs StoredModel::to_args() {
+	return ModelArgs{
+			offset(position),
+			model,
+	};
 }
