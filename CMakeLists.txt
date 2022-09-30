@@ -46,7 +46,7 @@ add_executable(course_renderer
         src/render/image_resetter/image_resetter.cpp
         src/render/zbuffer/zmerger.cu
         src/render/draw_caller/synchronizable.cpp
-        src/util/const.h)
+        src/util/const.h src/render/scene/scene.cu src/render/scene/scene.h)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES
