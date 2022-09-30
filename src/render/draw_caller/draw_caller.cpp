@@ -9,7 +9,7 @@
 #include <helper_math.h>
 
 
-void DrawCaller::draw(DrawCallArgs &args, Image &image)
+void DrawCaller::draw(DrawCallArgs args, Image &image)
 {
 	// dispatch
 	image_resetter->async_reset(image);
