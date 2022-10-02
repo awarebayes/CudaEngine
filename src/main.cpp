@@ -179,7 +179,7 @@ void display() {
 		auto &model = scene->get_model(i);
 		int posx = i / 100;
 		int posy = i % 1000;
-		// model.position.y = sin(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posy * 0.01) * 0.4 + cos(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posx * 0.01) * 0.2;
+		model.position.y = sin(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posy * 0.01) * 0.4 + cos(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posx * 0.01) * 0.2;
 	}
 
 	scene->display_menu();
@@ -335,8 +335,16 @@ void init_my_classes() {
 
 	ModelRef ref = mp->get("obj/african_head.obj");
 
-	scene->add_model(StoredModel{glm::vec3{1, 0, -5}, ref});
+	//scene->add_model(StoredModel{glm::vec3{1, 0, -5}, ref});
 	// scene->add_model(StoredModel{glm::vec3{1, 0, -5}, ref});
+	for (int i = 0; i < 100; i++)
+	{
+		for (int j = 0; j < 100; j++)
+		{
+			scene->add_model(StoredModel{glm::vec3{float(i-50) * 1.5f, float(j / 2), -10.0f * j - 10}, ref});
+		}
+	}
+
 
 	scene->set_camera(camera);
 }

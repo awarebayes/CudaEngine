@@ -36,6 +36,7 @@ struct DrawCallBaseArgs
 	glm::vec3 look_at{};
 	glm::mat4 view{};
 	glm::mat4 projection{};
+	glm::vec2 screen_size{1920, 1080};
 };
 
 struct ModelArgs

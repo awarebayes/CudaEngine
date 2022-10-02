@@ -14,14 +14,20 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 	auto light_dir = args.light_dir;
 
 	auto &model = model_args.model;
-	// auto &model_matrix = model_args.model_matrix;
 
-	auto sh = Shader(model, light_dir, args.projection, args.view, model_args.model_matrix, glm::vec2{1920, 1080});
+	auto sh = Shader(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size);
 
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i);
 
 	auto &pts = sh.pts;
+	glm::vec3 n = glm::cross(pts[2] - pts[0], pts[1] - pts[0]);
+	glm::vec3 look_dir = args.look_at - args.camera_pos;
+	float intensity = dot(n, look_dir);
+	if (intensity < 0) {
+		return;
+	}
+
 	auto &normals = sh.normals;
 	auto &textures = sh.textures;
 
@@ -73,22 +79,7 @@ __global__ void draw_faces(DrawCallBaseArgs args, ModelArgs model_args, Image im
 	if (position >= model.n_faces)
 		return;
 
-	auto face = model.faces[position];
-
-
-	glm::vec3 world_coords[3];
-	auto look_dir = args.look_at - args.camera_pos;
-	for (int j = 0; j < 3; j++)
-	{
-		glm::vec3 v = model.vertices[at(face, j)];
-		world_coords[j] = v;
-	}
-
-	glm::vec3 n = cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
-	n = normalize(n);
-	float intensity = dot(n, look_dir);
-	if (intensity > 0)
-		triangle(args, model_args, position, image, zbuffer);
+	triangle(args, model_args, position, image, zbuffer);
 }
 
 void Rasterizer::async_rasterize(DrawCallArgs &args, int model_index, Image image, ZBuffer zbuffer)

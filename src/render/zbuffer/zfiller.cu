@@ -49,31 +49,27 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 
 	auto &model = model_args.model;
-
 	if (position >= model.n_faces)
 		return;
 
-	auto face = model.faces[position];
-	glm::vec3 world_coords[3];
+	glm::vec3 screen_coords[3];
 	glm::vec3 look_dir = args.look_at - args.camera_pos;
-	auto sh = Shader(model, {0, 0, 0}, args.projection, args.view, model_args.model_matrix, {1920, 1080});
-
-	for (int i = 0; i < 3; i++)
-		sh.vertex(position, i);
-
-	auto &screen_coords = sh.pts;
-
-	for (int j = 0; j < 3; j++)
-	{
-		glm::vec3 v = model.vertices[at(face, j)];
-		world_coords[j] = glm::vec3(v.x, v.y, v.z);
+	auto face = model.faces[position];
+	for (int nthvert = 0; nthvert < 3; nthvert++) {
+		int index = at(face, nthvert);
+		glm::vec3 v = model.vertices[index];
+		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
+		auto proj = args.projection * (args.view * (model_args.model_matrix * mv));
+		proj.x = (proj.x + 1.0f) * args.screen_size.x / proj.w;
+		proj.y = (proj.y + 1.0f)  * args.screen_size.y / proj.w;
+		proj.z = (proj.z + 1.0f) / proj.w;
+		screen_coords[nthvert] = glm::vec3{proj.x, proj.y, proj.z};
 	}
 
-	glm::vec3 n = glm::cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
-	n = glm::normalize(n);
-	float intensity = glm::dot(n, look_dir);
-	if (intensity > 0)
+	glm::vec3 n = cross(screen_coords[2] - screen_coords[0], screen_coords[1] - screen_coords[0]);
+	if (dot(n, look_dir) > 0) {
 		triangle_zbuffer(screen_coords, buffer);
+	}
 }
 
 __global__ void set_kernel(ZBuffer buffer, float set_to)
