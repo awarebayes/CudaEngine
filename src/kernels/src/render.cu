@@ -45,7 +45,7 @@ void update_viewport(int width, int height)
 }
 ModelArgs StoredModel::to_args() {
 	return ModelArgs{
-			offset(position),
+	        position,
 			model,
 	};
 }

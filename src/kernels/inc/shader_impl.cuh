@@ -37,10 +37,10 @@ struct Shader {
 		normals[nthvert] = model.normals[index];
 		textures[nthvert] = model.textures[index];
 		auto proj = projection * (view * (model_matrix * mv));
-		proj.x = (proj.x + 1.0f) * 1920.0f / 2.0f;
-		proj.y = (proj.y + 1.0f) * 1080.0f / 2.0f;
+		proj.x = (proj.x + 1.0f) * 1920.0f / proj.w;
+		proj.y = (proj.y + 1.0f)  * 1080.0f / proj.w;
+		proj.z = (proj.z + 1.0f) / proj.w;
 		pts[nthvert] = float3{proj.x, proj.y, proj.z};
-
 		return float4{ pts[nthvert].x, pts[nthvert].y, pts[nthvert].z, 1.0f};
 	}
 

@@ -62,7 +62,7 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 	projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
 	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	glm::mat4 model_matrix = glm::mat4(1.0f);
-	model_matrix = glm::translate(model_matrix, glm::vec3(0.0f, 0.0f, 0.0f));
+	model_matrix = glm::translate(model_matrix, glm::vec3(model_args.model_position.x, model_args.model_position.y, model_args.model_position.z));
 	auto sh = Shader(model, {0, 0, 0}, projection, view, model_matrix);
 
 	for (int i = 0; i < 3; i++)

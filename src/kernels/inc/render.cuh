@@ -39,7 +39,7 @@ struct DrawCallBaseArgs
 
 struct ModelArgs
 {
-	mat<4, 4> model_matrix{};
+	float3 model_position{};
 	ModelRef model;
 };
 
