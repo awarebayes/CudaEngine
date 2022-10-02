@@ -8,10 +8,10 @@
 #include "zbuffer.h"
 #include "zfiller.h"
 #include <helper_math.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 extern __device__ __constant__ mat<4,4> viewport_matrix;
-// extern __device__ mat<4,4> projection_matrix;
-// extern __device__ mat<4,4> view_matrix;
 
 __device__ void triangle_zbuffer(float3 pts[3], ZBuffer &zbuffer) {
 	float2 bboxmin{float(zbuffer.width-1),  float(zbuffer.height-1)};
@@ -53,19 +53,26 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 	if (position >= model.n_faces)
 		return;
 
-	auto &model_matrix = model_args.model_matrix;
-
 	auto face = model.faces[position];
-	float3 screen_coords[3];
 	float3 world_coords[3];
 	float3 look_dir = args.look_at - args.camera_pos;
 
-	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, args.projection_matrix), model_matrix), args.view_matrix);
+	glm::mat4 view          = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+	glm::mat4 projection    = glm::mat4(1.0f);
+	projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
+	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	glm::mat4 model_matrix = glm::mat4(1.0f);
+	model_matrix = glm::translate(model_matrix, glm::vec3(0.0f, 0.0f, 0.0f));
+	auto sh = Shader(model, {0, 0, 0}, projection, view, model_matrix);
+
+	for (int i = 0; i < 3; i++)
+		sh.vertex(position, i);
+
+	auto &screen_coords = sh.pts;
 
 	for (int j = 0; j < 3; j++)
 	{
 		float3 v = model.vertices[at(face, j)];
-		screen_coords[j] = m2v(dot(transform_mat, v2m(v)));
 		world_coords[j] = v;
 	}
 

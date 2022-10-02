@@ -5,6 +5,8 @@
 #include "../../kernels/inc/shader_impl.cuh"
 #include "../../util/const.h"
 #include "rasterizer.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 extern __device__ __constant__ mat<4,4> viewport_matrix;
 
@@ -12,11 +14,15 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 	auto light_dir = args.light_dir;
 
 	auto &model = model_args.model;
-	auto &model_matrix = model_args.model_matrix;
-	mat<4,4> transform_mat = dot(dot(dot(viewport_matrix, args.projection_matrix), model_matrix), args.view_matrix);
+	// auto &model_matrix = model_args.model_matrix;
 
-	auto sh = Shader(model, light_dir);
-	sh.uniform_M = transform_mat;
+	glm::mat4 view          = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+	glm::mat4 projection    = glm::mat4(1.0f);
+	projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
+	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	glm::mat4 model_matrix = glm::mat4(1.0f);
+	model_matrix = glm::translate(model_matrix, glm::vec3(0.0f, 0.0f, 0.0f));
+	auto sh = Shader(model, light_dir, projection, view, model_matrix);
 
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i);

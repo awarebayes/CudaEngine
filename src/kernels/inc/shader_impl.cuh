@@ -10,10 +10,12 @@
 #include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
+#include <glm/glm.hpp>
 
 struct Shader {
-	mat<4,4> uniform_M;   //  Projection*ModelView
-	mat<4,4> uniform_MIT; // (Projection*ModelView).invert_transpose()
+	glm::mat4 projection;
+	glm::mat4 view;
+	glm::mat4 model_matrix;
 
 	ModelRef &model;
 
@@ -22,17 +24,22 @@ struct Shader {
 	float2 textures[3]{};
 	float3 light_dir{};
 
-	__device__ explicit Shader(ModelRef &mod, float3 light_dir_) : model(mod), light_dir(light_dir_) {};
+	__device__ explicit Shader(ModelRef &mod, float3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_)
+	    : model(mod), light_dir(light_dir_), projection(projection_), view(view_), model_matrix(model_matrix_) {};
 
 	__device__ __forceinline__ float4 vertex(int iface, int nthvert)
 	{
 		auto face = model.faces[iface];
 		int index = at(face, nthvert);
 		float3 v = model.vertices[index];
+		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
 
 		normals[nthvert] = model.normals[index];
 		textures[nthvert] = model.textures[index];
-		pts[nthvert] = m2v(dot(uniform_M, v2m(v)));
+		auto proj = projection * (view * (model_matrix * mv));
+		proj.x = (proj.x + 1.0f) * 1920.0f / 2.0f;
+		proj.y = (proj.y + 1.0f) * 1080.0f / 2.0f;
+		pts[nthvert] = float3{proj.x, proj.y, proj.z};
 
 		return float4{ pts[nthvert].x, pts[nthvert].y, pts[nthvert].z, 1.0f};
 	}

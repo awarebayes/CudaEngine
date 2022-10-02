@@ -5,8 +5,8 @@
 #ifndef COURSE_RENDERER_TEXTURE_CUH
 #define COURSE_RENDERER_TEXTURE_CUH
 
-#include <string>
 #include <vector_types.h>
+#include <string>
 
 struct TextureRef
 {
