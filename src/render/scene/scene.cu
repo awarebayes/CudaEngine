@@ -2,6 +2,7 @@
 // Created by dev on 8/28/22.
 //
 #include "scene.h"
+#include <glm/ext/matrix_clip_space.hpp>
 #include <imgui.h>
 
 std::shared_ptr<Camera> Scene::get_camera() {
@@ -19,16 +20,16 @@ DrawCallArgs Scene::get_draw_call_args() {
 	DrawCallArgs args = {
 			.models = get_models(),
 			.base = {
-					.light_dir = light_dir,
+					.light_dir = glm::vec3(light_dir.x, light_dir.y, light_dir.z),
 					.camera_pos = camera->position,
 					.look_at = camera->position + camera->get_look_direction(),
-					.view_matrix = camera->get_view_matrix(),
-					.projection_matrix = camera->get_projection_matrix(),
+					.view = camera->get_view_matrix(),
+					.projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f),
 			},
 	};
 	return args;
 }
-float3 &Scene::get_light_dir() {
+glm::vec3 &Scene::get_light_dir() {
 	return light_dir;
 }
 void Scene::set_camera(const Camera &cam) {

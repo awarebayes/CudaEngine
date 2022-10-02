@@ -26,8 +26,6 @@
 */
 
 
-#include <cmath>
-
 // OpenGL Graphics includes
 #include <GL/freeglut.h>
 #include <helper_gl.h>
@@ -67,7 +65,7 @@ int fpsCount = 0;// FPS count for averaging
 int fpsLimit = 1;// FPS limit for sampling
 const int REFRESH_DELAY = 10;
 
-float3 offsetsss{0, 0, 0};
+glm::vec3 offsetsss{0, 0, 0};
 
 
 #define GL_TEXTURE_TYPE GL_TEXTURE_2D
@@ -181,7 +179,7 @@ void display() {
 		auto &model = scene->get_model(i);
 		int posx = i / 100;
 		int posy = i % 1000;
-		model.position.y = std::sin(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posy * 0.01) * 0.4 + std::cos(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posx * 0.01) * 0.2;
+		// model.position.y = sin(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posy * 0.01) * 0.4 + cos(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posx * 0.01) * 0.2;
 	}
 
 	scene->display_menu();
@@ -323,8 +321,7 @@ void initGL(int argc, char **argv) {
 	assert(ImGui_ImplOpenGL3_Init("#version 330"));
 }
 
-void init_my_classes()
-{
+void init_my_classes() {
 	auto mp = ModelPoolCreator().get();
 	auto model = mp->get_mut("obj/african_head.obj");
 	model->load_texture("obj/african_head_diffuse.tga");
@@ -332,14 +329,14 @@ void init_my_classes()
 	auto scene = SceneSingleton().get();
 
 	Camera camera;
-	camera.position = float3{0, -1, 3};
-	camera.yaw_pitch = float2{-90, 0};
+	camera.position = glm::vec3{0, 0, 3};
+	camera.yaw = -90;
+	camera.pitch = 0;
 
 	ModelRef ref = mp->get("obj/african_head.obj");
 
-	for (int i = 0; i < 20; i++)
-		for (int j = 0; j < 20; j++)
-			scene->add_model(StoredModel{float3{float(i-10) * 1.5f, float(j / 2), -10.0f * j}, ref});
+	scene->add_model(StoredModel{glm::vec3{1, 0, -5}, ref});
+	// scene->add_model(StoredModel{glm::vec3{1, 0, -5}, ref});
 
 	scene->set_camera(camera);
 }

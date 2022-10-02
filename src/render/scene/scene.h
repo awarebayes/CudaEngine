@@ -11,7 +11,7 @@ class Scene {
 private:
 	std::vector<StoredModel> models{};
 	std::shared_ptr<Camera> camera{};
-	float3 light_dir{0, 0, 1.5};
+	glm::vec3 light_dir{0, 0, 1.5};
 public:
 	Scene() = default;
 	void display_menu();
@@ -20,7 +20,7 @@ public:
 	std::shared_ptr<Camera> get_camera();
 	void set_camera(const Camera &cam);
 	std::vector<ModelArgs> get_models();
-	float3 &get_light_dir();
+	glm::vec3 &get_light_dir();
 	DrawCallArgs get_draw_call_args();
 	int get_n_models();
 };

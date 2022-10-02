@@ -9,13 +9,13 @@
 #include "thrust/device_vector.h"
 #include "thrust/host_vector.h"
 #include "vector_types.h"
+#include <glm/glm.hpp>
 
 
-struct ModelRef
-{
-	float3 *vertices{};
-	float3 *normals{};
-	float2 *textures{};
+struct ModelRef {
+	glm::vec3 *vertices{};
+	glm::vec3 *normals{};
+	glm::vec2 *textures{};
 	int3 *faces{};
 
 	TextureRef texture{};
@@ -25,9 +25,9 @@ struct ModelRef
 };
 
 struct Model {
-	float3 *vertices;
-	float3 *normals{};
-	float2 *textures{};
+	glm::vec3 *vertices;
+	glm::vec3 *normals{};
+	glm::vec2 *textures{};
 	int3 *faces{};
 
 	Texture texture{};

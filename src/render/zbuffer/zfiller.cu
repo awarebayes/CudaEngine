@@ -13,10 +13,10 @@
 
 extern __device__ __constant__ mat<4,4> viewport_matrix;
 
-__device__ void triangle_zbuffer(float3 pts[3], ZBuffer &zbuffer) {
-	float2 bboxmin{float(zbuffer.width-1),  float(zbuffer.height-1)};
-	float2 bboxmax{0., 0.};
-	float2 clamp{float(zbuffer.width-1), float(zbuffer.height-1)};
+__device__ void triangle_zbuffer(glm::vec3 pts[3], ZBuffer &zbuffer) {
+	glm::vec2 bboxmin{float(zbuffer.width-1),  float(zbuffer.height-1)};
+	glm::vec2 bboxmax{0., 0.};
+	glm::vec2 clamp{float(zbuffer.width-1), float(zbuffer.height-1)};
 	for (int i=0; i<3; i++) {
 		bboxmin.x = max(0.0f, min(bboxmin.x, pts[i].x));
 		bboxmin.y = max(0.0f, min(bboxmin.y, pts[i].y));
@@ -26,7 +26,7 @@ __device__ void triangle_zbuffer(float3 pts[3], ZBuffer &zbuffer) {
 	}
 
 
-	float3 P{0, 0, 0};
+	glm::vec3 P{0, 0, 0};
 	int cnt = 0;
 	for (P.x=floor(bboxmin.x); P.x<=bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y<=bboxmax.y; P.y++) {
@@ -54,16 +54,16 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 		return;
 
 	auto face = model.faces[position];
-	float3 world_coords[3];
-	float3 look_dir = args.look_at - args.camera_pos;
+	glm::vec3 world_coords[3];
+	glm::vec3 look_dir = args.look_at - args.camera_pos;
 
 	glm::mat4 view          = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
 	glm::mat4 projection    = glm::mat4(1.0f);
 	projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
 	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	glm::mat4 model_matrix = glm::mat4(1.0f);
-	model_matrix = glm::translate(model_matrix, glm::vec3(model_args.model_position.x, model_args.model_position.y, model_args.model_position.z));
-	auto sh = Shader(model, {0, 0, 0}, projection, view, model_matrix);
+	model_matrix = glm::translate(model_matrix, model_args.model_position);
+	auto sh = Shader(model, {0, 0, 0}, projection, view, model_matrix, {1920, 1080});
 
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i);
@@ -72,13 +72,13 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 
 	for (int j = 0; j < 3; j++)
 	{
-		float3 v = model.vertices[at(face, j)];
-		world_coords[j] = v;
+		glm::vec3 v = model.vertices[at(face, j)];
+		world_coords[j] = glm::vec3(v.x, v.y, v.z);
 	}
 
-	float3 n = cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
-	n = normalize(n);
-	float intensity = dot(n, look_dir);
+	glm::vec3 n = glm::cross(world_coords[2] - world_coords[0], world_coords[1] - world_coords[0]);
+	n = glm::normalize(n);
+	float intensity = glm::dot(n, look_dir);
 	if (intensity > 0)
 		triangle_zbuffer(screen_coords, buffer);
 }

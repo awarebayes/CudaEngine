@@ -8,18 +8,18 @@
 #include "../kernels/inc/matrix.cuh"
 #include "../util/singleton.h"
 #include <vector_types.h>
+#include <glm/glm.hpp>
 
 struct Camera
 {
-	float3 position{};
-	float2 yaw_pitch{}; // yaw pitch roll
-
-
+	glm::vec3 position{};
+	glm::vec3 up{};
+	float yaw{};
+	float pitch{};
 
 	void display_menu();
-	[[nodiscard]] float3 get_look_direction() const;
-	mat<4, 4> get_projection_matrix();
-	mat<4, 4> get_view_matrix();
+	[[nodiscard]] glm::vec3 get_look_direction() const;
+	glm::mat4 get_view_matrix();
 };
 
 using CameraSingleton = SingletonCreator<Camera>;

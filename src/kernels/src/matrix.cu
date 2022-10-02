@@ -47,28 +47,3 @@ __device__ __host__ void dbg_print(const mat<4, 4> &mat)
 		mat.at(3, 0), mat.at(3, 1), mat.at(3, 2), mat.at(3, 3)
 	);
 }
-
-__device__ __host__ mat<4,4> lookat(float3 eye, float3 center, float3 up)
-{
-	float3 z = normalize(eye - center);
-	float3 x = normalize(cross(up,z));
-	float3 y = normalize(cross(z,x));
-	mat<4,4> Minv = identity_matrix<4>();
-	mat<4,4> Tr   = identity_matrix<4>();
-	for (int i=0; i<3; i++) {
-		Minv.at(0, i) = at(x, i);
-		Minv.at(1, i) = at(y, i);
-		Minv.at(2, i) = at(z, i);
-		Tr.at(i, 3) = -at(eye, i);
-	}
-	return dot(Minv, Tr);
-}
-
-__host__ mat<4,4> offset(float3 xyz)
-{
-	mat<4,4> result = identity_matrix<4>();
-	result.at(0, 3) = xyz.x;
-	result.at(1, 3) = xyz.y;
-	result.at(2, 3) = xyz.z;
-	return result;
-}

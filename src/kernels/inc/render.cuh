@@ -9,6 +9,7 @@
 #include "../../model/inc/model.h"
 #include "matrix.cuh"
 #include <helper_math.h>
+#include <glm/glm.hpp>
 
 struct Image {
 	uint *pixels;
@@ -30,16 +31,16 @@ struct Image {
 
 struct DrawCallBaseArgs
 {
-	float3 light_dir{};
-	float3 camera_pos{};
-	float3 look_at{};
-	mat<4, 4> view_matrix{};
-	mat<4, 4> projection_matrix{};
+	glm::vec3 light_dir{};
+	glm::vec3 camera_pos{};
+	glm::vec3 look_at{};
+	glm::mat4 view{};
+	glm::mat4 projection{};
 };
 
 struct ModelArgs
 {
-	float3 model_position{};
+	glm::vec3 model_position{};
 	ModelRef model;
 };
 
@@ -52,7 +53,7 @@ struct DrawCallArgs {
 
 struct StoredModel
 {
-	float3 position{};
+	glm::vec3 position{};
 	ModelRef model{};
 	ModelArgs to_args();
 };
@@ -60,12 +61,12 @@ struct StoredModel
 void update_viewport(int width, int height);
 
 template <typename Tp>
-__device__ __forceinline__ float3 barycentric(float3 *pts, Tp P) {
-	auto a = float3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
-	auto b = float3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
+__device__ __forceinline__ glm::vec3 barycentric(glm::vec3 *pts, Tp P) {
+	auto a = glm::vec3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
+	auto b = glm::vec3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
 	auto u = cross(a, b);
 	float flag = abs(u.z) < 1;
-	return float3{
+	return glm::vec3{
 			-1.0f * flag + (1.0f - flag) * (1.f-(u.x+u.y)/u.z),
 			1.0f * flag + (1.0f - flag) * (u.y/u.z),
 			1.0f * flag + (1.0f - flag) * (u.x/u.z)
