@@ -4,13 +4,15 @@ project(course_renderer CXX CUDA)
 
 set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CXX_STANDARD 20)
+set(ENABLE_PRECOMPILED_HEADERS OFF)
+set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
 include_directories(${GLUT_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIRS})
 find_package(CUDA REQUIRED)
 include_directories(${CUDA_INCLUDE_DIRS})
-
+find_package(glm REQUIRED)
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -58,4 +60,5 @@ target_link_libraries(${CMAKE_PROJECT_NAME})
 target_link_libraries(${CMAKE_PROJECT_NAME}  ${OPENGL_LIBRARIES})
 target_link_libraries(${CMAKE_PROJECT_NAME}  ${GLUT_LIBRARY})
 target_link_libraries(${CMAKE_PROJECT_NAME} ${CUDA_LIBRARIES} -lcuda -L/usr/local/lib64)
+target_link_libraries(${CMAKE_PROJECT_NAME} glm)
 
