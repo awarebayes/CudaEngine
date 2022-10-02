@@ -13,7 +13,7 @@
 struct Camera
 {
 	glm::vec3 position{};
-	glm::vec3 up{};
+	glm::vec3 up{0, 1, 0};
 	float yaw{};
 	float pitch{};
 

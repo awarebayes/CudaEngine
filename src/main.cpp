@@ -329,7 +329,7 @@ void init_my_classes() {
 	auto scene = SceneSingleton().get();
 
 	Camera camera;
-	camera.position = glm::vec3{0, 0, 3};
+	camera.position = glm::vec3{0, -1, 3};
 	camera.yaw = -90;
 	camera.pitch = 0;
 

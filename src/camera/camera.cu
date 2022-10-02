@@ -30,5 +30,7 @@ void Camera::display_menu() {
 
 glm::mat4 Camera::get_view_matrix()
 {
+	glm::vec3 look_dir = get_look_direction();
+
 	return glm::lookAt(position, position + get_look_direction(), up);
 }

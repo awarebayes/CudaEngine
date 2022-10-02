@@ -2,6 +2,7 @@
 #include "../../render/zbuffer/zbuffer.h"
 #include "../../util/stream_manager.h"
 #include "../inc/shader_impl.cuh"
+#include <glm/ext/matrix_transform.hpp>
 #include <helper_math.h>
 
 __device__ __constant__ mat<4,4> viewport_matrix{};
@@ -45,7 +46,7 @@ void update_viewport(int width, int height)
 }
 ModelArgs StoredModel::to_args() {
 	return ModelArgs{
-	        position,
+	        glm::translate(glm::mat4(1.0f), position),
 			model,
 	};
 }

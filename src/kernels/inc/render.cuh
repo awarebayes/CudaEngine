@@ -40,7 +40,7 @@ struct DrawCallBaseArgs
 
 struct ModelArgs
 {
-	glm::vec3 model_position{};
+	glm::mat4 model_matrix{};
 	ModelRef model;
 };
 
@@ -64,7 +64,7 @@ template <typename Tp>
 __device__ __forceinline__ glm::vec3 barycentric(glm::vec3 *pts, Tp P) {
 	auto a = glm::vec3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
 	auto b = glm::vec3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
-	auto u = cross(a, b);
+	auto u = glm::cross(a, b);
 	float flag = abs(u.z) < 1;
 	return glm::vec3{
 			-1.0f * flag + (1.0f - flag) * (1.f-(u.x+u.y)/u.z),

@@ -16,13 +16,7 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 	auto &model = model_args.model;
 	// auto &model_matrix = model_args.model_matrix;
 
-	glm::mat4 view          = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-	glm::mat4 projection    = glm::mat4(1.0f);
-	projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
-	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-	glm::mat4 model_matrix = glm::mat4(1.0f);
-	model_matrix = glm::translate(model_matrix, model_args.model_position);
-	auto sh = Shader(model, light_dir, projection, view, model_matrix, glm::vec2{1920, 1080});
+	auto sh = Shader(model, light_dir, args.projection, args.view, model_args.model_matrix, glm::vec2{1920, 1080});
 
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i);

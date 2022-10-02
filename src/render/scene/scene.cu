@@ -17,6 +17,9 @@ std::vector<ModelArgs> Scene::get_models() {
 }
 
 DrawCallArgs Scene::get_draw_call_args() {
+
+	auto view = camera->get_view_matrix();
+
 	DrawCallArgs args = {
 			.models = get_models(),
 			.base = {
@@ -29,6 +32,7 @@ DrawCallArgs Scene::get_draw_call_args() {
 	};
 	return args;
 }
+
 glm::vec3 &Scene::get_light_dir() {
 	return light_dir;
 }
