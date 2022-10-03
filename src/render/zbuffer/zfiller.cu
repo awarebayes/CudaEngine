@@ -60,7 +60,8 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 		glm::vec3 v = model.vertices[index];
 		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
 		auto proj = args.projection * (args.view * (model_args.model_matrix * mv));
-		proj.w = abs(proj.w);
+		if (proj.w < 0)
+			return;
 		proj.x = (proj.x + 1.0f) / 2.0f * args.screen_size.x / proj.w;
 		proj.y = (proj.y + 1.0f)  / 2.0f * args.screen_size.y / proj.w;
 		proj.z = (proj.z + 1.0f) / proj.w;

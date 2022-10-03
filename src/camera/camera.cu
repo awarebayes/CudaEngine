@@ -23,8 +23,8 @@ void Camera::display_menu() {
 	ImGui::Begin("Camera Controls");
 	ImGui::SliderFloat2("Camera XY", &position.x, -10, 10);
 	ImGui::SliderFloat("Camera Z", &position.z, -100, 100);
-	ImGui::SliderFloat("Look dir yaw", &yaw, -180, 180);
-	ImGui::SliderFloat("Look dir pitch", &pitch, -180, 180);
+	ImGui::SliderFloat("Look dir yaw", &yaw, -179.0, 179.0);
+	ImGui::SliderFloat("Look dir pitch", &pitch, -179.0, 179.0);
 	ImGui::End();
 }
 
