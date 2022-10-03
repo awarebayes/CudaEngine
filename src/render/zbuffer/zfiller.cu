@@ -68,6 +68,8 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 	}
 
 	glm::vec3 n = cross(screen_coords[2] - screen_coords[0], screen_coords[1] - screen_coords[0]);
+	if (glm::dot(look_dir, {0, 0, 1}) > 0)
+		n = -n;
 	if (dot(n, look_dir) > 0) {
 		triangle_zbuffer(screen_coords, buffer);
 	}

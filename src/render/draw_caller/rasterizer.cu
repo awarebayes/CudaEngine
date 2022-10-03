@@ -23,10 +23,10 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 	auto &pts = sh.pts;
 	glm::vec3 n = glm::cross(pts[2] - pts[0], pts[1] - pts[0]);
 	glm::vec3 look_dir = args.look_at - args.camera_pos;
-	float intensity = dot(n, look_dir);
-	if (intensity < 0) {
+	if (glm::dot(look_dir, {0, 0, 1}) > 0)
+		n = -n;
+	if (glm::dot(n, look_dir) < 0)
 		return;
-	}
 
 	auto &normals = sh.normals;
 	auto &textures = sh.textures;
