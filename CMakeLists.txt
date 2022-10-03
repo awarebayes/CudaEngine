@@ -49,7 +49,7 @@ add_executable(course_renderer
         src/render/draw_caller/synchronizable.cpp
         src/render/scene/scene.cu
         src/render/culler/culler.cpp
-        )
+        src/model/inc/bounding_volume.h src/model/src/bounding_volume.cpp src/render/logger/logger.h src/render/logger/logger.cpp)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

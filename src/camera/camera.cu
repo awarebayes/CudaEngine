@@ -24,6 +24,7 @@ void Camera::display_menu() {
 	ImGui::SliderFloat("Look dir yaw", &yaw, -179.0, 179.0);
 	ImGui::SliderFloat("Look dir pitch", &pitch, -179.0, 179.0);
 	ImGui::SliderFloat("FOV", &fov, 1, 179);
+	ImGui::SliderFloat("zFar", &zfar, 90, 1000);
 	ImGui::End();
 }
 glm::vec2 Camera::get_screen_size() const {

@@ -11,6 +11,10 @@
 
 void DrawCaller::draw(DrawCallArgs args, Image &image)
 {
+	logger->log_fps();
+	logger->log_before_culling(args.models.size());
+	args = culler->cull(args, *args.base.camera_ptr);
+	logger->log_after_culling(args.models.size());
 	// dispatch
 	image_resetter->async_reset(image);
 	size_t streams_to_use = std::min(args.models.size(), (size_t)n_streams);
@@ -41,10 +45,12 @@ void DrawCaller::draw(DrawCallArgs args, Image &image)
 	for (size_t i = 0; i < streams_to_use; i++)
 		rasterizers[i]->await();
 
-
+	logger->draw_widget();
 }
 DrawCaller::DrawCaller() {
 	image_resetter = std::make_shared<ImageResetter>();
+	culler = std::make_shared<Culler>();
+	logger = std::make_shared<RenderLogger>();
 	for (int i = 0; i < n_streams; i++)
 	{
 		rasterizers.emplace_back(std::make_shared<Rasterizer>());

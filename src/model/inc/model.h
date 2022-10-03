@@ -5,6 +5,7 @@
 #ifndef COURSE_RENDERER_MODEL_H
 #define COURSE_RENDERER_MODEL_H
 
+#include "bounding_volume.h"
 #include "texture.cuh"
 #include "thrust/device_vector.h"
 #include "thrust/host_vector.h"
@@ -22,6 +23,8 @@ struct ModelRef {
 
 	int n_vertices = 0;
 	int n_faces = 0;
+
+	Sphere *bounding_volume;
 };
 
 struct Model {
@@ -32,12 +35,14 @@ struct Model {
 
 	Texture texture{};
 
+ 	Sphere bounding_volume {{}, 0};
+
 	int n_vertices = 0;
 	int n_faces = 0;
 	explicit Model(const std::string &filename);
 	void load_texture(const std::string &filename);
 	~Model();
-	[[nodiscard]] ModelRef get_ref() const;
+	[[nodiscard]] ModelRef get_ref();
 };
 
 #endif//COURSE_RENDERER_MODEL_H

@@ -131,7 +131,7 @@ GLuint compileASMShader(GLenum program_type, const char *code) {
 	return program_id;
 }
 
-void computeFPS() {
+float computeFPS() {
 	fpsCount++;
 
 	if (fpsCount == fpsLimit) {
@@ -146,7 +146,9 @@ void computeFPS() {
 		fpsLimit = (int) MAX(ifps, 1.0f);
 
 		sdkResetTimer(&timer);
+		return ifps;
 	}
+	return 0;
 }
 
 // display results using OpenGL

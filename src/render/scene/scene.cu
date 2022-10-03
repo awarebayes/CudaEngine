@@ -19,7 +19,6 @@ std::vector<ModelArgs> Scene::get_models() {
 DrawCallArgs Scene::get_draw_call_args() {
 
 	auto look_dir = camera->get_look_direction();
-	std::cout << "look_dir: " << look_dir.x << ", " << look_dir.y << ", " << look_dir.z << std::endl;
 
 	DrawCallArgs args = {
 			.models = get_models(),
@@ -30,6 +29,7 @@ DrawCallArgs Scene::get_draw_call_args() {
 					.view = camera->get_view_matrix(),
 					.projection = camera->get_projection_matrix(),
 	                .screen_size = camera->get_screen_size(),
+	                .camera_ptr = camera.get(),
 			},
 	};
 	return args;

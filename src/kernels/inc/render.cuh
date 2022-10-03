@@ -6,9 +6,10 @@
 #define COURSE_RENDERER_RENDER_CUH
 
 #include "../../../Common/helper_functions.h"
+#include "../../camera/camera.h"
 #include "../../model/inc/model.h"
-#include <helper_math.h>
 #include <glm/glm.hpp>
+#include <helper_math.h>
 
 struct Image {
 	uint *pixels;
@@ -36,6 +37,7 @@ struct DrawCallBaseArgs
 	glm::mat4 view{};
 	glm::mat4 projection{};
 	glm::vec2 screen_size{1920, 1080};
+	Camera *camera_ptr = nullptr;
 };
 
 struct ModelArgs
@@ -43,8 +45,6 @@ struct ModelArgs
 	glm::mat4 model_matrix{};
 	ModelRef model;
 };
-
-
 
 struct DrawCallArgs {
 	std::vector<ModelArgs> models{};
@@ -58,7 +58,6 @@ struct StoredModel
 	ModelArgs to_args();
 };
 
-void update_viewport(int width, int height);
 
 template <typename Tp>
 __device__ __forceinline__ glm::vec3 barycentric(glm::vec3 *pts, Tp P) {

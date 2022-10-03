@@ -2,15 +2,27 @@
 // Created by dev on 7/9/22.
 //
 #include "../inc/model.h"
-#include <fstream>
 #include <glm/glm.hpp>
 #include <helper_cuda.h>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
 
 #include "../../util/tiny_objloader.h"
+
+Sphere generateSphereBV(const std::vector<glm::vec3> &vertices)
+{
+	glm::vec3 minAABB = glm::vec3(std::numeric_limits<float>::max());
+	glm::vec3 maxAABB = glm::vec3(std::numeric_limits<float>::min());
+
+	for (const auto &i: vertices)
+	{
+		minAABB = glm::min(minAABB, i);
+		maxAABB = glm::max(maxAABB, i);
+	}
+
+	return Sphere((maxAABB + minAABB) * 0.5f, glm::length(minAABB - maxAABB));
+}
 
 Model::Model(const std::string &filename) : vertices(), faces() {
 
@@ -103,6 +115,8 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 		checkCudaErrors(cudaMemcpy(textures, textures_host.data(), n_vertices * sizeof(glm::vec2), cudaMemcpyHostToDevice));
 
 	std::cerr << "# Model loaded with v# " << vertices_host.size() << " f# " << faces_host.size() << std::endl;
+
+	bounding_volume = generateSphereBV(vertices_host);
 }
 
 Model::~Model() {
@@ -111,8 +125,8 @@ Model::~Model() {
 	checkCudaErrors(cudaFree(normals));
 	checkCudaErrors(cudaFree(textures));
 }
-ModelRef Model::get_ref() const {
-	return ModelRef{vertices, normals, textures, faces, texture.get_ref(), n_vertices, n_faces};
+ModelRef Model::get_ref() {
+	return ModelRef{vertices, normals, textures, faces, texture.get_ref(), n_vertices, n_faces, &bounding_volume};
 }
 void Model::load_texture(const std::string &filename) {
 	texture = Texture(filename);

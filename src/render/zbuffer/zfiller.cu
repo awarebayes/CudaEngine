@@ -58,8 +58,8 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 		auto proj = args.projection * (args.view * (model_args.model_matrix * mv));
 		if (proj.w < 0)
 			return;
-		proj.x = (proj.x + 1.0f) / 2.0f * args.screen_size.x / proj.w;
-		proj.y = (proj.y + 1.0f)  / 2.0f * args.screen_size.y / proj.w;
+		proj.x = (proj.x + 1.0f) * args.screen_size.x / proj.w;
+		proj.y = (proj.y + 1.0f) * args.screen_size.y / proj.w;
 		proj.z = (proj.z + 1.0f) / proj.w;
 		screen_coords[nthvert] = glm::vec3{proj.x, proj.y, proj.z};
 	}

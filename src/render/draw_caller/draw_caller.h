@@ -6,7 +6,9 @@
 #define COURSE_RENDERER_DRAW_CALLER_H
 
 #include "../../util/singleton.h"
+#include "../culler/culler.h"
 #include "../image_resetter/image_resetter.h"
+#include "../logger/logger.h"
 #include "../zbuffer/zfiller.h"
 #include "../zbuffer/zmerger.h"
 #include "rasterizer.h"
@@ -19,6 +21,8 @@ private:
 	std::vector<std::shared_ptr<ZFiller>> zfillers{};
 	std::vector<std::shared_ptr<ZMerger>> z_mergers{};
 	std::shared_ptr<ImageResetter> image_resetter{};
+	std::shared_ptr<Culler> culler{};
+	std::shared_ptr<RenderLogger> logger{};
 public:
 	DrawCaller();
 	~DrawCaller() = default;
