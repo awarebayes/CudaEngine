@@ -28,7 +28,8 @@ DrawCallArgs Scene::get_draw_call_args() {
 					.camera_pos = camera->position,
 					.look_at = camera->position + camera->get_look_direction(),
 					.view = camera->get_view_matrix(),
-					.projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f),
+					.projection = camera->get_projection_matrix(),
+	                .screen_size = camera->get_screen_size(),
 			},
 	};
 	return args;

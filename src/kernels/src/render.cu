@@ -5,10 +5,6 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <helper_math.h>
 
-__device__ __constant__ mat<4,4> viewport_matrix{};
-// __device__ mat<4,4> projection_matrix{};
-// __device__ mat<4,4> view_matrix{};
-
 
 __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 	bool steep = false;
@@ -34,16 +30,6 @@ __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 	}
 }
 
-void update_viewport(int width, int height)
-{
-	int depth = 255;
-	mat<4,4> ViewPort = viewport(width/8, height/8, width*3/4, height*3/4, depth);
-	cudaMemcpyToSymbol(
-	        viewport_matrix,
-	        &ViewPort,
-	        sizeof(mat<4,4>)
-	        );
-}
 ModelArgs StoredModel::to_args() {
 	return ModelArgs{
 	        glm::translate(glm::mat4(1.0f), position),

@@ -7,7 +7,6 @@
 
 #include "../../../Common/helper_functions.h"
 #include "../../model/inc/model.h"
-#include "matrix.cuh"
 #include <helper_math.h>
 #include <glm/glm.hpp>
 

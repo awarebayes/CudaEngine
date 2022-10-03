@@ -4,10 +4,8 @@
 #include "camera.h"
 #include <cmath>
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 #include <imgui.h>
-
-#include "../kernels/inc/matrix.cuh"
-#include "helper_math.h"
 
 glm::vec3 Camera::get_look_direction() const {
 	float yawr = yaw / 180.0f * M_PI;
@@ -25,12 +23,18 @@ void Camera::display_menu() {
 	ImGui::SliderFloat("Camera Z", &position.z, -100, 100);
 	ImGui::SliderFloat("Look dir yaw", &yaw, -179.0, 179.0);
 	ImGui::SliderFloat("Look dir pitch", &pitch, -179.0, 179.0);
+	ImGui::SliderFloat("FOV", &fov, 1, 179);
 	ImGui::End();
 }
+glm::vec2 Camera::get_screen_size() const {
+	return  screen_size;
+}
 
-glm::mat4 Camera::get_view_matrix()
+glm::mat4 Camera::get_view_matrix() const
 {
 	glm::vec3 look_dir = get_look_direction();
-
 	return glm::lookAt(position, position + get_look_direction(), up);
+}
+glm::mat4 Camera::get_projection_matrix() const {
+	return glm::perspective(glm::radians(fov), screen_size.x / screen_size.y, znear, zfar);
 }

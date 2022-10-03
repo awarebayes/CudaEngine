@@ -36,7 +36,6 @@ add_executable(course_renderer
         src/model/src/texture.cu
         src/util/stb_image.cpp
         src/kernels/src/util.cu
-        src/kernels/src/matrix.cu
         src/kernels/src/render.cu
         src/kernels/inc/shader.cuh src/kernels/inc/shader_impl.cuh
         src/camera/camera.cu
@@ -48,7 +47,9 @@ add_executable(course_renderer
         src/render/image_resetter/image_resetter.cpp
         src/render/zbuffer/zmerger.cu
         src/render/draw_caller/synchronizable.cpp
-        src/util/const.h src/render/scene/scene.cu src/render/scene/scene.h)
+        src/render/scene/scene.cu
+        src/render/culler/culler.cpp
+        )
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

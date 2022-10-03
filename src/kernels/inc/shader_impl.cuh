@@ -3,7 +3,6 @@
 //
 
 #include "../../model/inc/model.h"
-#include "matrix.cuh"
 #include "shader.cuh"
 #include "util.cuh"
 
@@ -31,7 +30,7 @@ struct Shader {
 	__device__ __forceinline__ float4 vertex(int iface, int nthvert)
 	{
 		auto face = model.faces[iface];
-		int index = at(face, nthvert);
+		int index = face[nthvert];
 		glm::vec3 v = model.vertices[index];
 		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
 
@@ -53,8 +52,8 @@ struct Shader {
 		glm::vec2 T{};
 		for (int i = 0; i < 3; i++)
 		{
-			N += normals[i] * at(bar, i);
-			T += textures[i] * at(bar, i);
+			N += normals[i] * bar[i];
+			T += textures[i] * bar[i];
 		}
 
 		uchar3 color_u = model.texture.get_uv(T.x, T.y);

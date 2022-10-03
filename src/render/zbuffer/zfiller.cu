@@ -1,7 +1,6 @@
 //
 // Created by dev on 8/27/22.
 //
-#include "../../kernels/inc/matrix.cuh"
 #include "../../kernels/inc/render.cuh"
 #include "../../kernels/inc/shader_impl.cuh"
 #include "../../util/const.h"
@@ -9,9 +8,6 @@
 #include "zfiller.h"
 #include <helper_math.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-extern __device__ __constant__ mat<4,4> viewport_matrix;
 
 __device__ void triangle_zbuffer(glm::vec3 pts[3], ZBuffer &zbuffer) {
 	glm::vec2 bboxmin{float(zbuffer.width-1),  float(zbuffer.height-1)};
@@ -56,7 +52,7 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 	glm::vec3 look_dir = args.look_at - args.camera_pos;
 	auto face = model.faces[position];
 	for (int nthvert = 0; nthvert < 3; nthvert++) {
-		int index = at(face, nthvert);
+		int index = face[nthvert];
 		glm::vec3 v = model.vertices[index];
 		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
 		auto proj = args.projection * (args.view * (model_args.model_matrix * mv));

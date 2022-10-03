@@ -6,9 +6,7 @@
 #include "../../util/const.h"
 #include "rasterizer.h"
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
-extern __device__ __constant__ mat<4,4> viewport_matrix;
 
 __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
 	auto light_dir = args.light_dir;
@@ -55,7 +53,7 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 
 			P.z = 0;
 			for (int i = 0; i < 3; i++)
-				P.z += pts[i].z * at(bc_screen, i);
+				P.z += pts[i].z * bc_screen[i];
 
 			if (zbuffer.zbuffer[int(P.x + P.y* image.width)] == P.z) {
 				uint color;

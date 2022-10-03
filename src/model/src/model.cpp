@@ -42,7 +42,7 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 	std::vector<glm::vec3> vertices_host{uvertices};
 	std::vector<glm::vec3> normals_host{uvertices};
 	std::vector<glm::vec2> textures_host{uvertices};
-	std::vector<int3> faces_host{};
+	std::vector<glm::ivec3> faces_host{};
 
 	bool has_textures = false;
 
@@ -88,14 +88,14 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 	n_vertices = vertices_host.size();
 	n_faces = faces_host.size();
 
-	checkCudaErrors(cudaMalloc((void **) (&faces), sizeof(int3) * n_faces));
+	checkCudaErrors(cudaMalloc((void **) (&faces), sizeof(glm::ivec3) * n_faces));
 	checkCudaErrors(cudaMalloc((void **) (&vertices), sizeof(glm::vec3) * n_vertices));
 	checkCudaErrors(cudaMalloc((void **) (&normals), sizeof(glm::vec3) * n_vertices));
 
 	if (has_textures)
 		checkCudaErrors(cudaMalloc((void **) (&textures), sizeof(glm::vec3) * n_vertices));
 
-	checkCudaErrors(cudaMemcpy(faces, faces_host.data(), n_faces * sizeof(int3), cudaMemcpyHostToDevice));
+	checkCudaErrors(cudaMemcpy(faces, faces_host.data(), n_faces * sizeof(glm::ivec3), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(vertices, vertices_host.data(), n_vertices * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(normals, normals_host.data(), n_vertices * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 
