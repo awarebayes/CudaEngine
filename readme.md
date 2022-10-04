@@ -2,6 +2,10 @@
 
 MPP Renderer/Engine build with CUDA
 
+> If you want to check out the code, start with `src/render` and `src/render/draw_caller` folders. Main.cpp is a mess.
+
+## Features
+
 - [x] Tiny Renderer baseline
 - [x] Obj Files Loading
 - [x] UV Textures

@@ -3,7 +3,6 @@
 //
 
 #include "../../model/inc/model.h"
-#include "shader.cuh"
 #include "util.cuh"
 
 #include <helper_cuda.h>

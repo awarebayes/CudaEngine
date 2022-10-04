@@ -1,8 +1,0 @@
-//
-// Created by dev on 7/25/22.
-//
-
-#ifndef COURSE_RENDERER_SHADER_CUH
-#define COURSE_RENDERER_SHADER_CUH
-
-#endif//COURSE_RENDERER_SHADER_CUH
