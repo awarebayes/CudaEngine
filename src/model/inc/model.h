@@ -5,6 +5,7 @@
 #ifndef COURSE_RENDERER_MODEL_H
 #define COURSE_RENDERER_MODEL_H
 
+#include "../../util/tiny_objloader.h"
 #include "bounding_volume.h"
 #include "texture.cuh"
 #include "thrust/device_vector.h"
@@ -39,7 +40,8 @@ struct Model {
 
 	int n_vertices = 0;
 	int n_faces = 0;
-	explicit Model(const std::string &filename);
+	Model(const tinyobj::ObjReader &reader, int index);
+	static Model from_file(const std::string &filename, int index=0);
 	void load_texture(const std::string &filename);
 	~Model();
 	[[nodiscard]] ModelRef get_ref();

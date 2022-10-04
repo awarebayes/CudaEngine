@@ -42,12 +42,16 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 		bboxmax.y = min(clamp.y, max(bboxmax.y, pt.y));
 	}
 
+	// 419, 420
+	//if (position != 419)
+	//	return;
+
 	glm::vec3 P{0, 0, 0};
 
 	int cnt = 0;
 	for (P.x=floor(bboxmin.x); P.x <= bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y <= bboxmax.y; P.y++) {
-			auto bc_screen  = barycentric(pts, P);
+			auto bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
 			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
 				continue;
 
@@ -71,7 +75,6 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 
 
 __global__ void draw_faces(DrawCallBaseArgs args, ModelArgs model_args, Image image, ZBuffer zbuffer) {
-
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	auto model = model_args.model;
 	if (position >= model.n_faces)

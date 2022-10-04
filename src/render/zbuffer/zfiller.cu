@@ -27,7 +27,7 @@ __device__ void triangle_zbuffer(glm::vec3 pts[3], ZBuffer &zbuffer) {
 	for (P.x=floor(bboxmin.x); P.x<=bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y<=bboxmax.y; P.y++) {
 			P.z = 0;
-			auto bc_screen  = barycentric(pts, P);
+			auto bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
 			float bc_screen_idx[3] = {bc_screen.x, bc_screen.y, bc_screen.z};
 			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
 				continue;

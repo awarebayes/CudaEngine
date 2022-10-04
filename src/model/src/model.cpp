@@ -24,29 +24,17 @@ Sphere generateSphereBV(const std::vector<glm::vec3> &vertices)
 	return Sphere((maxAABB + minAABB) * 0.5f, glm::length(minAABB - maxAABB));
 }
 
-Model::Model(const std::string &filename) : vertices(), faces() {
 
-	tinyobj::ObjReaderConfig reader_config;
-	reader_config.mtl_search_path = "./";
-	tinyobj::ObjReader reader;
-
-	if (!reader.ParseFromFile(filename, reader_config)) {
-		if (!reader.Error().empty()) {
-			std::cerr << "TinyObjReader: " << reader.Error();
-		}
-		exit(1);
-	}
-
+Model::Model(const tinyobj::ObjReader &reader, int index) {
 	if (!reader.Warning().empty()) {
 		std::cout << "TinyObjReader: " << reader.Warning();
 	}
 
 	auto &attrib = reader.GetAttrib();
 	auto &shapes = reader.GetShapes();
-	assert(shapes.size() == 1);
 
 	n_vertices = 0;
-	for (auto i : shapes[0].mesh.indices)
+	for (auto i : shapes[index].mesh.indices)
 		n_vertices = std::max(n_vertices, i.vertex_index);
 	n_vertices += 1;
 
@@ -59,7 +47,11 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 	bool has_textures = false;
 
 	size_t index_offset = 0;
-	for (unsigned char num_face_vertice : shapes[0].mesh.num_face_vertices) {
+
+	n_faces = shapes[index].mesh.num_face_vertices.size();
+	for (int face_idx = 0; face_idx < n_faces; face_idx ++)
+	{
+		unsigned char num_face_vertice =  shapes[index].mesh.num_face_vertices[face_idx];
 		auto fv = size_t(num_face_vertice);
 		assert(fv == 3);
 		int indexes[3] = {0, 0, 0};
@@ -67,7 +59,7 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 		// Loop over vertices in the face.
 		for (size_t v = 0; v < fv; v++) {
 			// access to vertex
-			tinyobj::index_t idx = shapes[0].mesh.indices[index_offset + v];
+			tinyobj::index_t idx = shapes[index].mesh.indices[index_offset + v];
 			indexes[v] = idx.vertex_index;
 			tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
 			tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
@@ -98,7 +90,6 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 	}
 
 	n_vertices = vertices_host.size();
-	n_faces = faces_host.size();
 
 	checkCudaErrors(cudaMalloc((void **) (&faces), sizeof(glm::ivec3) * n_faces));
 	checkCudaErrors(cudaMalloc((void **) (&vertices), sizeof(glm::vec3) * n_vertices));
@@ -117,6 +108,22 @@ Model::Model(const std::string &filename) : vertices(), faces() {
 	std::cerr << "# Model loaded with v# " << vertices_host.size() << " f# " << faces_host.size() << std::endl;
 
 	bounding_volume = generateSphereBV(vertices_host);
+}
+
+Model Model::from_file(const std::string &filename, int index) {
+
+	tinyobj::ObjReaderConfig reader_config;
+	reader_config.mtl_search_path = "./";
+	tinyobj::ObjReader reader;
+
+	if (!reader.ParseFromFile(filename, reader_config)) {
+		if (!reader.Error().empty()) {
+			std::cerr << "TinyObjReader: " << reader.Error();
+		}
+		exit(1);
+	}
+
+	return {reader, index};
 }
 
 Model::~Model() {

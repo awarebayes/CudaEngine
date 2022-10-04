@@ -36,6 +36,10 @@ struct Shader {
 
 		normals[nthvert] = model.normals[index];
 		textures[nthvert] = model.textures[index];
+		//if (iface == 419 && nthvert == 2) {
+		//	printf("index: %d, T: (%f, %f), (%f, %f), (%f, %f)\n", index, textures[0].x, textures[0].y, textures[1].x, textures[1].y, textures[2].x, textures[2].y);
+		//}
+
 		auto proj = projection * (view * (model_matrix * mv));
 		proj.w = abs(proj.w);
 		proj.x = (proj.x + 1.0f) * screen_size.x / proj.w;
@@ -50,18 +54,23 @@ struct Shader {
 	{
 		glm::vec3 N{};
 		glm::vec2 T{};
+		glm::vec2 uv = textures[0] * bar.x + textures[1] * bar.y + textures[2] * bar.z;
+		// printf("T: (%f, %f), (%f, %f), (%f, %f)\n", textures[0].x, textures[0].y, textures[1].x, textures[1].y, textures[2].x, textures[2].y);
 		for (int i = 0; i < 3; i++)
 		{
 			N += normals[i] * bar[i];
 			T += textures[i] * bar[i];
 		}
 
-		uchar3 color_u = model.texture.get_uv(T.x, T.y);
-		float4 color_f = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
 
-		float4 colorf = color_f * max(dot(light_dir, N), 0.0f);
-		colorf.w = 1.0f;
-		output_color = rgbaFloatToInt(colorf);
-		return false;                              // no, we do not discard this pixel
+		//uchar3 color_u = model.texture.get_uv(T.x, T.y);
+		//float4 color_f = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
+		auto val = T.x;
+		float4 color_f = float4{val, val, val, 1.0f};
+
+		color_f = color_f * max(dot(light_dir, N), 0.0f);
+		color_f.w = 1.0f;
+		output_color = rgbaFloatToInt(color_f);
+		return false;
 	}
 };

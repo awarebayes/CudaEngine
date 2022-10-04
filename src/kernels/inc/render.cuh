@@ -60,16 +60,14 @@ struct StoredModel
 
 
 template <typename Tp>
-__device__ __forceinline__ glm::vec3 barycentric(glm::vec3 *pts, Tp P) {
-	auto a = glm::vec3{float(pts[2].x-pts[0].x), float(pts[1].x-pts[0].x), float(pts[0].x-P.x)};
-	auto b = glm::vec3{float(pts[2].y-pts[0].y), float(pts[1].y-pts[0].y), float(pts[0].y-P.y)};
-	auto u = glm::cross(a, b);
-	float flag = abs(u.z) < 1;
-	return glm::vec3{
-			-1.0f * flag + (1.0f - flag) * (1.f-(u.x+u.y)/u.z),
-			1.0f * flag + (1.0f - flag) * (u.y/u.z),
-			1.0f * flag + (1.0f - flag) * (u.x/u.z)
-	};
+__device__ __forceinline__ glm::vec3 barycentric(glm::vec3 a, glm::vec3 b, glm::vec3 c, Tp P) {
+
+	auto m = glm::vec3{float(c.x-a.x), float(b.x-a.x), float(a.x-P.x)};
+	auto n = glm::vec3{float(c.y-a.y), float(b.y-a.y), float(a.y-P.y)};
+	auto u = glm::cross(n, m);
+	if (abs(u.z) < 1)
+		return glm::vec3(-1, 1, 1);
+	return glm::vec3{1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z};
 }
 
 #endif//COURSE_RENDERER_RENDER_CUH

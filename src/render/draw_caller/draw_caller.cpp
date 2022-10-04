@@ -13,7 +13,7 @@ void DrawCaller::draw(DrawCallArgs args, Image &image)
 {
 	logger->log_fps();
 	logger->log_before_culling(args.models.size());
-	args = culler->cull(args, *args.base.camera_ptr);
+	// args = culler->cull(args, *args.base.camera_ptr);
 	logger->log_after_culling(args.models.size());
 	// dispatch
 	image_resetter->async_reset(image);

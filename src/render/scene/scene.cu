@@ -71,3 +71,6 @@ StoredModel &Scene::get_model(int index) {
 int  Scene::get_n_models() {
 	return models.size();
 }
+void Scene::set_light_dir(const glm::vec3 &dir) {
+	light_dir = dir;
+}
