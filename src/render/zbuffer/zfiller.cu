@@ -28,11 +28,14 @@ __device__ void triangle_zbuffer(glm::vec3 pts[3], ZBuffer &zbuffer) {
 		for (P.y=floor(bboxmin.y); P.y<=bboxmax.y; P.y++) {
 			P.z = 0;
 			auto bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
-			float bc_screen_idx[3] = {bc_screen.x, bc_screen.y, bc_screen.z};
+
+			auto bc_clip = glm::vec3(bc_screen[0]/pts[0].z, bc_screen[1]/pts[1].z, bc_screen[2]/pts[2].z);
+			bc_clip = bc_clip / (bc_clip.x + bc_clip.y + bc_clip.z);
+
 			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
 				continue;
 			for (int i = 0; i < 3; i++)
-				P.z += pts[i].z * bc_screen_idx[i];
+				P.z += pts[i].z * bc_clip[i];
 			atomicMax(&zbuffer.zbuffer[int(P.x + P.y * zbuffer.width)], P.z);
 			cnt++;
 			if (cnt > MAX_PIXELS_PER_KERNEL)

@@ -47,16 +47,20 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 	for (P.x=floor(bboxmin.x); P.x <= bboxmax.x; P.x++) {
 		for (P.y=floor(bboxmin.y); P.y <= bboxmax.y; P.y++) {
 			auto bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
+
 			if (bc_screen.x < 0 || bc_screen.y < 0 || bc_screen.z < 0)
 				continue;
 
+			auto bc_clip = glm::vec3(bc_screen[0]/pts[0].z, bc_screen[1]/pts[1].z, bc_screen[2]/pts[2].z);
+			bc_clip = bc_clip / (bc_clip.x + bc_clip.y + bc_clip.z);
+
 			P.z = 0;
 			for (int i = 0; i < 3; i++)
-				P.z += pts[i].z * bc_screen[i];
+				P.z += pts[i].z * bc_clip[i];
 
 			if (zbuffer.zbuffer[int(P.x + P.y* image.width)] == P.z) {
 				uint color;
-				sh.fragment(bc_screen, color);
+				sh.fragment(bc_clip, color);
 				image.set((int)P.x, (int)P.y, color);
 			}
 
