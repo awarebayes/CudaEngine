@@ -1,12 +1,20 @@
-# Минимальный Cuda + OpenGL
+# CudaEngine
 
-Супер минимальный темплейт с CMakeLists.txt, OpenGL (GLUT), и кудой.
-Параметрический кружок и черный экран.
-Предполагается, что ты будешь высвечивать пыксели параллельно, на растре. OpenGL используется только для отрисовки прямоугольника,
-на который накладывается текстура растра. В текстуре можно менять каждый пыксель сетки растра.
+MPP Renderer/Engine build with CUDA
 
-Зачем: так весело, тем более Куров банит, когда все делает OpenGL. Если правильно написать, будет еще и очень быстро
-(каждый пыксел обрабатывать параллельно!)
+- [x] Tiny Renderer baseline
+- [x] Obj Files Loading
+- [x] UV Textures
+- [x] Normal Mapping
+- [x] Phong Shading
+- [x] Shader System
+- [x] Frustum Culling
+- [x] GPU Instancing
+- [ ] Shadow Mapping
+- [ ] Ambient Occlusion
+- [ ] GUI for scene loading / manipulation
+- [ ] LODs / Tesselation with virtual geometry
+- [ ] Lights
+- [ ] PBR
 
-![https://ibb.co/j8ws6Wd](https://user-images.githubusercontent.com/42784580/178074705-4a55fd7f-a4a8-4e44-812e-8fdce0cd9414.png)
-![](https://user-images.githubusercontent.com/42784580/178074823-807da067-4453-409a-9122-4ad278401181.png)
+![https://user-images.githubusercontent.com/42784580/193868847-bd24e7ee-c569-4495-bc25-fd489c2f247c.png](https://user-images.githubusercontent.com/42784580/193868847-bd24e7ee-c569-4495-bc25-fd489c2f247c.png)
