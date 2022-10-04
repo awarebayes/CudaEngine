@@ -80,7 +80,7 @@ __global__ void set_kernel(ZBuffer buffer, float set_to)
 	const int y = blockIdx.y * blockDim.y + threadIdx.y;
 	if (x >= buffer.width || y >= buffer.height)
 		return;
-	buffer.zbuffer[x + y * buffer.width] = set_to; // -FLT_MAX is bad, use cam_z
+	buffer.zbuffer[x + y * buffer.width] = set_to;
 }
 
 void ZFiller::async_zbuf(DrawCallArgs &args, int model_index) {
@@ -97,7 +97,7 @@ ZBuffer ZFiller::get_zbuffer() {
 void ZFiller::async_reset() {
 	const dim3 block(16,16);
 	const dim3 grid(divUp(zbuffer.width, block.x), divUp(zbuffer.height, block.y));
-	set_kernel<<<grid, block, 0, stream>>>(zbuffer, -FLT_MAX); // fixme set with something else!!!!!!!!!!!!!!!!!!!!!!!!!!
+	set_kernel<<<grid, block, 0, stream>>>(zbuffer, -FLT_MAX);
 }
 
 void ZFiller::resize(int height, int width) {

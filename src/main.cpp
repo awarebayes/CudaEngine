@@ -44,7 +44,9 @@
 #include "model/inc/pool.h"
 #include "render/draw_caller/draw_caller.h"
 #include "render/misc/draw_caller_args.cuh"
-#include "render/scene/scene.h"
+#include "scene/scene.h"
+#include "scene/scene_loader.h"
+#include "scene/predefined_scenes.h"
 
 #ifdef NDEBUG
 	#undef NDEBUG
@@ -189,10 +191,11 @@ void display() {
 		auto &model = scene->get_model(i);
 		int posx = i / 100;
 		int posy = i % 1000;
-		model.position.y = sin(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posy * 0.01) * 0.4 + cos(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posx * 0.01) * 0.2;
+		// model.position.y = sin(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posy * 0.01) * 0.4 + cos(glutGet(GLUT_ELAPSED_TIME) * 0.01 + posx * 0.01) * 0.2;
 	}
 
 	scene->display_menu();
+	SceneLoaderSingleton().get()->display_widget();
 	draw_caller->draw(scene->get_draw_call_args(), img);
 
 	checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, nullptr));
@@ -330,78 +333,11 @@ void initGL(int argc, char **argv) {
 	glutDisplayFunc(display);
 }
 
-void load_rungholt()
-{
-	auto mp = ModelPoolCreator().get();
-	mp->load_all_from_obj_file("obj/rungholt.obj");
-	mp->assign_texture_to_obj_file("obj/rungholt.obj", "obj/rungholt.tga");
-
-	auto scene = SceneSingleton().get();
-
-	Camera camera;
-	camera.position = glm::vec3{0, 100, 0};
-	camera.yaw = -90;
-	camera.pitch = 0;
-
-	for (const auto ref: mp->get_all()) {
-		scene->add_model(StoredModel{glm::vec3{0, -100, -50}, ref});
-	}
-
-	scene->set_camera(camera);
-}
-
-void load_test_single()
-{
-
-	auto mp = ModelPoolCreator().get();
-	mp->load_all_from_obj_file("obj/african_head.obj");
-	mp->assign_texture_to_obj_file("obj/african_head.obj", "obj/african_head_diffuse.tga");
-
-	auto scene = SceneSingleton().get();
-
-	Camera camera;
-	camera.position = glm::vec3{0, -1, -12};
-	camera.yaw = 76;
-	camera.pitch = 0;
-
-	scene->set_light_dir(glm::vec3{0, 0, -1});
-
-	for (const auto ref: mp->get_all()) {
-		scene->add_model(StoredModel{glm::vec3{0, 0, -5}, ref});
-	}
-
-	scene->set_camera(camera);
-}
-
-void load_test_many()
-{
-
-	auto mp = ModelPoolCreator().get();
-	mp->load_all_from_obj_file("obj/african_head.obj");
-	mp->assign_texture_to_obj_file("obj/african_head.obj", "obj/african_head_diffuse.tga");
-
-	auto scene = SceneSingleton().get();
-
-	Camera camera;
-	camera.position = glm::vec3{0, -1, 12};
-	camera.yaw = -90;
-	camera.pitch = 0;
-
-	scene->set_light_dir(glm::vec3{0, 0, 1});
-
-	auto ref = mp->get_all()[0];
-	scene->add_model(StoredModel{glm::vec3{0, 0, -5}, ref});
-	for (int i = 0; i < 100; i++)
-		for (int j = 0; j < 100; j++)
-			scene->add_model(StoredModel{glm::vec3{float(i-50) * 1.5f, float(j / 2), -10.0f * j - 10}, ref});
-
-
-	scene->set_camera(camera);
-}
 
 
 void init_my_classes() {
-	load_test_many();
+	register_predefined_scenes();
+	SceneLoaderSingleton().get()->load_scene("default");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

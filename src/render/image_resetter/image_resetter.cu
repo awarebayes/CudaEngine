@@ -4,5 +4,6 @@
 #include "image_resetter.h"
 
 void ImageResetter::async_reset(Image &image) {
+	assert(stream != nullptr);
 	cudaMemsetAsync((void *)image.pixels, 0, image.width * image.height * sizeof(uint), stream);
 }

@@ -5,8 +5,7 @@
 #ifndef COURSE_RENDERER_SCENE_H
 #define COURSE_RENDERER_SCENE_H
 
-#include "../../camera/camera.h"
-#include "../misc/draw_caller_args.cuh"
+#include "../render/misc/draw_caller_args.cuh"
 class Scene {
 private:
 	std::vector<StoredModel> models{};
@@ -24,6 +23,7 @@ public:
 	glm::vec3 &get_light_dir();
 	DrawCallArgs get_draw_call_args();
 	int get_n_models();
+	void clear();
 };
 
 using SceneSingleton = SingletonCreator<Scene>;

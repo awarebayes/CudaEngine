@@ -73,3 +73,6 @@ int  Scene::get_n_models() {
 void Scene::set_light_dir(const glm::vec3 &dir) {
 	light_dir = dir;
 }
+void Scene::clear() {
+	this->models.clear();
+}

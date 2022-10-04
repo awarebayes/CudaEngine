@@ -10,10 +10,8 @@
 #include "../misc/image.cuh"
 #include <driver_types.h>
 class ImageResetter : public Synchronizable {
-private:
-	cudaStream_t stream{};
 public:
-	ImageResetter() = default;
+	ImageResetter() : Synchronizable() {}
 	void async_reset(Image &image);
 };
 

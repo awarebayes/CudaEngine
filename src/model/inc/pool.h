@@ -17,10 +17,11 @@ private:
 public:
 	ModelPool() = default;
 	~ModelPool() = default;
+	void clear();
 	ModelRef get(const std::string &path);
 	std::shared_ptr<Model> get_mut(const std::string &path);
 	void load_all_from_obj_file(const std::string &filename);
-	void assign_texture_to_obj_file(const std::string &obj_filename, const std::string &texture_filename);
+	void assign_single_texture_to_obj_file(const std::string &obj_filename, const std::string &texture_filename);
 	std::vector<ModelRef> get_all();
 };
 

@@ -32,7 +32,7 @@ void ModelPool::load_all_from_obj_file(const std::string &filename) {
 		pool.insert(std::make_pair(filename + ":" + reader.GetShapes()[i].name, model));
 	}
 }
-void ModelPool::assign_texture_to_obj_file(const std::string &obj_filename, const std::string &texture_filename) {
+void ModelPool::assign_single_texture_to_obj_file(const std::string &obj_filename, const std::string &texture_filename) {
 	tinyobj::ObjReaderConfig reader_config;
 	reader_config.mtl_search_path = "./";
 	tinyobj::ObjReader reader;
@@ -55,4 +55,7 @@ std::vector<ModelRef> ModelPool::get_all() {
 		models.push_back(model.second->get_ref());
 	}
 	return models;
+}
+void ModelPool::clear() {
+	pool.clear();
 }

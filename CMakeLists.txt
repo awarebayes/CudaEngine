@@ -45,11 +45,11 @@ add_executable(course_renderer
         src/render/image_resetter/image_resetter.cu
         src/render/zbuffer/zmerger.cu
         src/render/draw_caller/synchronizable.cpp
-        src/render/scene/scene.cu
+        src/scene/scene.cu
         src/render/culler/culler.cpp
         src/model/src/bounding_volume.cpp
         src/render/logger/logger.cpp
-        )
+        src/scene/scene_loader.cpp src/scene/predefined_scenes.cpp src/scene/predefined_scenes.h)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES
