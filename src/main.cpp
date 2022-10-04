@@ -41,13 +41,21 @@
 
 #include "camera/camera.h"
 #include "helper_math.h"
-#include "imgui.h"
-#include "imgui_impl_glut.h"
-#include "imgui_impl_opengl3.h"
 #include "kernels/inc/render.cuh"
 #include "model/inc/pool.h"
 #include "render/draw_caller/draw_caller.h"
 #include "render/scene/scene.h"
+
+#ifdef NDEBUG
+	#undef NDEBUG
+	#include "imgui.h"
+	#define NDEBUG
+#else
+	#include "imgui.h"
+#endif
+
+#include "imgui_impl_glut.h"
+#include "imgui_impl_opengl3.h"
 
 StopWatchInterface *timer = NULL;
 unsigned int width, height;
@@ -154,6 +162,9 @@ float computeFPS() {
 // display results using OpenGL
 void display() {
 	sdkStartTimer(&timer);
+	ImGuiIO &io = ImGui::GetIO();
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGLUT_NewFrame();
 
 	// execute filter, writing results to pbo
 	unsigned int *dResult;
@@ -170,12 +181,9 @@ void display() {
 	auto scene = SceneSingleton().get();
 
 
-	ImGuiIO &io = ImGui::GetIO();
 	glViewport(0, 0, (GLsizei) io.DisplaySize.x, (GLsizei) io.DisplaySize.y);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplGLUT_NewFrame();
 
 	for (int i = 0; i < scene->get_n_models(); i++) {
 		auto &model = scene->get_model(i);
@@ -288,7 +296,6 @@ void initGL(int argc, char **argv) {
 	glutInitWindowSize(width, height);
 
 	glutCreateWindow("CUDA Bresenham example");
-	glutDisplayFunc(display);
 
 	glutKeyboardFunc(keyboard);
 	glutReshapeFunc(reshape);
@@ -314,12 +321,13 @@ void initGL(int argc, char **argv) {
 	io.DisplaySize.x = width;
 	io.DisplaySize.y = height;
 
-
 	ImGui::StyleColorsLight();
 	assert(ImGui_ImplGLUT_Init());
 	ImGui_ImplGLUT_InstallFuncs();
 
 	assert(ImGui_ImplOpenGL3_Init("#version 330"));
+
+	glutDisplayFunc(display);
 }
 
 void load_rungholt()
@@ -422,6 +430,7 @@ int main(int argc, char **argv) {
 	// This is necessary in order to achieve optimal performance with
 	// OpenGL/CUDA interop.
 	initGL(argc, (char **) argv);
+
 
 	initCuda();
 	initGLResources();

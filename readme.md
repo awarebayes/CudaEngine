@@ -6,14 +6,14 @@ MPP Renderer/Engine build with CUDA
 
 ## Features
 
-- [x] Tiny Renderer baseline
-- [x] Obj Files Loading
-- [x] UV Textures
-- [x] Normal Mapping
-- [x] Phong Shading
-- [x] Shader System
-- [x] Frustum Culling
-- [x] GPU Instancing
+- [X] Tiny Renderer baseline
+- [X] Obj Files Loading
+- [X] UV Textures
+- [X] Normal Mapping
+- [X] Phong Shading
+- [X] Shader System
+- [X] Frustum Culling
+- [X] GPU Instancing
 - [ ] Shadow Mapping
 - [ ] Ambient Occlusion
 - [ ] GUI for scene loading / manipulation
