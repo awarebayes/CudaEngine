@@ -60,13 +60,11 @@ struct StoredModel
 
 
 template <typename Tp>
-__device__ __forceinline__ glm::vec3 barycentric(glm::vec3 a, glm::vec3 b, glm::vec3 c, Tp P) {
-
+__device__ __forceinline__ glm::vec3 barycentric(glm::vec3 a, glm::vec3 b, glm::vec3 c, Tp P)
+{
 	auto m = glm::vec3{float(c.x-a.x), float(b.x-a.x), float(a.x-P.x)};
 	auto n = glm::vec3{float(c.y-a.y), float(b.y-a.y), float(a.y-P.y)};
 	auto u = glm::cross(n, m);
-	if (abs(u.z) < 1)
-		return glm::vec3(-1, 1, 1);
 	return glm::vec3{1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z};
 }
 

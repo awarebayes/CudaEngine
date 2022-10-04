@@ -48,16 +48,10 @@ struct Shader {
 
 	__device__ bool fragment(glm::vec3 bar, uint &output_color)
 	{
-		glm::vec3 N{};
-		glm::vec2 T{};
+		glm::vec3 N = glm::normalize(normals[0] * bar.x + normals[1] * bar.y + normals[2] * bar.z);
 		glm::vec2 uv = textures[0] * bar.x + textures[1] * bar.y + textures[2] * bar.z;
-		for (int i = 0; i < 3; i++)
-		{
-			N += normals[i] * bar[i];
-			T += textures[i] * bar[i];
-		}
 
-		uchar3 color_u = model.texture.get_uv(T.x, T.y);
+		uchar3 color_u = model.texture.get_uv(uv.x, uv.y);
 		float4 color_f = float4{float(color_u.x), float(color_u.y), float(color_u.z), 255.0f} / 255.0f;
 
 		color_f = color_f * max(dot(light_dir, N), 0.0f);
