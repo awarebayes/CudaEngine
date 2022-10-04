@@ -3,7 +3,7 @@
 //
 
 #include "culler.h"
-#include "../../kernels/inc/render.cuh"
+#include "../misc/draw_caller_args.cuh"
 
 Frustum frustum_from_camera(const Camera &cam) {
 	Frustum frustum;

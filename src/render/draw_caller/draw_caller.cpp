@@ -2,9 +2,9 @@
 // Created by dev on 8/27/22.
 //
 
-#include "../../kernels/inc/render.cuh"
-#include "../../util/stream_manager.h"
 #include "draw_caller.h"
+#include "../../util/stream_manager.h"
+#include "../misc/draw_caller_args.cuh"
 #include <helper_functions.h>
 #include <helper_math.h>
 

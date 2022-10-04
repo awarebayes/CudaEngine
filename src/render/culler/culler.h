@@ -5,8 +5,8 @@
 #ifndef COURSE_RENDERER_CULLER_H
 #define COURSE_RENDERER_CULLER_H
 #include "../../camera/camera.h"
-#include "../../kernels/inc/render.cuh"
 #include "../../model/inc/bounding_volume.h"
+#include "../misc/draw_caller_args.cuh"
 #include <glm/glm.hpp>
 #include <vector>
 

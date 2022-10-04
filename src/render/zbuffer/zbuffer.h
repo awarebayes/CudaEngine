@@ -5,7 +5,8 @@
 #ifndef COURSE_RENDERER_ZBUFFER_H
 #define COURSE_RENDERER_ZBUFFER_H
 
-#include "../../kernels/inc/render.cuh"
+#include "../misc/draw_caller_args.cuh"
+#include "../misc/image.cuh"
 
 struct ZBuffer
 {

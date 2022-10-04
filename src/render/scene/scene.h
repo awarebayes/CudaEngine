@@ -6,7 +6,7 @@
 #define COURSE_RENDERER_SCENE_H
 
 #include "../../camera/camera.h"
-#include "../../kernels/inc/render.cuh"
+#include "../misc/draw_caller_args.cuh"
 class Scene {
 private:
 	std::vector<StoredModel> models{};

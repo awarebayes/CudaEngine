@@ -41,9 +41,9 @@
 
 #include "camera/camera.h"
 #include "helper_math.h"
-#include "kernels/inc/render.cuh"
 #include "model/inc/pool.h"
 #include "render/draw_caller/draw_caller.h"
+#include "render/misc/draw_caller_args.cuh"
 #include "render/scene/scene.h"
 
 #ifdef NDEBUG

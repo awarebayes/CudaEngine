@@ -1,9 +1,10 @@
 //
 // Created by dev on 8/27/22.
 //
-#include "../../kernels/inc/render.cuh"
-#include "../../kernels/inc/shader_impl.cuh"
+
+#include "../../shader/shader_impl.cuh"
 #include "../../util/const.h"
+#include "../misc/image.cuh"
 #include "rasterizer.h"
 #include <glm/glm.hpp>
 

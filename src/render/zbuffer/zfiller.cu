@@ -1,13 +1,12 @@
 //
 // Created by dev on 8/27/22.
 //
-#include "../../kernels/inc/render.cuh"
-#include "../../kernels/inc/shader_impl.cuh"
 #include "../../util/const.h"
+#include "../misc/util.cuh"
 #include "zbuffer.h"
 #include "zfiller.h"
-#include <helper_math.h>
 #include <glm/glm.hpp>
+#include <helper_math.h>
 
 __device__ void triangle_zbuffer(glm::vec3 pts[3], ZBuffer &zbuffer) {
 	glm::vec2 bboxmin{float(zbuffer.width-1),  float(zbuffer.height-1)};

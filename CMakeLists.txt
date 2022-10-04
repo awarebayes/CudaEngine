@@ -35,21 +35,21 @@ add_executable(course_renderer
         src/util/tiny_objloader.cpp
         src/model/src/texture.cu
         src/util/stb_image.cpp
-        src/kernels/src/util.cu
-        src/kernels/src/render.cu
-        src/kernels/inc/shader.cuh src/kernels/inc/shader_impl.cuh
+        src/render/misc/util.cu
         src/camera/camera.cu
         src/render/draw_caller/draw_caller.cpp
         src/render/profiling_timer/profiling_timer.cpp
-        src/render/zbuffer/zbuffer.cpp
+        src/render/zbuffer/zbuffer.cu
         src/render/zbuffer/zfiller.cu
         src/render/draw_caller/rasterizer.cu
-        src/render/image_resetter/image_resetter.cpp
+        src/render/image_resetter/image_resetter.cu
         src/render/zbuffer/zmerger.cu
         src/render/draw_caller/synchronizable.cpp
         src/render/scene/scene.cu
         src/render/culler/culler.cpp
-        src/model/inc/bounding_volume.h src/model/src/bounding_volume.cpp src/render/logger/logger.h src/render/logger/logger.cpp)
+        src/model/src/bounding_volume.cpp
+        src/render/logger/logger.cpp
+        )
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

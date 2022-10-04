@@ -2,13 +2,13 @@
 // Created by dev on 7/25/22.
 //
 
-#include "../../model/inc/model.h"
-#include "util.cuh"
 
+#include "../model/inc/model.h"
+#include "../render/misc/util.cuh"
+#include <glm/glm.hpp>
 #include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
-#include <glm/glm.hpp>
 
 struct Shader {
 	glm::mat4 projection;
