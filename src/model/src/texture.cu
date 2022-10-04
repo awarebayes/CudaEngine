@@ -15,7 +15,6 @@ __device__ uchar3 TextureRef::get_uv(float u, float v) const {
 }
 Texture::Texture(const std::string &filename) {
 	unsigned char *data_host = stbi_load(filename.c_str(), &x, &y, &n, 3);
-
 	size_t size = x * y * n * sizeof(unsigned char);
 	assert(n == 3);
 	checkCudaErrors(cudaMalloc(&data, size));

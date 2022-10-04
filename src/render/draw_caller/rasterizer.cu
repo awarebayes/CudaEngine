@@ -10,7 +10,6 @@
 
 __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
 	auto light_dir = args.light_dir;
-
 	auto &model = model_args.model;
 
 	auto sh = Shader(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size);
@@ -41,10 +40,6 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 		bboxmax.x = min(clamp.x, max(bboxmax.x, pt.x));
 		bboxmax.y = min(clamp.y, max(bboxmax.y, pt.y));
 	}
-
-	// 419, 420
-	//if (position != 419)
-	//	return;
 
 	glm::vec3 P{0, 0, 0};
 

@@ -17,7 +17,7 @@ struct Camera
 	float pitch{};
 	float fov{45};
 	float znear{0.1f};
-	float zfar{100.0f};
+	float zfar{200.0f};
 
 	glm::vec2 screen_size{1920, 1080};
 

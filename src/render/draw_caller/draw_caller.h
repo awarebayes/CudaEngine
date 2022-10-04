@@ -22,7 +22,7 @@ private:
 	std::vector<std::shared_ptr<ZMerger>> z_mergers{};
 	std::shared_ptr<ImageResetter> image_resetter{};
 	std::shared_ptr<Culler> culler{};
-	std::shared_ptr<RenderLogger> logger{};
+	std::shared_ptr<RenderInterface> interface {};
 public:
 	DrawCaller();
 	~DrawCaller() = default;

@@ -38,17 +38,21 @@ Model::Model(const tinyobj::ObjReader &reader, int index) {
 		n_vertices = std::max(n_vertices, i.vertex_index);
 	n_vertices += 1;
 
+	n_faces = shapes[index].mesh.num_face_vertices.size();
+
 	size_t uvertices = n_vertices;
 	std::vector<glm::vec3> vertices_host{uvertices};
 	std::vector<glm::vec3> normals_host{uvertices};
 	std::vector<glm::vec2> textures_host{uvertices};
 	std::vector<glm::ivec3> faces_host{};
+	std::vector<glm::ivec3> textures_for_faces_host{size_t(n_faces)};
 
 	bool has_textures = false;
 
 	size_t index_offset = 0;
 
-	n_faces = shapes[index].mesh.num_face_vertices.size();
+	int max_texture_index = 0;
+
 	for (int face_idx = 0; face_idx < n_faces; face_idx ++)
 	{
 		unsigned char num_face_vertice =  shapes[index].mesh.num_face_vertices[face_idx];
@@ -79,7 +83,11 @@ Model::Model(const tinyobj::ObjReader &reader, int index) {
 			if (idx.texcoord_index >= 0) {
 				tinyobj::real_t tx = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
 				tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
-				textures_host[idx.vertex_index] = glm::vec2{tx, ty};
+				if (idx.texcoord_index >= textures_host.capacity())
+					textures_host.resize(idx.texcoord_index + 1);
+				textures_host[idx.texcoord_index] = glm::vec2{tx, ty};
+				textures_for_faces_host[face_idx][v] =idx.texcoord_index;
+				max_texture_index = std::max(max_texture_index, idx.texcoord_index);
 				has_textures = true;
 			}
 		}
@@ -95,15 +103,20 @@ Model::Model(const tinyobj::ObjReader &reader, int index) {
 	checkCudaErrors(cudaMalloc((void **) (&vertices), sizeof(glm::vec3) * n_vertices));
 	checkCudaErrors(cudaMalloc((void **) (&normals), sizeof(glm::vec3) * n_vertices));
 
-	if (has_textures)
-		checkCudaErrors(cudaMalloc((void **) (&textures), sizeof(glm::vec3) * n_vertices));
+	if (has_textures) {
+		checkCudaErrors(cudaMalloc((void **) (&textures), sizeof(glm::vec3) * max_texture_index));
+		checkCudaErrors(cudaMalloc((void **) (&textures_for_face), sizeof(glm::ivec3) * n_faces));
+	}
 
 	checkCudaErrors(cudaMemcpy(faces, faces_host.data(), n_faces * sizeof(glm::ivec3), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(vertices, vertices_host.data(), n_vertices * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 	checkCudaErrors(cudaMemcpy(normals, normals_host.data(), n_vertices * sizeof(glm::vec3), cudaMemcpyHostToDevice));
 
 	if (has_textures)
-		checkCudaErrors(cudaMemcpy(textures, textures_host.data(), n_vertices * sizeof(glm::vec2), cudaMemcpyHostToDevice));
+	{
+		checkCudaErrors(cudaMemcpy(textures, textures_host.data(), max_texture_index * sizeof(glm::vec2), cudaMemcpyHostToDevice));
+		checkCudaErrors(cudaMemcpy(textures_for_face, textures_for_faces_host.data(), n_faces * sizeof(glm::ivec3), cudaMemcpyHostToDevice));
+	}
 
 	std::cerr << "# Model loaded with v# " << vertices_host.size() << " f# " << faces_host.size() << std::endl;
 
@@ -133,7 +146,7 @@ Model::~Model() {
 	checkCudaErrors(cudaFree(textures));
 }
 ModelRef Model::get_ref() {
-	return ModelRef{vertices, normals, textures, faces, texture.get_ref(), n_vertices, n_faces, &bounding_volume};
+	return ModelRef{vertices, normals, textures, textures_for_face, faces, texture.get_ref(), n_vertices, n_faces, &bounding_volume};
 }
 void Model::load_texture(const std::string &filename) {
 	texture = Texture(filename);

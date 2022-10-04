@@ -18,14 +18,14 @@ glm::vec3 Camera::get_look_direction() const {
 }
 
 void Camera::display_menu() {
-	ImGui::Begin("Camera Controls");
-	ImGui::SliderFloat2("Camera XY", &position.x, -10, 10);
-	ImGui::SliderFloat("Camera Z", &position.z, -100, 100);
-	ImGui::SliderFloat("Look dir yaw", &yaw, -179.0, 179.0);
-	ImGui::SliderFloat("Look dir pitch", &pitch, -179.0, 179.0);
-	ImGui::SliderFloat("FOV", &fov, 1, 179);
-	ImGui::SliderFloat("zFar", &zfar, 90, 1000);
-	ImGui::End();
+	if (ImGui::CollapsingHeader("Camera Controls")) {
+		ImGui::SliderFloat2("Camera XY", &position.x, -10, 10);
+		ImGui::SliderFloat("Camera Z", &position.z, -100, 100);
+		ImGui::SliderFloat("Look dir yaw", &yaw, -179.0, 179.0);
+		ImGui::SliderFloat("Look dir pitch", &pitch, -179.0, 179.0);
+		ImGui::SliderFloat("FOV", &fov, 1, 179);
+		ImGui::SliderFloat("zFar", &zfar, 90, 1000);
+	}
 }
 glm::vec2 Camera::get_screen_size() const {
 	return  screen_size;

@@ -44,22 +44,21 @@ void Scene::set_camera(const Camera &cam) {
 
 
 void Scene::display_menu() {
-	ImGui::Begin("Scene Controls");
-	ImGui::SliderFloat3("Light dir", &light_dir.x, -1, 1);
-	ImGui::End();
 
-	camera->display_menu();
+	if (ImGui::CollapsingHeader("Scene Controls")) {
+		ImGui::SliderFloat3("Light dir", &light_dir.x, -1, 1);
 
-	ImGui::Begin("Models");
-	for (int i = 0; i < models.size(); i++)
-	{
-		if (ImGui::TreeNode((void*)(intptr_t)i, "Model %d", i))
-		{
-			ImGui::SliderFloat3("Position", &models[i].position.x, -10, 10);
-			ImGui::TreePop();
+		camera->display_menu();
+
+		if (ImGui::CollapsingHeader("Models")) {
+			for (int i = 0; i < models.size(); i++) {
+				if (ImGui::TreeNode((void *) (intptr_t) i, "Model %d", i)) {
+					ImGui::SliderFloat3("Position", &models[i].position.x, -10, 10);
+					ImGui::TreePop();
+				}
+			}
 		}
 	}
-	ImGui::End();
 }
 void Scene::add_model(const StoredModel &model) {
 	models.push_back(model);

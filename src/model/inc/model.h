@@ -18,6 +18,7 @@ struct ModelRef {
 	glm::vec3 *vertices{};
 	glm::vec3 *normals{};
 	glm::vec2 *textures{};
+	glm::ivec3 *textures_for_face{};
 	glm::ivec3 *faces{};
 
 	TextureRef texture{};
@@ -32,6 +33,7 @@ struct Model {
 	glm::vec3 *vertices;
 	glm::vec3 *normals{};
 	glm::vec2 *textures{};
+	glm::ivec3 *textures_for_face{};
 	glm::ivec3 *faces{};
 
 	Texture texture{};
