@@ -25,8 +25,9 @@ struct Texture
 	uchar3 *data{};
 
 	Texture() = default;
+	~Texture();
 	explicit Texture(const std::string &filename);
-	void free() const;
+	static Texture get_default();
 
 	[[nodiscard]] TextureRef get_ref() const;
 };

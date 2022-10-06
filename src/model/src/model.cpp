@@ -140,14 +140,14 @@ Model Model::from_file(const std::string &filename, int index) {
 }
 
 Model::~Model() {
-	checkCudaErrors(cudaFree(faces));
-	checkCudaErrors(cudaFree(vertices));
-	checkCudaErrors(cudaFree(normals));
-	checkCudaErrors(cudaFree(textures));
+	cudaFree(faces);
+	cudaFree(normals);
+	cudaFree(textures);
+	cudaFree(vertices);
 }
 ModelRef Model::get_ref() {
-	return ModelRef{vertices, normals, textures, textures_for_face, faces, texture.get_ref(), n_vertices, n_faces, &bounding_volume};
+	return ModelRef{texture->get_ref(), vertices, normals, textures, textures_for_face, faces, n_vertices, n_faces, &bounding_volume, shader_type};
 }
 void Model::load_texture(const std::string &filename) {
-	texture = Texture(filename);
+	texture = std::make_shared<Texture>(filename);
 }

@@ -5,16 +5,15 @@
 
 #include "../model/inc/model.h"
 #include "../render/misc/util.cuh"
-#include "base_shader.cuh"
 #include <glm/glm.hpp>
 #include <helper_cuda.h>
 #include <helper_functions.h>
 #include <helper_math.h>
 
-struct ShaderDefault : BaseShader<ShaderDefault> {
+struct ShaderWater : BaseShader<ShaderWater> {
+	__device__ explicit ShaderWater(ModelRef &mod, glm::vec3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_, glm::vec2 screen_size_)
+			: BaseShader<ShaderWater>(mod, light_dir_, projection_, view_, model_matrix_, screen_size_) {};
 
-	__device__ explicit ShaderDefault(ModelRef &mod, glm::vec3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_, glm::vec2 screen_size_)
-	        : BaseShader<ShaderDefault>(mod, light_dir_, projection_, view_, model_matrix_, screen_size_) {};
 	__device__ __forceinline__ float4 vertex_impl(int iface, int nthvert)
 	{
 		auto face = model.faces[iface];

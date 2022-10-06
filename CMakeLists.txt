@@ -49,7 +49,7 @@ add_executable(course_renderer
         src/render/culler/culler.cpp
         src/model/src/bounding_volume.cpp
         src/render/logger/logger.cpp
-        src/scene/scene_loader.cpp src/scene/predefined_scenes.cpp src/scene/predefined_scenes.h)
+        src/scene/scene_loader.cpp src/scene/predefined_scenes.cpp src/scene/predefined_scenes.h src/shader/base_shader.cuh)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

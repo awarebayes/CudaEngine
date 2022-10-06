@@ -15,28 +15,27 @@
 
 
 struct ModelRef {
+	TextureRef texture{};
 	glm::vec3 *vertices{};
 	glm::vec3 *normals{};
 	glm::vec2 *textures{};
 	glm::ivec3 *textures_for_face{};
 	glm::ivec3 *faces{};
-
-	TextureRef texture{};
-
 	int n_vertices = 0;
 	int n_faces = 0;
-
 	Sphere *bounding_volume;
+	char shader_type = 'd';
 };
 
 struct Model {
-	glm::vec3 *vertices;
+	glm::vec3 *vertices{};
 	glm::vec3 *normals{};
 	glm::vec2 *textures{};
 	glm::ivec3 *textures_for_face{};
 	glm::ivec3 *faces{};
+	char shader_type = 'd';
 
-	Texture texture{};
+	std::shared_ptr<Texture> texture{};
 
  	Sphere bounding_volume {{}, 0};
 

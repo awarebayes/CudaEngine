@@ -36,7 +36,7 @@ void load_test_single_head()
 	auto scene = SceneSingleton().get();
 
 	Camera camera;
-	camera.position = glm::vec3{0, -1, 12};
+	camera.position = glm::vec3{-3, -1.5, 5};
 	camera.yaw = -90;
 	camera.pitch = 0;
 
@@ -99,12 +99,40 @@ void load_scene_diablo()
 	scene->set_camera(camera);
 }
 
+
+void load_scene_water()
+{
+
+	auto mp = ModelPoolCreator().get();
+	mp->load_all_from_obj_file("obj/water/water.obj");
+	mp->assign_single_texture_to_obj_file("obj/water/water.obj", "obj/water/water.jpg");
+	auto scene = SceneSingleton().get();
+	scene->clear();
+
+	Camera camera;
+	camera.position = glm::vec3{-0.36, -0.34, 4};
+	camera.yaw = -90;
+	camera.pitch = -25;
+
+	scene->set_light_dir(glm::vec3{0, 1, 0});
+
+	auto mut = mp->get_mut("obj/water/water.obj:Plane");
+	mut->shader_type = 'w';
+
+	auto ref = mp->get("obj/water/water.obj:Plane");
+
+	scene->add_model(StoredModel{glm::vec3{0, -2, 0}, ref});
+
+	scene->set_camera(camera);
+}
+
 void register_predefined_scenes()
 {
 	auto scene_loader = SceneLoaderSingleton().get();
 	scene_loader->register_load_scene("test_single_head", load_test_single_head);
 	scene_loader->register_load_scene("test_many_heads", load_test_many);
 	scene_loader->register_load_scene("diablo", load_scene_diablo);
+	scene_loader->register_load_scene("water", load_scene_water);
 	// scene_loader->register_load_scene("rungholt", load_rungholt);
 
 	scene_loader->register_load_scene("default", load_test_single_head);

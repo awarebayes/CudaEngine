@@ -14,8 +14,9 @@ class ModelPool
 {
 private:
 	std::unordered_map<std::string, std::shared_ptr<Model>> pool{};
+	std::shared_ptr<Texture> default_texture{};
 public:
-	ModelPool() = default;
+	ModelPool();
 	~ModelPool() = default;
 	void clear();
 	ModelRef get(const std::string &path);

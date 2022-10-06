@@ -3,17 +3,24 @@
 //
 
 #include "../../shader/shader_impl.cuh"
+#include "../../shader/shader_water.cuh"
 #include "../../util/const.h"
 #include "../misc/image.cuh"
 #include "rasterizer.h"
 #include <glm/glm.hpp>
 
+template<typename T>
+__device__ BaseShader<T> get_shader(char shader_type, ModelRef &model, glm::vec3 light_dir, const glm::mat4 &projection, const glm::mat4 &view, const glm::mat4 &model_matrix, glm::vec2 screen_size)
+{
 
+}
+
+template <typename ShaderType>
 __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
 	auto light_dir = args.light_dir;
 	auto &model = model_args.model;
 
-	auto sh = Shader(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size);
+	auto sh = BaseShader<ShaderType>(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size);
 
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i);
@@ -70,26 +77,32 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 				return;
 		}
 	}
-
 }
 
-
+template <typename ShaderType>
 __global__ void draw_faces(DrawCallBaseArgs args, ModelArgs model_args, Image image, ZBuffer zbuffer) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	auto model = model_args.model;
 	if (position >= model.n_faces)
 		return;
-
-	triangle(args, model_args, position, image, zbuffer);
+	triangle<ShaderType>(args, model_args, position, image, zbuffer);
 }
 
 void Rasterizer::async_rasterize(DrawCallArgs &args, int model_index, Image image, ZBuffer zbuffer)
 {
-
 	auto &model_args = args.models[model_index];
 	auto &model = model_args.model;
 	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = dim3(32);
-	draw_faces<<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+
+	switch (model.shader_type)
+	{
+		case 'd':
+			draw_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+			break;
+		case 'w':
+			draw_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+	}
+
 }
 

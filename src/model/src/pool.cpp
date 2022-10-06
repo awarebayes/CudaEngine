@@ -59,3 +59,6 @@ std::vector<ModelRef> ModelPool::get_all() {
 void ModelPool::clear() {
 	pool.clear();
 }
+ModelPool::ModelPool() {
+	default_texture = std::make_shared<Texture>(Texture::get_default());
+}

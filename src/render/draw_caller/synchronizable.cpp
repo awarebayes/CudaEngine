@@ -13,7 +13,6 @@ Synchronizable::~Synchronizable() {
 	cudaStreamDestroy(stream);
 }
 void Synchronizable::await() {
-	assert(stream != nullptr);
-	checkCudaErrors(cudaStreamSynchronize(stream));
+		checkCudaErrors(cudaStreamSynchronize(stream));
 }
 
