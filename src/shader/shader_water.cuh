@@ -11,18 +11,23 @@
 #include <helper_math.h>
 
 struct ShaderWater : BaseShader<ShaderWater> {
-	__device__ explicit ShaderWater(ModelRef &mod, glm::vec3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_, glm::vec2 screen_size_)
-			: BaseShader<ShaderWater>(mod, light_dir_, projection_, view_, model_matrix_, screen_size_) {};
+	__device__ explicit ShaderWater(ModelRef &mod, glm::vec3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_, glm::vec2 screen_size_, const DrawCallBaseArgs &args)
+			: BaseShader<ShaderWater>(mod, light_dir_, projection_, view_, model_matrix_, screen_size_, args) {};
 
-	__device__ __forceinline__ float4 vertex_impl(int iface, int nthvert)
+
+	__device__ __forceinline__ float4 vertex_impl(int iface, int nthvert, bool load_tex)
 	{
 		auto face = model.faces[iface];
 		int index = face[nthvert];
+		float time = base_args.time;
 		glm::vec3 v = model.vertices[index];
 		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
+		mv.y = mv.y + 0.1 * sinf(10.0f * v.x + 1.0 * v.z + 0.01 * time) + 0.05 * cosf( v.x + 10.0 * v.z + 0.01 * time) + 0.005 * sinf(100.0 * v.x + 100.0 * v.z + 0.01 * time);
 
-		normals[nthvert] = model.normals[index];
-		textures[nthvert] = model.textures[model.textures_for_face[iface][nthvert]];
+		if (load_tex) {
+			normals[nthvert] = model.normals[index];
+			textures[nthvert] = model.textures[model.textures_for_face[iface][nthvert]];
+		}
 
 		auto proj = projection * (view * (model_matrix * mv));
 		proj.w = abs(proj.w);

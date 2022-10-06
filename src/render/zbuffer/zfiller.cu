@@ -1,6 +1,8 @@
 //
 // Created by dev on 8/27/22.
 //
+#include "../../shader/shader_impl.cuh"
+#include "../../shader/shader_water.cuh"
 #include "../../util/const.h"
 #include "../misc/util.cuh"
 #include "zbuffer.h"
@@ -43,6 +45,7 @@ __device__ void triangle_zbuffer(glm::vec3 pts[3], ZBuffer &zbuffer) {
 	}
 }
 
+template<typename ShaderType>
 __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffer buffer) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -50,27 +53,19 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffe
 	if (position >= model.n_faces)
 		return;
 
-	glm::vec3 screen_coords[3];
-	glm::vec3 look_dir = args.look_at - args.camera_pos;
-	auto face = model.faces[position];
-	for (int nthvert = 0; nthvert < 3; nthvert++) {
-		int index = face[nthvert];
-		glm::vec3 v = model.vertices[index];
-		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
-		auto proj = args.projection * (args.view * (model_args.model_matrix * mv));
-		if (proj.w < 0)
-			return;
-		proj.x = (proj.x + 1.0f)  * args.screen_size.x / proj.w;
-		proj.y = (proj.y + 1.0f)  * args.screen_size.y / proj.w;
-		proj.z = (proj.z + 1.0f) / proj.w;
-		screen_coords[nthvert] = glm::vec3{proj.x, proj.y, proj.z};
-	}
+	auto light_dir = args.light_dir;
+	auto sh = BaseShader<ShaderType>(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
 
-	glm::vec3 n = cross(screen_coords[2] - screen_coords[0], screen_coords[1] - screen_coords[0]);
+	for (int i = 0; i < 3; i++)
+		sh.vertex(position, i, false);
+
+
+	glm::vec3 look_dir = args.look_at - args.camera_pos;
+	glm::vec3 n = cross(sh.pts[2] - sh.pts[0], sh.pts[1] - sh.pts[0]);
 	if (glm::dot(look_dir, {0, 0, 1}) > 0)
 		n = -n;
 	if (dot(n, look_dir) > 0) {
-		triangle_zbuffer(screen_coords, buffer);
+		triangle_zbuffer(sh.pts, buffer);
 	}
 }
 
@@ -88,7 +83,15 @@ void ZFiller::async_zbuf(DrawCallArgs &args, int model_index) {
 	auto &model = model_args.model;
 	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = 32;
-	fill_zbuffer<<<n_grid, n_block, 0, stream>>>(args.base, model_args, zbuffer);
+	switch (model.shader_type)
+	{
+		case 'd':
+			fill_zbuffer<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, zbuffer);
+			break;
+		case 'w':
+			fill_zbuffer<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, zbuffer);
+			break;
+	}
 }
 
 ZBuffer ZFiller::get_zbuffer() {

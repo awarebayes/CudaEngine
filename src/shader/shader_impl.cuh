@@ -13,17 +13,19 @@
 
 struct ShaderDefault : BaseShader<ShaderDefault> {
 
-	__device__ explicit ShaderDefault(ModelRef &mod, glm::vec3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_, glm::vec2 screen_size_)
-	        : BaseShader<ShaderDefault>(mod, light_dir_, projection_, view_, model_matrix_, screen_size_) {};
-	__device__ __forceinline__ float4 vertex_impl(int iface, int nthvert)
+	__device__ explicit ShaderDefault(ModelRef &mod, glm::vec3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_, glm::vec2 screen_size_, const DrawCallBaseArgs &args)
+	        : BaseShader<ShaderDefault>(mod, light_dir_, projection_, view_, model_matrix_, screen_size_, args) {};
+	__device__ __forceinline__ float4 vertex_impl(int iface, int nthvert, bool load_tex)
 	{
 		auto face = model.faces[iface];
 		int index = face[nthvert];
 		glm::vec3 v = model.vertices[index];
 		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
 
-		normals[nthvert] = model.normals[index];
-		textures[nthvert] = model.textures[model.textures_for_face[iface][nthvert]];
+		if (load_tex) {
+			normals[nthvert] = model.normals[index];
+			textures[nthvert] = model.textures[model.textures_for_face[iface][nthvert]];
+		}
 
 		auto proj = projection * (view * (model_matrix * mv));
 		proj.w = abs(proj.w);

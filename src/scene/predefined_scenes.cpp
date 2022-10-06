@@ -135,5 +135,5 @@ void register_predefined_scenes()
 	scene_loader->register_load_scene("water", load_scene_water);
 	// scene_loader->register_load_scene("rungholt", load_rungholt);
 
-	scene_loader->register_load_scene("default", load_test_single_head);
+	scene_loader->register_load_scene("default", load_scene_water);
 }

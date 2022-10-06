@@ -11,7 +11,7 @@ MPP Renderer/Engine build with CUDA
 - [X] UV Textures
 - [X] Normal Mapping
 - [X] Phong Shading
-- [X] Shader System
+- [X] ShaderDefault System
 - [X] Frustum Culling
 - [X] GPU Instancing
 - [ ] Shadow Mapping

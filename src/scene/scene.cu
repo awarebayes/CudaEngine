@@ -2,6 +2,7 @@
 // Created by dev on 8/28/22.
 //
 #include "scene.h"
+#include <GL/freeglut.h>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <imgui.h>
 
@@ -30,6 +31,7 @@ DrawCallArgs Scene::get_draw_call_args() {
 					.projection = camera->get_projection_matrix(),
 	                .screen_size = camera->get_screen_size(),
 	                .camera_ptr = camera.get(),
+	                .time = (float)glutGet(GLUT_ELAPSED_TIME),
 			},
 	};
 	return args;

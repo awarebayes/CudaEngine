@@ -20,10 +20,10 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 	auto light_dir = args.light_dir;
 	auto &model = model_args.model;
 
-	auto sh = BaseShader<ShaderType>(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size);
+	auto sh = BaseShader<ShaderType>(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
 
 	for (int i = 0; i < 3; i++)
-		sh.vertex(position, i);
+		sh.vertex(position, i, true);
 
 	auto &pts = sh.pts;
 	glm::vec3 n = glm::cross(pts[2] - pts[0], pts[1] - pts[0]);

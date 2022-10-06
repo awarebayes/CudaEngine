@@ -18,6 +18,7 @@ struct DrawCallBaseArgs
 	glm::mat4 projection{};
 	glm::vec2 screen_size{1920, 1080};
 	Camera *camera_ptr = nullptr;
+	float time = 0;
 };
 
 struct ModelArgs
