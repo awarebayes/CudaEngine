@@ -5,21 +5,28 @@
 #include "draw_caller.h"
 #include "../../util/stream_manager.h"
 #include "../misc/draw_caller_args.cuh"
+#include <future>
 #include <helper_functions.h>
 #include <helper_math.h>
 
 
-void DrawCaller::draw(DrawCallArgs args, Image &image)
+void DrawCaller::draw(DrawCallArgs args_unculled, Image &image)
 {
 	// interface
 	interface->log_fps();
-	interface->log_before_culling(args.models.size());
+	interface->log_before_culling(args_unculled.models.size());
+
+	DrawCallArgs args;
 
 	if (interface->is_culling_enabled()) {
-		args = culler->cull(args, *args.base.camera_ptr);
+		args = culler->cull(args_unculled, *args_unculled.base.camera_ptr);
+	} else {
+		args = args_unculled;
 	}
 
 	interface->log_after_culling(args.models.size());
+
+
 
 	// dispatch
 	image_resetter->async_reset(image);
@@ -53,6 +60,7 @@ void DrawCaller::draw(DrawCallArgs args, Image &image)
 
 	interface->draw_widget();
 }
+
 DrawCaller::DrawCaller() {
 	image_resetter = std::make_shared<ImageResetter>();
 	culler = std::make_shared<Culler>();

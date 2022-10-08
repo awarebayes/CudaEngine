@@ -49,9 +49,10 @@ __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 	}
 }
 
-ModelArgs StoredModel::to_args() {
-	return ModelArgs{
-	        glm::translate(glm::mat4(1.0f), position),
+ModelDrawCallArgs SceneObject::to_args() {
+	return ModelDrawCallArgs{
 	        model,
+	        glm::translate(glm::mat4(1.0f), position),
+	        id,
 	};
 }

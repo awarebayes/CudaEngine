@@ -15,14 +15,18 @@ class ModelPool
 private:
 	std::unordered_map<std::string, std::shared_ptr<Model>> pool{};
 	std::shared_ptr<Texture> default_texture{};
+	int id_counter = 0;
 public:
 	ModelPool();
 	~ModelPool() = default;
 	void clear();
-	ModelRef get(const std::string &path);
-	std::shared_ptr<Model> get_mut(const std::string &path);
+
+	ModelRef get(const std::string &name);
+	std::shared_ptr<Model> get_mut(const std::string &name);
+
 	void load_all_from_obj_file(const std::string &filename);
 	void assign_single_texture_to_obj_file(const std::string &obj_filename, const std::string &texture_filename);
+
 	std::vector<ModelRef> get_all();
 };
 

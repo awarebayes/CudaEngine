@@ -46,7 +46,7 @@ __device__ void triangle_zbuffer(glm::vec3 pts[3], ZBuffer &zbuffer) {
 }
 
 template<typename ShaderType>
-__global__ void fill_zbuffer(DrawCallBaseArgs args, ModelArgs model_args, ZBuffer buffer) {
+__global__ void fill_zbuffer(DrawCallBaseArgs args, ModelDrawCallArgs model_args, ZBuffer buffer) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 
 	auto &model = model_args.model;
@@ -83,12 +83,12 @@ void ZFiller::async_zbuf(DrawCallArgs &args, int model_index) {
 	auto &model = model_args.model;
 	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = 32;
-	switch (model.shader_type)
+	switch (model.shader)
 	{
-		case 'd':
+		case RegisteredShaders::Default:
 			fill_zbuffer<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, zbuffer);
 			break;
-		case 'w':
+		case RegisteredShaders::Water:
 			fill_zbuffer<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, zbuffer);
 			break;
 	}

@@ -3,16 +3,16 @@
 //
 #include "../inc/pool.h"
 
-ModelRef ModelPool::get(const std::string &path) {
-	if (pool.find(path) == pool.end())
+ModelRef ModelPool::get(const std::string &name) {
+	if (pool.find(name) == pool.end())
 		throw std::runtime_error("Model not found in pool");
-	return pool.at(path)->get_ref();
+	return pool.at(name)->get_ref();
 }
 
-std::shared_ptr<Model> ModelPool::get_mut(const std::string &path) {
-	if (pool.find(path) == pool.end())
+std::shared_ptr<Model> ModelPool::get_mut(const std::string &name) {
+	if (pool.find(name) == pool.end())
 		throw std::runtime_error("Model not found in pool");
-	return pool.at(path);
+	return pool.at(name);
 }
 
 void ModelPool::load_all_from_obj_file(const std::string &filename) {
@@ -29,7 +29,10 @@ void ModelPool::load_all_from_obj_file(const std::string &filename) {
 
 	for (int i = 0; i < reader.GetShapes().size(); i++) {
 		auto model = std::make_shared<Model>(reader, i);
-		pool.insert(std::make_pair(filename + ":" + reader.GetShapes()[i].name, model));
+		model->id = id_counter++;
+		std::string model_name = filename + ":" + reader.GetShapes()[i].name;
+		pool.insert(std::make_pair(model_name, model));
+
 	}
 }
 void ModelPool::assign_single_texture_to_obj_file(const std::string &obj_filename, const std::string &texture_filename) {
@@ -62,3 +65,4 @@ void ModelPool::clear() {
 ModelPool::ModelPool() {
 	default_texture = std::make_shared<Texture>(Texture::get_default());
 }
+

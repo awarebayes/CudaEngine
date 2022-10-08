@@ -9,14 +9,8 @@
 #include "rasterizer.h"
 #include <glm/glm.hpp>
 
-template<typename T>
-__device__ BaseShader<T> get_shader(char shader_type, ModelRef &model, glm::vec3 light_dir, const glm::mat4 &projection, const glm::mat4 &view, const glm::mat4 &model_matrix, glm::vec2 screen_size)
-{
-
-}
-
 template <typename ShaderType>
-__device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
+__device__ void triangle(DrawCallBaseArgs &args, ModelDrawCallArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
 	auto light_dir = args.light_dir;
 	auto &model = model_args.model;
 
@@ -68,7 +62,7 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 
 			if (zbuffer.zbuffer[int(P.x + P.y* image.width)] == P.z) {
 				uint color;
-				sh.fragment(bc_clip, color);
+				sh.fragment(bc_clip, color, P.z);
 				image.set((int)P.x, (int)P.y, color);
 			}
 
@@ -80,7 +74,7 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelArgs &model_args, int posi
 }
 
 template <typename ShaderType>
-__global__ void draw_faces(DrawCallBaseArgs args, ModelArgs model_args, Image image, ZBuffer zbuffer) {
+__global__ void draw_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, Image image, ZBuffer zbuffer) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	auto model = model_args.model;
 	if (position >= model.n_faces)
@@ -95,14 +89,13 @@ void Rasterizer::async_rasterize(DrawCallArgs &args, int model_index, Image imag
 	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = dim3(32);
 
-	switch (model.shader_type)
+	switch (model.shader)
 	{
-		case 'd':
+		case RegisteredShaders::Default:
 			draw_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
 			break;
-		case 'w':
+		case RegisteredShaders::Water:
 			draw_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
 	}
-
 }
 

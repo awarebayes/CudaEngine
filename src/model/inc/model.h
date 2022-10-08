@@ -5,6 +5,7 @@
 #ifndef COURSE_RENDERER_MODEL_H
 #define COURSE_RENDERER_MODEL_H
 
+#include "../../shader/registered_shaders.h"
 #include "../../util/tiny_objloader.h"
 #include "bounding_volume.h"
 #include "texture.cuh"
@@ -23,8 +24,9 @@ struct ModelRef {
 	glm::ivec3 *faces{};
 	int n_vertices = 0;
 	int n_faces = 0;
-	Sphere *bounding_volume;
-	char shader_type = 'd';
+	int id = 0;
+	Sphere *bounding_volume{};
+	RegisteredShaders shader = RegisteredShaders::Default;
 };
 
 struct Model {
@@ -33,14 +35,15 @@ struct Model {
 	glm::vec2 *textures{};
 	glm::ivec3 *textures_for_face{};
 	glm::ivec3 *faces{};
-	char shader_type = 'd';
 
+	RegisteredShaders shader;
 	std::shared_ptr<Texture> texture{};
-
  	Sphere bounding_volume {{}, 0};
 
 	int n_vertices = 0;
 	int n_faces = 0;
+	int id = 0;
+
 	Model(const tinyobj::ObjReader &reader, int index);
 	static Model from_file(const std::string &filename, int index=0);
 	void load_texture(const std::string &filename);

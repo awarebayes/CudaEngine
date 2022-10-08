@@ -20,10 +20,11 @@ void load_rungholt()
 	camera.pitch = 0;
 
 	for (const auto ref: mp->get_all()) {
-		scene->add_model(StoredModel{glm::vec3{0, -100, -50}, ref});
+		scene->add_model(SceneObject{glm::vec3{0, -100, -50}, ref});
 	}
 
 	scene->set_camera(camera);
+	scene->sort_models();
 }
 
 void load_test_single_head()
@@ -42,11 +43,15 @@ void load_test_single_head()
 
 	scene->set_light_dir(glm::vec3{0, 0, 1});
 
+	auto mut = mp->get_mut("obj/african_head.obj:head");
+	mut->shader = RegisteredShaders::Default;
+
 	const auto ref =  mp->get("obj/african_head.obj:head");
-	scene->add_model(StoredModel{glm::vec3{0, 0, -5}, ref});
+	scene->add_model(SceneObject{glm::vec3{0, 0, -5}, ref});
 
 
 	scene->set_camera(camera);
+	scene->sort_models();
 }
 
 void load_test_many()
@@ -64,15 +69,17 @@ void load_test_many()
 	camera.pitch = 0;
 
 	scene->set_light_dir(glm::vec3{0, 0, 1});
-
+	auto mut = mp->get_mut("obj/african_head.obj:head");
+	mut->shader = RegisteredShaders::Default;
 	auto ref = mp->get("obj/african_head.obj:head");
-	scene->add_model(StoredModel{glm::vec3{0, 0, -5}, ref});
+	scene->add_model(SceneObject{glm::vec3{0, 0, -5}, ref});
 	for (int i = 0; i < 100; i++)
 		for (int j = 0; j < 100; j++)
-			scene->add_model(StoredModel{glm::vec3{float(i-50) * 1.5f, float(j / 2), -10.0f * j - 10}, ref});
+			scene->add_model(SceneObject{glm::vec3{float(i-50) * 1.5f, float(j / 2), -10.0f * j - 10}, ref});
 
 
 	scene->set_camera(camera);
+	scene->sort_models();
 }
 
 
@@ -93,10 +100,14 @@ void load_scene_diablo()
 
 	scene->set_light_dir(glm::vec3{0, 0, 1});
 
+	auto mut = mp->get_mut("obj/diablo_pose/diablo_pose.obj:objDiablo3");
+	mut->shader = RegisteredShaders::Default;
+
 	auto ref = mp->get("obj/diablo_pose/diablo_pose.obj:objDiablo3");
-	scene->add_model(StoredModel{glm::vec3{0, 0, -5}, ref});
+	scene->add_model(SceneObject{glm::vec3{0, 0, -5}, ref});
 
 	scene->set_camera(camera);
+	scene->sort_models();
 }
 
 
@@ -117,13 +128,14 @@ void load_scene_water()
 	scene->set_light_dir(glm::vec3{0, 1, 0});
 
 	auto mut = mp->get_mut("obj/water/water.obj:Plane");
-	mut->shader_type = 'w';
+	mut->shader = RegisteredShaders::Water;
 
 	auto ref = mp->get("obj/water/water.obj:Plane");
 
-	scene->add_model(StoredModel{glm::vec3{0, -2, 0}, ref});
+	scene->add_model(SceneObject{glm::vec3{0, -2, 0}, ref});
 
 	scene->set_camera(camera);
+	scene->sort_models();
 }
 
 void register_predefined_scenes()
@@ -135,5 +147,5 @@ void register_predefined_scenes()
 	scene_loader->register_load_scene("water", load_scene_water);
 	// scene_loader->register_load_scene("rungholt", load_rungholt);
 
-	scene_loader->register_load_scene("default", load_scene_water);
+	scene_loader->register_load_scene("default", load_test_single_head);
 }

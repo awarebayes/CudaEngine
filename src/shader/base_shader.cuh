@@ -30,9 +30,9 @@ struct BaseShader
 		static_cast<T*>(this)->vertex_impl(iface, nthvert, load_tex);
 	}
 
-	__device__ bool fragment(glm::vec3 bar, uint &output_color)
+	__device__ bool fragment(glm::vec3 bar, uint &output_color, float z_value)
 	{
-		static_cast<T*>(this)->fragment_impl(bar, output_color);
+		static_cast<T*>(this)->fragment_impl(bar, output_color, z_value);
 	}
 };
 

@@ -9,6 +9,7 @@
 #include "../culler/culler.h"
 #include "../image_resetter/image_resetter.h"
 #include "../logger/logger.h"
+#include "../virtual_geometry/analyzer/mesh_analyzer_puppeteer.h"
 #include "../zbuffer/zfiller.h"
 #include "../zbuffer/zmerger.h"
 #include "rasterizer.h"
@@ -22,7 +23,7 @@ private:
 	std::vector<std::shared_ptr<ZMerger>> z_mergers{};
 	std::shared_ptr<ImageResetter> image_resetter{};
 	std::shared_ptr<Culler> culler{};
-	std::shared_ptr<RenderInterface> interface {};
+	std::shared_ptr<RenderInterface> interface{};
 public:
 	DrawCaller();
 	~DrawCaller() = default;

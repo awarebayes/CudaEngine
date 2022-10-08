@@ -146,7 +146,7 @@ Model::~Model() {
 	cudaFree(vertices);
 }
 ModelRef Model::get_ref() {
-	return ModelRef{texture->get_ref(), vertices, normals, textures, textures_for_face, faces, n_vertices, n_faces, &bounding_volume, shader_type};
+	return ModelRef{texture->get_ref(), vertices, normals, textures, textures_for_face, faces, n_vertices, n_faces, id, &bounding_volume, shader};
 }
 void Model::load_texture(const std::string &filename) {
 	texture = std::make_shared<Texture>(filename);

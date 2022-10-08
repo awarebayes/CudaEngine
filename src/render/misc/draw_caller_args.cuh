@@ -21,22 +21,22 @@ struct DrawCallBaseArgs
 	float time = 0;
 };
 
-struct ModelArgs
-{
-	glm::mat4 model_matrix{};
+struct ModelDrawCallArgs {
 	ModelRef model;
+	glm::mat4 model_matrix{};
+	int id = 0;
 };
 
 struct DrawCallArgs {
-	std::vector<ModelArgs> models{};
+	std::vector<ModelDrawCallArgs> models{};
 	DrawCallBaseArgs base{};
 };
 
-struct StoredModel
-{
+struct SceneObject {
 	glm::vec3 position{};
 	ModelRef model{};
-	ModelArgs to_args();
+	ModelDrawCallArgs to_args();
+	int id;
 };
 
 #endif//COURSE_RENDERER_DRAW_CALLER_ARGS_CU

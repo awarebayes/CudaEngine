@@ -39,7 +39,7 @@ struct ShaderWater : BaseShader<ShaderWater> {
 	}
 
 
-	__device__ bool fragment_impl(glm::vec3 bar, uint &output_color)
+	__device__ bool fragment_impl(glm::vec3 bar, uint &output_color,  float z_value)
 	{
 		glm::vec3 N = glm::normalize(normals[0] * bar.x + normals[1] * bar.y + normals[2] * bar.z);
 		glm::vec2 uv = textures[0] * bar.x + textures[1] * bar.y + textures[2] * bar.z;
