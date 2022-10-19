@@ -6,6 +6,7 @@ set(CMAKE_CUDA_STANDARD 20)
 set(CMAKE_CXX_STANDARD 20)
 set(ENABLE_PRECOMPILED_HEADERS OFF)
 set(CMAKE_NO_SYSTEM_FROM_IMPORTED ON)
+set(CMAKE_CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE} --use_fast_math --dopt on -O3")
 
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
@@ -49,7 +50,7 @@ add_executable(course_renderer
         src/render/culler/culler.cpp
         src/model/src/bounding_volume.cpp
         src/render/logger/logger.cpp
-        src/scene/scene_loader.cpp src/scene/predefined_scenes.cpp src/scene/predefined_scenes.h src/shader/base_shader.cuh src/shader/registered_shaders.h src/render/virtual_geometry/analyzer/mesh_analyzer.h src/render/virtual_geometry/analyzer/mesh_analyzer.cu src/shader/all.h src/render/virtual_geometry/analyzer/mesh_analyzer_puppeteer.h src/render/virtual_geometry/analyzer/mesh_analyzer_puppeteer.cpp src/render/virtual_geometry/manager/virtual_geometry_manger.h src/render/virtual_geometry/manager/virtual_geometry_manager.cpp)
+        src/scene/scene_loader.cpp src/scene/predefined_scenes.cpp src/scene/predefined_scenes.h src/shader/base_shader.cuh src/shader/registered_shaders.h src/render/virtual_geometry/analyzer/mesh_analyzer.h src/render/virtual_geometry/analyzer/mesh_analyzer.cu src/shader/all.h src/render/virtual_geometry/analyzer/mesh_analyzer_puppeteer.h src/render/virtual_geometry/analyzer/mesh_analyzer_puppeteer.cpp src/render/virtual_geometry/manager/virtual_geometry_manger.h src/render/virtual_geometry/manager/virtual_geometry_manager.cpp src/render/virtual_geometry/virtual_model/virtual_model.cpp src/render/virtual_geometry/virtual_model/virtual_model.h)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

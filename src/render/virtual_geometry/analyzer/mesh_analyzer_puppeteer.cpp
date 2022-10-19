@@ -3,6 +3,7 @@
 //
 
 #include "mesh_analyzer_puppeteer.h"
+#include "../../../util/const.h"
 #include <cuda_runtime_api.h>
 
 MeshAnalyzerPuppeteer::MeshAnalyzerPuppeteer(int n_analyzers_) : Synchronizable() {
@@ -10,7 +11,7 @@ MeshAnalyzerPuppeteer::MeshAnalyzerPuppeteer(int n_analyzers_) : Synchronizable(
 	cudaMalloc(reinterpret_cast<void **>(&bad_faces_found_device), sizeof(bool) * n_analyzers);
 	cudaMallocHost(reinterpret_cast<void **>(&bad_faces_found_host), sizeof(bool) * n_analyzers);
 	for (int i = 0; i < n_analyzers; ++i) {
-		analyzers.emplace_back(std::make_shared<MeshAnalyzer>(8, 5000));
+		analyzers.emplace_back(std::make_shared<MeshAnalyzer>(VIRTUAL_GEOMETRY_VERTICES, 5000));
 		analyzers[i]->has_bad_faces = bad_faces_found_device + i;
 	}
 }
@@ -28,17 +29,21 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 	assert(!m_is_analyzing);
 
 	m_is_analyzing = true;
+	if (args.scene_id != analyzing_scene_id) {
+		analyzing_scene_id = args.scene_id;
+		model_analysis_queue = std::queue<int>();
+		m_is_analyzing = false;
+		std::cout << "MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING: scene changed, clearing queue" << std::endl;
+		return;
+	}
 
 	cudaMemsetAsync(bad_faces_found_device, 0, sizeof(bool) * n_analyzers, stream);
 
 	models_in_analysis = get_model_ids_for_analysis(models_with_bad_faces);
 
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
-		std::cout << "Analyzing model " << models_in_analysis[i] << std::endl;
-	}
-
-	for (int i = 0; i < models_in_analysis.size(); ++i) {
 		bad_faces_found_host[i] = false;
+		std::cout << "Analyzing model " << models_in_analysis[i] << std::endl;
 		analyzers[i]->async_analyze_mesh(args, models_in_analysis[i]);
 	}
 
@@ -49,6 +54,8 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 	copy_bad_faces();
 	await();
 	n_calls++;
+
+	analyzing_scene_id = args.scene_id;
 
 	m_is_analyzing = false;
 }

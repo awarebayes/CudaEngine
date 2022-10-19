@@ -29,7 +29,6 @@ void load_rungholt()
 
 void load_test_single_head()
 {
-
 	auto mp = ModelPoolCreator().get();
 	mp->load_all_from_obj_file("obj/african_head.obj");
 	mp->assign_single_texture_to_obj_file("obj/african_head.obj", "obj/african_head_diffuse.tga");
@@ -113,7 +112,6 @@ void load_scene_diablo()
 
 void load_scene_water()
 {
-
 	auto mp = ModelPoolCreator().get();
 	mp->load_all_from_obj_file("obj/water/water.obj");
 	mp->assign_single_texture_to_obj_file("obj/water/water.obj", "obj/water/water.jpg");
@@ -121,9 +119,10 @@ void load_scene_water()
 	scene->clear();
 
 	Camera camera;
-	camera.position = glm::vec3{-0.36, -0.34, 4};
-	camera.yaw = -90;
+	camera.position = glm::vec3{2, 6, 30};
+	camera.yaw = -100;
 	camera.pitch = -25;
+	camera.fov = 60;
 
 	scene->set_light_dir(glm::vec3{0, 1, 0});
 
@@ -132,10 +131,17 @@ void load_scene_water()
 
 	auto ref = mp->get("obj/water/water.obj:Plane");
 
-	scene->add_model(SceneObject{glm::vec3{0, -2, 0}, ref});
+	for (int i = 0; i < 8; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			scene->add_model(SceneObject{glm::vec3{float(i) * 2.0f, 0 , float(j) * 2.0f}, ref});
+		}
+	}
 
 	scene->set_camera(camera);
 	scene->sort_models();
+	//scene->allow_culling = false;
 }
 
 void register_predefined_scenes()

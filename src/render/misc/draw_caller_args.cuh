@@ -25,11 +25,13 @@ struct ModelDrawCallArgs {
 	ModelRef model;
 	glm::mat4 model_matrix{};
 	int id = 0;
+	bool *disabled_faces = nullptr;
 };
 
 struct DrawCallArgs {
 	std::vector<ModelDrawCallArgs> models{};
 	DrawCallBaseArgs base{};
+	int scene_id = 0;
 };
 
 struct SceneObject {

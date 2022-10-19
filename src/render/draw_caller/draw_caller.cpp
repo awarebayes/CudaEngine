@@ -23,9 +23,9 @@ void DrawCaller::draw(DrawCallArgs args_unculled, Image &image)
 	} else {
 		args = args_unculled;
 	}
-
 	interface->log_after_culling(args.models.size());
 
+	// virtual_geometry_manager->populate_virtual_models(args, args_unculled);
 
 
 	// dispatch
@@ -65,6 +65,7 @@ DrawCaller::DrawCaller() {
 	image_resetter = std::make_shared<ImageResetter>();
 	culler = std::make_shared<Culler>();
 	interface = std::make_shared<RenderInterface>();
+	virtual_geometry_manager = std::make_shared<VirtualGeometryManager>();
 	for (int i = 0; i < n_streams; i++)
 	{
 		rasterizers.emplace_back(std::make_shared<Rasterizer>());

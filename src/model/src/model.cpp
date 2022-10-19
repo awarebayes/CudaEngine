@@ -13,7 +13,7 @@
 Sphere generateSphereBV(const std::vector<glm::vec3> &vertices)
 {
 	glm::vec3 minAABB = glm::vec3(std::numeric_limits<float>::max());
-	glm::vec3 maxAABB = glm::vec3(std::numeric_limits<float>::min());
+	glm::vec3 maxAABB = glm::vec3(0.001, 0.001, 0.001);
 
 	for (const auto &i: vertices)
 	{

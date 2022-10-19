@@ -12,6 +12,7 @@ private:
 	std::shared_ptr<Camera> camera{};
 	glm::vec3 light_dir{0, 0, 1};
 	int id_counter = 0;
+	int scene_id = 0;
 	bool sorted = false;
 public:
 	Scene() = default;
@@ -27,6 +28,7 @@ public:
 	int get_n_models();
 	void clear();
 	void sort_models();
+	bool allow_culling = true;
 };
 
 using SceneSingleton = SingletonCreator<Scene>;

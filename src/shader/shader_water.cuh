@@ -21,15 +21,15 @@ struct ShaderWater : BaseShader<ShaderWater> {
 		int index = face[nthvert];
 		float time = base_args.time;
 		glm::vec3 v = model.vertices[index];
-		auto mv = glm::vec4(v.x, v.y, v.z, 1.0f);
-		mv.y = mv.y + 0.1 * sinf(10.0f * v.x + 1.0 * v.z + 0.01 * time) + 0.05 * cosf( v.x + 10.0 * v.z + 0.01 * time) + 0.005 * sinf(100.0 * v.x + 100.0 * v.z + 0.01 * time);
+		auto mv = model_matrix * glm::vec4(v.x, v.y, v.z, 1.0f);
+		mv.y = mv.y + 0.1 * sinf(10.0f * mv.x + 1.0 * mv.z + 0.01 * time) + 0.05 * cosf( mv.x + 10.0 * mv.z + 0.01 * time) + 0.005 * sinf(100.0 * mv.x + 100.0 * mv.z + 0.01 * time);
 
 		if (load_tex) {
 			normals[nthvert] = model.normals[index];
 			textures[nthvert] = model.textures[model.textures_for_face[iface][nthvert]];
 		}
 
-		auto proj = projection * (view * (model_matrix * mv));
+		auto proj = projection * (view * mv);
 		proj.w = abs(proj.w);
 		proj.x = (proj.x + 1.0f) * screen_size.x / proj.w;
 		proj.y = (proj.y + 1.0f) * screen_size.y / proj.w;

@@ -1,8 +1,9 @@
 //
 // Created by dev on 10/6/22.
 //
-#include "mesh_analyzer.h"
 #include "../../../shader/all.h"
+#include "../../../util/const.h"
+#include "mesh_analyzer.h"
 
 template <typename ShaderType>
 __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, int threshold, float *surface_areas, int n_faces, bool *has_bad_faces) {
@@ -17,15 +18,19 @@ __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_arg
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i, false);
 
+
 	auto &pts = sh.pts;
-	*has_bad_faces = true;
+
+	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
+
+	*has_bad_faces = false;
 }
 
 void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, int model_index)
 {
 	auto &model_args = args.models[model_index];
 	auto &model = model_args.model;
-	auto n_grid = model.n_faces / 32 + 1;
+	auto n_grid = std::min(model.n_faces, VIRTUAL_GEOMETRY_FACES) / 32 + 1;
 	auto n_block = dim3(32);
 
 	switch (model.shader)

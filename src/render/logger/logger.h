@@ -14,7 +14,7 @@ protected:
 	int n_models_before_culling;
 	int n_models_after_culling;
 public:
-	bool is_culling_enabled();
+	bool is_culling_enabled() const;
 	void log_fps();
 	void log_before_culling(int n_models);
 	void log_after_culling(int n_models);

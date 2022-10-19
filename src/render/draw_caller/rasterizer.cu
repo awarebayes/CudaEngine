@@ -10,7 +10,8 @@
 #include <glm/glm.hpp>
 
 template <typename ShaderType>
-__device__ void triangle(DrawCallBaseArgs &args, ModelDrawCallArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
+__forceinline__ __device__ void triangle(DrawCallBaseArgs &args, ModelDrawCallArgs &model_args, int position, Image &image, ZBuffer &zbuffer) {
+
 	auto light_dir = args.light_dir;
 	auto &model = model_args.model;
 
@@ -73,11 +74,24 @@ __device__ void triangle(DrawCallBaseArgs &args, ModelDrawCallArgs &model_args, 
 	}
 }
 
+
+
 template <typename ShaderType>
 __global__ void draw_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, Image image, ZBuffer zbuffer) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	auto model = model_args.model;
 	if (position >= model.n_faces)
+		return;
+	triangle<ShaderType>(args, model_args, position, image, zbuffer);
+}
+
+template <typename ShaderType>
+__global__ void draw_faces_mask(DrawCallBaseArgs args, ModelDrawCallArgs model_args, Image image, ZBuffer zbuffer) {
+	int position = blockIdx.x * blockDim.x + threadIdx.x;
+	auto model = model_args.model;
+	if (position >= model.n_faces)
+		return;
+	if (model_args.disabled_faces[position])
 		return;
 	triangle<ShaderType>(args, model_args, position, image, zbuffer);
 }
@@ -89,13 +103,25 @@ void Rasterizer::async_rasterize(DrawCallArgs &args, int model_index, Image imag
 	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = dim3(32);
 
-	switch (model.shader)
-	{
-		case RegisteredShaders::Default:
-			draw_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
-			break;
-		case RegisteredShaders::Water:
-			draw_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+	if (model_args.disabled_faces == nullptr) {
+		switch (model.shader) {
+			case RegisteredShaders::Default:
+				draw_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+				break;
+			case RegisteredShaders::Water:
+				draw_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+				break;
+		}
+	}
+	else {
+		switch (model.shader) {
+			case RegisteredShaders::Default:
+				draw_faces_mask<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+				break;
+			case RegisteredShaders::Water:
+				draw_faces_mask<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+				break;
+		}
 	}
 }
 

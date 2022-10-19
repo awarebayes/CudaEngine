@@ -2,7 +2,9 @@
 // Created by dev on 10/3/22.
 //
 #include "logger.h"
+#include "../../scene/scene.h"
 #include <imgui.h>
+#include <imgui_internal.h>
 
 void RenderInterface::draw_widget() {
 	if (ImGui::CollapsingHeader("FPS"))
@@ -12,7 +14,19 @@ void RenderInterface::draw_widget() {
 	}
 
 	if (ImGui::CollapsingHeader("Culling")) {
-		ImGui::Checkbox("Enable Culling", &culling_enabled);
+		if (!SceneSingleton().get()->allow_culling)
+		{
+			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+			bool f = false;
+			ImGui::Checkbox("Enable Culling", &f);
+			ImGui::PopItemFlag();
+			ImGui::PopStyleVar();
+		}
+		else
+		{
+			ImGui::Checkbox("Enable Culling", &culling_enabled);
+		}
 		ImGui::Text("Called to draw models: %d", n_models_before_culling);
 		ImGui::Text("Drawn after culling: %d", n_models_after_culling);
 		ImGui::Text("Culling Percentage: %.1f", culling_percentage.back());
@@ -36,6 +50,8 @@ void RenderInterface::log_after_culling(int n_models) {
 		culling_percentage.erase(culling_percentage.begin());
 	}
 }
-bool RenderInterface::is_culling_enabled() {
-	return culling_enabled;
+bool RenderInterface::is_culling_enabled() const {
+	if (SceneSingleton().get()->allow_culling)
+		return culling_enabled;
+	return false;
 }

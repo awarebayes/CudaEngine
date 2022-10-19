@@ -19,6 +19,7 @@ private:
 	std::atomic_bool m_is_analyzing = false;
 	std::vector<int> models_in_analysis{};
 	std::queue<int> model_analysis_queue{};
+	int analyzing_scene_id = -1;
 
 	void copy_bad_faces();
 	std::vector<int> get_model_ids_for_analysis(const std::vector<int> &models_with_bad_faces);

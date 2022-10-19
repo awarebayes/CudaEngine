@@ -35,6 +35,7 @@ DrawCallArgs Scene::get_draw_call_args() {
 	                .camera_ptr = camera.get(),
 	                .time = (float)glutGet(GLUT_ELAPSED_TIME),
 			},
+	        .scene_id = scene_id,
 	};
 	return args;
 }
@@ -46,20 +47,70 @@ void Scene::set_camera(const Camera &cam) {
 	camera = std::make_shared<Camera>(cam);
 }
 
+std::string thousandSeparator(size_t n)
+{
+	std::string ans = {};
+
+	// Convert the given integer
+	// to equivalent string
+	std::string num = std::to_string(n);
+
+	// Initialise count
+	int count = 0;
+
+	// Traverse the string in reverse
+	int i = num.size() - 1;
+	for (;i >= 0; i--) {
+		count++;
+		ans.push_back(num[i]);
+
+		// If three characters
+		// are traversed
+		if (count == 3) {
+			ans.push_back('.');
+			count = 0;
+		}
+	}
+
+	// Reverse the string to get
+	// the desired output
+	reverse(ans.begin(), ans.end());
+
+	// If the given string is
+	// less than 1000
+	if (ans.size() % 4 == 0) {
+		// Remove ','
+		ans.erase(ans.begin());
+	}
+
+	return ans;
+}
+
+
 void Scene::display_menu() {
 
-	if (ImGui::CollapsingHeader("Scene Controls")) {
+	if (ImGui::CollapsingHeader("Scene")) {
 		ImGui::SliderFloat3("Light dir", &light_dir.x, -1, 1);
 
 		camera->display_menu();
 
+		size_t vertices = 0;
+		size_t triangles = 0;
+		for (auto &model : models) {
+			vertices += model.model.n_vertices;
+			triangles += model.model.n_faces;
+		}
+
+		ImGui::Text("Vertices: %s", thousandSeparator(vertices).c_str());
+		ImGui::Text("Triangles: %s", thousandSeparator(triangles).c_str());
 
 		if (ImGui::CollapsingHeader("Models")) {
 			for (int i = 0; i < models.size(); i++) {
 				if (ImGui::TreeNode((void *) (intptr_t) i, "Model %d", i)) {
 					ImGui::SliderFloat3("Position", &models[i].position.x, -10, 10);
-
 					const char* current_item = registered_shaders_string.at(models[i].model.shader).data();
+					vertices += models[i].model.n_vertices;
+					triangles += models[i].model.n_faces;
 					if (ImGui::BeginCombo("Shader", current_item))
 					{
 						for (const auto &shader : registered_shaders_enum) {
@@ -79,6 +130,7 @@ void Scene::display_menu() {
 				}
 			}
 		}
+
 	}
 }
 void Scene::add_model(const SceneObject &model) {
@@ -86,6 +138,7 @@ void Scene::add_model(const SceneObject &model) {
 	model_copy.id = id_counter++;
 	models.push_back(model_copy);
 	sorted = false;
+	scene_id += 1;
 }
 SceneObject &Scene::get_model(int index) {
 	return models[index];
@@ -99,6 +152,9 @@ void Scene::set_light_dir(const glm::vec3 &dir) {
 }
 void Scene::clear() {
 	this->models.clear();
+	id_counter = 0;
+	scene_id += 1;
+	allow_culling = true;
 }
 void Scene::sort_models() {
 	std::sort(models.begin(), models.end(), [](const SceneObject &a, const SceneObject &b) {

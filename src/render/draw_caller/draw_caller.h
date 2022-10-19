@@ -10,6 +10,7 @@
 #include "../image_resetter/image_resetter.h"
 #include "../logger/logger.h"
 #include "../virtual_geometry/analyzer/mesh_analyzer_puppeteer.h"
+#include "../virtual_geometry/manager/virtual_geometry_manger.h"
 #include "../zbuffer/zfiller.h"
 #include "../zbuffer/zmerger.h"
 #include "rasterizer.h"
@@ -24,6 +25,7 @@ private:
 	std::shared_ptr<ImageResetter> image_resetter{};
 	std::shared_ptr<Culler> culler{};
 	std::shared_ptr<RenderInterface> interface{};
+	std::shared_ptr<VirtualGeometryManager> virtual_geometry_manager{};
 public:
 	DrawCaller();
 	~DrawCaller() = default;

@@ -53,6 +53,9 @@ __global__ void fill_zbuffer(DrawCallBaseArgs args, ModelDrawCallArgs model_args
 	if (position >= model.n_faces)
 		return;
 
+	if (model_args.disabled_faces != nullptr && model_args.disabled_faces[position])
+		return;
+
 	auto light_dir = args.light_dir;
 	auto sh = BaseShader<ShaderType>(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
 
