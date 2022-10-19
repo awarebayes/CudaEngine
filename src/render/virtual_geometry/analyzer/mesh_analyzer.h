@@ -10,8 +10,6 @@
 #include "../../misc/image.cuh"
 #include "../../zbuffer/zbuffer.h"
 
-
-
 class MeshAnalyzer : public Synchronizable
 {
 	friend class MeshAnalyzerPuppeteer;

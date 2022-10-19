@@ -67,7 +67,7 @@ std::string thousandSeparator(size_t n)
 		// If three characters
 		// are traversed
 		if (count == 3) {
-			ans.push_back('.');
+			ans.push_back(',');
 			count = 0;
 		}
 	}
@@ -155,6 +155,7 @@ void Scene::clear() {
 	id_counter = 0;
 	scene_id += 1;
 	allow_culling = true;
+	time = 0;
 }
 void Scene::sort_models() {
 	std::sort(models.begin(), models.end(), [](const SceneObject &a, const SceneObject &b) {

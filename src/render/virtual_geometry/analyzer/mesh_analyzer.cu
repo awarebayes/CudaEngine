@@ -14,15 +14,15 @@ __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_arg
 		return;
 
 	auto sh = BaseShader<ShaderType>(model, args.light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
-
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i, false);
 
-
 	auto &pts = sh.pts;
-
 	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
 
+
+
+	*surface_areas = 0.0f;
 	*has_bad_faces = false;
 }
 
@@ -33,6 +33,7 @@ void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, int model_index)
 	auto n_grid = std::min(model.n_faces, VIRTUAL_GEOMETRY_FACES) / 32 + 1;
 	auto n_block = dim3(32);
 
+	std::cout << "Had bad faces addr:" << has_bad_faces << std::endl;
 	switch (model.shader)
 	{
 		case RegisteredShaders::Default:

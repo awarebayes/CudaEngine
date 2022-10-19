@@ -13,6 +13,7 @@ private:
 	glm::vec3 light_dir{0, 0, 1};
 	int id_counter = 0;
 	int scene_id = 0;
+	int time = 0;
 	bool sorted = false;
 public:
 	Scene() = default;
@@ -29,6 +30,8 @@ public:
 	void clear();
 	void sort_models();
 	bool allow_culling = true;
+	void tick() { time++; };
+	int get_time() { return time; };
 };
 
 using SceneSingleton = SingletonCreator<Scene>;

@@ -3,6 +3,7 @@
 //
 
 #include "mesh_analyzer_puppeteer.h"
+#include "../../../scene/scene.h"
 #include "../../../util/const.h"
 #include <cuda_runtime_api.h>
 
@@ -28,6 +29,9 @@ void MeshAnalyzerPuppeteer::copy_bad_faces() {
 void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args, const std::vector<int> &models_with_bad_faces) {
 	assert(!m_is_analyzing);
 
+	if (SceneSingleton().get()->get_time() < 100)
+		return;
+
 	m_is_analyzing = true;
 	if (args.scene_id != analyzing_scene_id) {
 		analyzing_scene_id = args.scene_id;
@@ -43,7 +47,6 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
 		bad_faces_found_host[i] = false;
-		std::cout << "Analyzing model " << models_in_analysis[i] << std::endl;
 		analyzers[i]->async_analyze_mesh(args, models_in_analysis[i]);
 	}
 
@@ -79,8 +82,10 @@ std::vector<int> MeshAnalyzerPuppeteer::get_model_ids_for_analysis(const std::ve
 	max_index - model_indices.size();
 
 	for (int i = 0; i < max_index; ++i) {
-		model_indices.push_back(model_analysis_queue.front());
-		model_analysis_queue.pop();
+		if (std::find(model_indices.begin(), model_indices.end(), model_analysis_queue.front()) == model_indices.end()) {
+			model_indices.push_back(model_analysis_queue.front());
+			model_analysis_queue.pop();
+		}
 	}
 	return  model_indices;
 }

@@ -19,7 +19,6 @@ void VirtualGeometryManager::populate_virtual_models(DrawCallArgs &culled_args, 
 	if (!mesh_analyzer->is_analyzing())
 	{
 		// get analysis results
-
 		auto models_with_bad_faces = mesh_analyzer->get_ids_with_bad_faces();
 
 		// launch task
