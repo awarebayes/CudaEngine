@@ -6,9 +6,9 @@
 #define COURSE_RENDERER_IMAGE_CUH
 
 struct Image {
-	uint *pixels;
 	int width;
 	int height;
+	uint *pixels;
 
 	__device__ void set(int x, int y, uint value) const {
 		if (x < 0 or x >= width) return;

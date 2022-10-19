@@ -8,20 +8,19 @@
 VirtualGeometryManager::VirtualGeometryManager() {
 	mesh_analyzer = std::make_shared<MeshAnalyzerPuppeteer>(n_analyzers);
 }
-void VirtualGeometryManager::populate_virtual_models(DrawCallArgs &culled_args, const DrawCallArgs &unculled_args)
+void VirtualGeometryManager::populate_virtual_models(DrawCallArgs &culled_args, const Image &image, const DrawCallArgs &unculled_args)
 {
-	// virtual geometry analysis
-	if (mesh_analyzer->queue_empty())
-	{
-		for(auto& model : culled_args.models)
-			mesh_analyzer->enqueue_model(model.id);
-	}
 	if (!mesh_analyzer->is_analyzing())
 	{
+		// virtual geometry analysis
+		if (mesh_analyzer->queue_empty())
+		{
+			for(auto& model : culled_args.models)
+				mesh_analyzer->enqueue_model(model.model.id);
+		}
 		// get analysis results
 		auto models_with_bad_faces = mesh_analyzer->get_ids_with_bad_faces();
-
 		// launch task
-		std::async(std::launch::async, &MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING, this->mesh_analyzer, unculled_args, models_with_bad_faces);
+		std::async(std::launch::async, &MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING, this->mesh_analyzer, unculled_args, image, models_with_bad_faces);
 	}
 }

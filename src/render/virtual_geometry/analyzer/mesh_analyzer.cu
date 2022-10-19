@@ -6,7 +6,7 @@
 #include "mesh_analyzer.h"
 
 template <typename ShaderType>
-__global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, int threshold, float *surface_areas, int n_faces, bool *has_bad_faces) {
+__global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, const Image image, int threshold, bool *face_mask, int n_faces, bool *has_bad_faces) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	auto &model = model_args.model;
 	int max_pos = max(model.n_faces, n_faces);
@@ -20,33 +20,51 @@ __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_arg
 	auto &pts = sh.pts;
 	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
 
+	glm::vec2 bboxmin{float(image.width-1),  float(image.height-1)};
+	glm::vec2 bboxmax{0., 0.};
+	glm::vec2 clamp{float(image.width-1), float(image.height-1)};
+	for (auto &pt : pts) {
+		bboxmin.x = max(0.0f, min(bboxmin.x, pt.x));
+		bboxmin.y = max(0.0f, min(bboxmin.y, pt.y));
 
+		bboxmax.x = min(clamp.x, max(bboxmax.x, pt.x));
+		bboxmax.y = min(clamp.y, max(bboxmax.y, pt.y));
+	}
 
-	*surface_areas = 0.0f;
-	*has_bad_faces = false;
+	float area = (bboxmax.x - pts[0].x) * (bboxmax.y - pts[0].y);
+	if (area > threshold) {
+		*has_bad_faces = true;
+		face_mask[position] = true;
+	}
 }
 
-void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, int model_index)
+void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &image, int model_index)
 {
 	auto &model_args = args.models[model_index];
 	auto &model = model_args.model;
 	auto n_grid = std::min(model.n_faces, VIRTUAL_GEOMETRY_FACES) / 32 + 1;
 	auto n_block = dim3(32);
 
+	if (model.n_faces > capacity) {
+		capacity = model.n_faces;
+		cudaFreeAsync(face_mask, stream);
+		cudaMallocAsync(&face_mask, sizeof(float) * capacity, stream);
+	}
+
 	std::cout << "Had bad faces addr:" << has_bad_faces << std::endl;
 	switch (model.shader)
 	{
 		case RegisteredShaders::Default:
-			analyze_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, threshold, surface_areas, capacity, has_bad_faces);
+			analyze_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, has_bad_faces);
 			break;
 		case RegisteredShaders::Water:
-			analyze_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, threshold, surface_areas, capacity, has_bad_faces);
+			analyze_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, has_bad_faces);
 			break;
 	}
 }
 MeshAnalyzer::MeshAnalyzer(int capacity_, int threshold_) : capacity(capacity_), threshold(threshold_), Synchronizable() {
-	cudaMalloc(&surface_areas, sizeof(float) * capacity);
+	cudaMalloc(&face_mask, sizeof(bool) * capacity);
 }
 MeshAnalyzer::~MeshAnalyzer() {
-	cudaFree(surface_areas);
+	cudaFree(&face_mask);
 }

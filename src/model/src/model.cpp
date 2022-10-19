@@ -104,8 +104,9 @@ Model::Model(const tinyobj::ObjReader &reader, int index) {
 	checkCudaErrors(cudaMalloc((void **) (&normals), sizeof(glm::vec3) * n_vertices));
 
 	if (has_textures) {
-		checkCudaErrors(cudaMalloc((void **) (&textures), sizeof(glm::vec3) * max_texture_index));
+		checkCudaErrors(cudaMalloc((void **) (&textures), sizeof(glm::vec2) * max_texture_index));
 		checkCudaErrors(cudaMalloc((void **) (&textures_for_face), sizeof(glm::ivec3) * n_faces));
+		m_max_texture_index = max_texture_index;
 	}
 
 	checkCudaErrors(cudaMemcpy(faces, faces_host.data(), n_faces * sizeof(glm::ivec3), cudaMemcpyHostToDevice));
@@ -146,7 +147,7 @@ Model::~Model() {
 	cudaFree(vertices);
 }
 ModelRef Model::get_ref() {
-	return ModelRef{texture->get_ref(), vertices, normals, textures, textures_for_face, faces, n_vertices, n_faces, id, &bounding_volume, shader};
+	return ModelRef{texture->get_ref(), vertices, normals, textures, textures_for_face, faces, n_vertices, n_faces, m_max_texture_index, id, &bounding_volume, shader};
 }
 void Model::load_texture(const std::string &filename) {
 	texture = std::make_shared<Texture>(filename);

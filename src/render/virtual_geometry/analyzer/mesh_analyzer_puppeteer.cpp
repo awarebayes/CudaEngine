@@ -26,17 +26,17 @@ void MeshAnalyzerPuppeteer::copy_bad_faces() {
 	cudaMemcpyAsync(bad_faces_found_host, bad_faces_found_device, sizeof(bool) * n_analyzers, cudaMemcpyDeviceToHost, stream);
 }
 
-void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args, const std::vector<int> &models_with_bad_faces) {
-	assert(!m_is_analyzing);
+void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args, const Image &image, const std::vector<int> &models_with_bad_faces) {
+	assert(!m_busy);
 
 	if (SceneSingleton().get()->get_time() < 100)
 		return;
 
-	m_is_analyzing = true;
+	m_busy = true;
 	if (args.scene_id != analyzing_scene_id) {
 		analyzing_scene_id = args.scene_id;
 		model_analysis_queue = std::queue<int>();
-		m_is_analyzing = false;
+		m_busy = false;
 		std::cout << "MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING: scene changed, clearing queue" << std::endl;
 		return;
 	}
@@ -47,7 +47,7 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
 		bad_faces_found_host[i] = false;
-		analyzers[i]->async_analyze_mesh(args, models_in_analysis[i]);
+		analyzers[i]->async_analyze_mesh(args, image, models_in_analysis[i]);
 	}
 
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
@@ -57,14 +57,13 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 	copy_bad_faces();
 	await();
 	n_calls++;
-
 	analyzing_scene_id = args.scene_id;
 
-	m_is_analyzing = false;
+	m_busy = false;
 }
 
 std::vector<int> MeshAnalyzerPuppeteer::get_ids_with_bad_faces() {
-	assert(!m_is_analyzing);
+	assert(!m_busy);
 	std::vector<int> bad_models{};
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
 		if (bad_faces_found_host[i]) {

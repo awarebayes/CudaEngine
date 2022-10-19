@@ -176,7 +176,7 @@ void display() {
 	checkCudaErrors(cudaGraphicsResourceGetMappedPointer(
 	        (void **) &dResult, &num_bytes, cuda_pbo_resource));
 
-	auto img = Image{dResult, (int) width, (int) height};
+	auto img = Image{(int)width, (int) height, dResult};
 	auto mp = ModelPoolCreator().get();
 
 	auto draw_caller = DrawCallerSigleton().get();

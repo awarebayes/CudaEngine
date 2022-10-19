@@ -18,13 +18,13 @@ private:
 	int size = 0;
 	int threshold = 0;
 
-	float *surface_areas = nullptr;
+	bool *face_mask = nullptr;
 	bool *has_bad_faces = nullptr;
 
 public:
 	explicit MeshAnalyzer(int capacity, int threshold);
 	~MeshAnalyzer() override;
-	void async_analyze_mesh(const DrawCallArgs &args, int model_index);
+	void async_analyze_mesh(const DrawCallArgs &args, const Image &image, int model_index);
 };
 
 #endif//COURSE_RENDERER_MESH_ANALYZER_H

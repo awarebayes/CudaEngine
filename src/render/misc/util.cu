@@ -53,6 +53,7 @@ ModelDrawCallArgs SceneObject::to_args() {
 	return ModelDrawCallArgs{
 	        model,
 	        glm::translate(glm::mat4(1.0f), position),
+	        nullptr,
 	        id,
 	};
 }

@@ -10,14 +10,18 @@
 
 class VirtualModel {
 private:
-	std::optional<int> holding_id = std::nullopt;
-	std::optional<ModelRef> holding_model = std::nullopt;
+	std::optional<int> scene_object_id = std::nullopt;
 	ModelRef vmodel;
 	bool *disabled_faces = nullptr;
+	void free();
 
 public:
 	VirtualModel();
 	~VirtualModel();
+
+	void accept(ModelDrawCallArgs model, int n_bad_faces, int n_bad_verices, int max_texture_index);
+	void release();
+	int get_model_id();
 	ModelDrawCallArgs to_args();
 };
 

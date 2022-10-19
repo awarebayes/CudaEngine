@@ -24,6 +24,7 @@ struct ModelRef {
 	glm::ivec3 *faces{};
 	int n_vertices = 0;
 	int n_faces = 0;
+	int max_texture_index = 0;
 	int id = 0;
 	Sphere *bounding_volume{};
 	RegisteredShaders shader = RegisteredShaders::Default;
@@ -43,6 +44,7 @@ struct Model {
 	int n_vertices = 0;
 	int n_faces = 0;
 	int id = 0;
+	int m_max_texture_index;
 
 	Model(const tinyobj::ObjReader &reader, int index);
 	static Model from_file(const std::string &filename, int index=0);
