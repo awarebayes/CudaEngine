@@ -11,7 +11,7 @@ VirtualGeometryObjectManager::VirtualGeometryObjectManager(int max_virtual_geome
 		virtual_models.push_back(std::make_shared<VirtualModel>());
 }
 
-void VirtualGeometryObjectManager::accept(const ModelDrawCallArgs &model_args, bool *disabled_faces) {
+void VirtualGeometryObjectManager::accept_single(const ModelDrawCallArgs &model_args, bool *disabled_faces) {
 	int id = model_args.scene_object_id;
 	if (virtual_models_map.find(id) == virtual_models_map.end())
 	{
@@ -30,6 +30,8 @@ void VirtualGeometryObjectManager::accept(const ModelDrawCallArgs &model_args, b
 	}
 }
 void VirtualGeometryObjectManager::release_unclaimed(const std::vector<int> &model_ids_in_query) {
+	if (model_ids_in_query.empty())
+		return;
 	for (const auto &model: virtual_models)
 	{
 		if (!model->holds_nothing())

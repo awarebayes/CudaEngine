@@ -29,7 +29,7 @@ void MeshAnalyzerPuppeteer::copy_bad_faces() {
 void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args, const Image &image, const std::vector<int> &models_with_bad_faces) {
 	assert(!m_busy);
 
-	if (SceneSingleton().get()->get_time() < 10)
+	if (SceneSingleton().get()->get_time() < 3)
 		return;
 
 	m_busy = true;
@@ -74,7 +74,8 @@ std::vector<int> MeshAnalyzerPuppeteer::get_ids_with_bad_faces() {
 }
 
 std::vector<int> MeshAnalyzerPuppeteer::get_model_ids_for_analysis(const std::vector<int> &models_with_bad_faces) {
-	assert(!model_analysis_queue.empty());
+	if (model_analysis_queue.empty())
+		return models_with_bad_faces;
 	assert(models_with_bad_faces.size() < n_analyzers);
 	std::vector<int> model_indices = models_with_bad_faces;
 	int max_index = std::min(n_analyzers, static_cast<int>(model_analysis_queue.size()));

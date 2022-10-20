@@ -9,11 +9,11 @@ template <typename ShaderType>
 __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, const Image image, int threshold, bool *face_mask, int n_faces, int *has_bad_faces) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	auto &model = model_args.model;
-	int max_pos = max(model.n_faces, n_faces);
+	int max_pos = model.n_faces;
 	if (position >= max_pos)
 		return;
 
-	auto sh = ShaderDefault(model, args.light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
+	auto sh = BaseShader<ShaderType>(model, args.light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
 	for (int i = 0; i < 3; i++)
 			sh.vertex(position, i, false);
 
@@ -42,7 +42,7 @@ void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &ima
 {
 	auto &model_args = args.models[model_index];
 	auto &model = model_args.model;
-	auto n_grid = std::min(model.n_faces, VIRTUAL_GEOMETRY_FACES) / 32 + 1;
+	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = dim3(32);
 
 	if (model.n_faces > capacity) {
@@ -51,6 +51,7 @@ void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &ima
 		cudaMallocAsync(&face_mask, sizeof(float) * capacity, stream);
 	}
 
+	cudaMemsetAsync(face_mask, 0, sizeof(bool) * model.n_faces, stream);
 	switch (model.shader)
 	{
 		case RegisteredShaders::Default:

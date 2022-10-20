@@ -7,6 +7,7 @@
 
 #include "mesh_analyzer.h"
 #include <atomic>
+#include <condition_variable>
 #include <memory>
 #include <queue>
 
@@ -16,9 +17,9 @@ private:
 	int *bad_faces_found_host = nullptr;
 	int n_analyzers = 0;
 	std::vector<std::shared_ptr<MeshAnalyzer>> analyzers;
-	std::atomic_bool m_busy = false;
 	std::vector<int> models_in_analysis{};
 	std::queue<int> model_analysis_queue{};
+	std::atomic_bool m_busy = false;
 	int analyzing_scene_id = -1;
 	const size_t max_queue_size = 1024;
 
@@ -32,9 +33,9 @@ public:
 
 	void analyze_from_queue_BLOCKING(const DrawCallArgs &args, const Image &image, const std::vector<int> &models_with_bad_faces);
 	std::vector<int> get_ids_with_bad_faces();
-	[[nodiscard]] bool is_analyzing() const { return m_busy; }
 	[[nodiscard]] bool queue_empty() const { return model_analysis_queue.empty(); }
 	bool *get_bad_faces(int id);
+	bool is_analyzing() { return m_busy; }
 	void enqueue_model(int model_id) {
 		if (model_analysis_queue.size() < max_queue_size)
 			model_analysis_queue.push(model_id);

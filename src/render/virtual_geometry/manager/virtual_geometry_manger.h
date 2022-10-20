@@ -7,6 +7,7 @@
 
 #include "../analyzer/mesh_analyzer_puppeteer.h"
 #include "../object_manager/virtual_geometry_object_manager.h"
+#include <condition_variable>
 
 class VirtualGeometryManager {
 	int n_analyzers = 64;
