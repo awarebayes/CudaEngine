@@ -29,7 +29,7 @@ void MeshAnalyzerPuppeteer::copy_bad_faces() {
 void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args, const Image &image, const std::vector<int> &models_with_bad_faces) {
 	assert(!m_busy);
 
-	if (SceneSingleton().get()->get_time() < 100)
+	if (SceneSingleton().get()->get_time() < 10)
 		return;
 
 	m_busy = true;

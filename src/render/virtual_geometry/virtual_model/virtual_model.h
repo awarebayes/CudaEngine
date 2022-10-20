@@ -20,6 +20,7 @@ public:
 	~VirtualModel();
 
 	void accept(ModelDrawCallArgs model, bool *disabled_faces);
+	void update(ModelDrawCallArgs model, bool *disabled_faces);
 	void release();
 	int get_model_id();
 	bool holds_nothing() { return !scene_object_id.has_value(); };

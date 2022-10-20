@@ -61,10 +61,14 @@ void VirtualModel::free() {
 }
 
 void VirtualModel::release() {
+	assert(scene_object_id.has_value());
 	scene_object_id = std::nullopt;
 }
 
 int VirtualModel::get_model_id() {
 	assert(scene_object_id.has_value());
 	return vmodel.id;
+}
+void VirtualModel::update(ModelDrawCallArgs model, bool *disabled_faces) {
+	0;
 }

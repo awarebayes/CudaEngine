@@ -7,6 +7,7 @@
 
 VirtualGeometryManager::VirtualGeometryManager() {
 	mesh_analyzer = std::make_shared<MeshAnalyzerPuppeteer>(n_analyzers);
+	virtual_geometry_object_manager = std::make_shared<VirtualGeometryObjectManager>(n_virtual_geometry_objects);
 }
 void VirtualGeometryManager::populate_virtual_models(DrawCallArgs &culled_args, const Image &image, const DrawCallArgs &unculled_args)
 {
@@ -21,10 +22,10 @@ void VirtualGeometryManager::populate_virtual_models(DrawCallArgs &culled_args, 
 		// get analysis results
 		auto models_with_bad_faces = mesh_analyzer->get_ids_with_bad_faces();
 
+		virtual_geometry_object_manager->release_unclaimed(models_with_bad_faces);
+
 		for (auto bad_face_model_id : models_with_bad_faces)
 		{
-			break;
-			std::cout << "Bad face found from: " << bad_face_model_id << std::endl;
 			auto bad_draw_args = *std::find_if(unculled_args.models.begin(), unculled_args.models.end(), [bad_face_model_id](ModelDrawCallArgs const& a) { return a.scene_object_id == bad_face_model_id; });
 			virtual_geometry_object_manager->accept(bad_draw_args, mesh_analyzer->get_bad_faces(bad_face_model_id));
 		}

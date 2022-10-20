@@ -15,7 +15,7 @@ private:
 public:
 	explicit VirtualGeometryObjectManager(int max_virtual_geometry_objects);
 	void accept(const ModelDrawCallArgs &model_args, bool *disabled_faces);
-	void release(const std::vector<int> &model_ids);
+	void release_unclaimed(const std::vector<int> &model_ids_in_query);
 	std::vector<ModelDrawCallArgs> to_args();
 };
 

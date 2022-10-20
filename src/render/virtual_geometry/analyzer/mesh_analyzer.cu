@@ -51,7 +51,6 @@ void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &ima
 		cudaMallocAsync(&face_mask, sizeof(float) * capacity, stream);
 	}
 
-	std::cout << "Had bad faces addr:" << bad_face_count << std::endl;
 	switch (model.shader)
 	{
 		case RegisteredShaders::Default:

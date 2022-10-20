@@ -26,20 +26,19 @@ void VirtualGeometryObjectManager::accept(const ModelDrawCallArgs &model_args, b
 		}
 	}
 	else {
-		virtual_models_map[id]->accept(model_args, disabled_faces);
+		virtual_models_map[id]->update(model_args, disabled_faces);
 	}
 }
-void VirtualGeometryObjectManager::release(const std::vector<int> &model_ids) {
-	for (auto id: model_ids)
+void VirtualGeometryObjectManager::release_unclaimed(const std::vector<int> &model_ids_in_query) {
+	for (const auto &model: virtual_models)
 	{
-		if (virtual_models_map.find(id) != virtual_models_map.end())
+		if (!model->holds_nothing())
 		{
-			virtual_models_map[id]->release();
-			virtual_models_map.erase(id);
-		}
-		else
-		{
-			assert(false && "model not found");
+			auto model_id = model->get_model_id();
+			if (std::find(model_ids_in_query.begin(), model_ids_in_query.end(), model_id) == model_ids_in_query.end()) {
+				model->release();
+				virtual_models_map.erase(model_id);
+			}
 		}
 	}
 }
