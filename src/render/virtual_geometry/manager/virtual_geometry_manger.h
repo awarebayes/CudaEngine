@@ -6,11 +6,13 @@
 #define COURSE_RENDERER_VIRTUAL_GEOMETRY_MANGER_H
 
 #include "../analyzer/mesh_analyzer_puppeteer.h"
+#include "../object_manager/virtual_geometry_object_manager.h"
 
 class VirtualGeometryManager {
 	int n_analyzers = 64;
 	int n_virtual_geometry_objects = 16;
 	std::shared_ptr<MeshAnalyzerPuppeteer> mesh_analyzer{};
+	std::shared_ptr<VirtualGeometryObjectManager> virtual_geometry_object_manager{};
 public:
 	VirtualGeometryManager();
 	void populate_virtual_models(DrawCallArgs& culled_args, const Image &image, const DrawCallArgs& unculled_args);

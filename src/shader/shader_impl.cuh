@@ -24,7 +24,8 @@ struct ShaderDefault : BaseShader<ShaderDefault> {
 
 		if (load_tex) {
 			normals[nthvert] = model.normals[index];
-			textures[nthvert] = model.textures[model.textures_for_face[iface][nthvert]];
+			int texture = model.textures_for_face[iface][nthvert];
+			textures[nthvert] = model.textures[texture];
 		}
 
 		auto proj = projection * (view * (model_matrix * mv));

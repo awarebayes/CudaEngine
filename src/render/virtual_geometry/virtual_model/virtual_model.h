@@ -19,9 +19,10 @@ public:
 	VirtualModel();
 	~VirtualModel();
 
-	void accept(ModelDrawCallArgs model, int n_bad_faces, int n_bad_verices, int max_texture_index);
+	void accept(ModelDrawCallArgs model, bool *disabled_faces);
 	void release();
 	int get_model_id();
+	bool holds_nothing() { return !scene_object_id.has_value(); };
 	ModelDrawCallArgs to_args();
 };
 

@@ -181,6 +181,7 @@ void display() {
 
 	auto draw_caller = DrawCallerSigleton().get();
 	auto scene = SceneSingleton().get();
+	scene->tick();
 
 
 	glViewport(0, 0, (GLsizei) io.DisplaySize.x, (GLsizei) io.DisplaySize.y);

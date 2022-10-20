@@ -87,7 +87,7 @@ Model::Model(const tinyobj::ObjReader &reader, int index) {
 					textures_host.resize(idx.texcoord_index + 1);
 				textures_host[idx.texcoord_index] = glm::vec2{tx, ty};
 				textures_for_faces_host[face_idx][v] =idx.texcoord_index;
-				max_texture_index = std::max(max_texture_index, idx.texcoord_index);
+				max_texture_index = std::max(max_texture_index, idx.texcoord_index) + 1;
 				has_textures = true;
 			}
 		}

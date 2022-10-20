@@ -12,7 +12,6 @@ ModelDrawCallArgs VirtualModel::to_args() {
 	return {
 		.model = vmodel,
 		.disabled_faces = disabled_faces,
-
 	};
 }
 
@@ -20,15 +19,20 @@ VirtualModel::VirtualModel() {
 	vmodel.n_faces = 0;
 	vmodel.n_vertices = 0;
 }
+
 VirtualModel::~VirtualModel() {
 	free();
 }
 
-void VirtualModel::accept(ModelDrawCallArgs args, int n_bad_faces, int n_bad_vertices, int max_texture_index) {
+void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces) {
 	if (scene_object_id.has_value())
 		release();
 
 	scene_object_id = args.scene_object_id;
+
+	int n_bad_faces = 10;
+	int n_bad_vertices = 10;
+	int max_texture_index = args.model.max_texture_index;
 
 	if (n_bad_faces > vmodel.n_faces)
 	{
@@ -47,6 +51,7 @@ void VirtualModel::accept(ModelDrawCallArgs args, int n_bad_faces, int n_bad_ver
 		checkCudaErrors(cudaMalloc((void **) (&vmodel.textures), sizeof(glm::vec2) * max_texture_index));
 	}
 }
+
 void VirtualModel::free() {
 	cudaFree(vmodel.faces);
 	cudaFree(vmodel.vertices);
@@ -54,9 +59,11 @@ void VirtualModel::free() {
 	cudaFree(vmodel.textures);
 	cudaFree(vmodel.textures_for_face);
 }
+
 void VirtualModel::release() {
 	scene_object_id = std::nullopt;
 }
+
 int VirtualModel::get_model_id() {
 	assert(scene_object_id.has_value());
 	return vmodel.id;

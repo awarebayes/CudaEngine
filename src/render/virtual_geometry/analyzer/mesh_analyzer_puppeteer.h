@@ -12,14 +12,15 @@
 
 class MeshAnalyzerPuppeteer : public Synchronizable {
 private:
-	bool *bad_faces_found_device = nullptr;
-	bool *bad_faces_found_host = nullptr;
+	int *bad_faces_found_device = nullptr;
+	int *bad_faces_found_host = nullptr;
 	int n_analyzers = 0;
 	std::vector<std::shared_ptr<MeshAnalyzer>> analyzers;
 	std::atomic_bool m_busy = false;
 	std::vector<int> models_in_analysis{};
 	std::queue<int> model_analysis_queue{};
 	int analyzing_scene_id = -1;
+	const size_t max_queue_size = 1024;
 
 	void copy_bad_faces();
 	std::vector<int> get_model_ids_for_analysis(const std::vector<int> &models_with_bad_faces);
@@ -33,7 +34,11 @@ public:
 	std::vector<int> get_ids_with_bad_faces();
 	[[nodiscard]] bool is_analyzing() const { return m_busy; }
 	[[nodiscard]] bool queue_empty() const { return model_analysis_queue.empty(); }
-	void enqueue_model(int model_id) { model_analysis_queue.push(model_id); }
+	bool *get_bad_faces(int id);
+	void enqueue_model(int model_id) {
+		if (model_analysis_queue.size() < max_queue_size)
+			model_analysis_queue.push(model_id);
+	}
 };
 
 #endif//COURSE_RENDERER_MESH_ANALYZER_PUPPETEER_H

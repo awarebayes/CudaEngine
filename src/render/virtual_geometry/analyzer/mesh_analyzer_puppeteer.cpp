@@ -9,11 +9,11 @@
 
 MeshAnalyzerPuppeteer::MeshAnalyzerPuppeteer(int n_analyzers_) : Synchronizable() {
 	n_analyzers = n_analyzers_;
-	cudaMalloc(reinterpret_cast<void **>(&bad_faces_found_device), sizeof(bool) * n_analyzers);
-	cudaMallocHost(reinterpret_cast<void **>(&bad_faces_found_host), sizeof(bool) * n_analyzers);
+	cudaMalloc(reinterpret_cast<void **>(&bad_faces_found_device), sizeof(int) * n_analyzers);
+	cudaMallocHost(reinterpret_cast<void **>(&bad_faces_found_host), sizeof(int) * n_analyzers);
 	for (int i = 0; i < n_analyzers; ++i) {
 		analyzers.emplace_back(std::make_shared<MeshAnalyzer>(VIRTUAL_GEOMETRY_VERTICES, 5000));
-		analyzers[i]->has_bad_faces = bad_faces_found_device + i;
+		analyzers[i]->bad_face_count = bad_faces_found_device + i;
 	}
 }
 
@@ -23,7 +23,7 @@ MeshAnalyzerPuppeteer::~MeshAnalyzerPuppeteer() {
 }
 
 void MeshAnalyzerPuppeteer::copy_bad_faces() {
-	cudaMemcpyAsync(bad_faces_found_host, bad_faces_found_device, sizeof(bool) * n_analyzers, cudaMemcpyDeviceToHost, stream);
+	cudaMemcpyAsync(bad_faces_found_host, bad_faces_found_device, sizeof(int) * n_analyzers, cudaMemcpyDeviceToHost, stream);
 }
 
 void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args, const Image &image, const std::vector<int> &models_with_bad_faces) {
@@ -41,12 +41,12 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 		return;
 	}
 
-	cudaMemsetAsync(bad_faces_found_device, 0, sizeof(bool) * n_analyzers, stream);
+	cudaMemsetAsync(bad_faces_found_device, 0, sizeof(int) * n_analyzers, stream);
 
 	models_in_analysis = get_model_ids_for_analysis(models_with_bad_faces);
 
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
-		bad_faces_found_host[i] = false;
+		bad_faces_found_host[i] = 0;
 		analyzers[i]->async_analyze_mesh(args, image, models_in_analysis[i]);
 	}
 
@@ -87,4 +87,12 @@ std::vector<int> MeshAnalyzerPuppeteer::get_model_ids_for_analysis(const std::ve
 		}
 	}
 	return  model_indices;
+}
+
+bool *MeshAnalyzerPuppeteer::get_bad_faces(int id) {
+	for (int i = 0; i < models_in_analysis.size(); ++i) {
+		if (models_in_analysis[i] == id) {
+			return analyzers[i]->face_mask;
+		}
+	}
 }

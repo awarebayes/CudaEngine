@@ -1,0 +1,11 @@
+//
+// Created by dev on 10/20/22.
+//
+
+#ifndef COURSE_RENDERER_GEOMETRY_UPSAMPLER_H
+#define COURSE_RENDERER_GEOMETRY_UPSAMPLER_H
+
+class GeometryUpsampler {
+};
+
+#endif//COURSE_RENDERER_GEOMETRY_UPSAMPLER_H

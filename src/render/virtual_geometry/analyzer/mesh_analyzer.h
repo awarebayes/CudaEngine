@@ -19,7 +19,7 @@ private:
 	int threshold = 0;
 
 	bool *face_mask = nullptr;
-	bool *has_bad_faces = nullptr;
+	int *bad_face_count = nullptr;
 
 public:
 	explicit MeshAnalyzer(int capacity, int threshold);

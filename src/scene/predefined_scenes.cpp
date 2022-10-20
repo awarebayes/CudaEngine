@@ -36,9 +36,10 @@ void load_test_single_head()
 	auto scene = SceneSingleton().get();
 
 	Camera camera;
-	camera.position = glm::vec3{-3, -1.5, 5};
-	camera.yaw = -90;
-	camera.pitch = 0;
+	camera.position = glm::vec3{-1.5, -1.2, 0.01};
+	camera.yaw = -83;
+	camera.pitch = 3;
+	camera.fov = 25;
 
 	scene->set_light_dir(glm::vec3{0, 0, 1});
 

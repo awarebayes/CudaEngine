@@ -6,16 +6,16 @@
 #include "mesh_analyzer.h"
 
 template <typename ShaderType>
-__global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, const Image image, int threshold, bool *face_mask, int n_faces, bool *has_bad_faces) {
+__global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, const Image image, int threshold, bool *face_mask, int n_faces, int *has_bad_faces) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	auto &model = model_args.model;
 	int max_pos = max(model.n_faces, n_faces);
 	if (position >= max_pos)
 		return;
 
-	auto sh = BaseShader<ShaderType>(model, args.light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
+	auto sh = ShaderDefault(model, args.light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
 	for (int i = 0; i < 3; i++)
-		sh.vertex(position, i, false);
+			sh.vertex(position, i, false);
 
 	auto &pts = sh.pts;
 	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
@@ -33,7 +33,7 @@ __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_arg
 
 	float area = (bboxmax.x - pts[0].x) * (bboxmax.y - pts[0].y);
 	if (area > threshold) {
-		*has_bad_faces = true;
+		*has_bad_faces = 1;
 		face_mask[position] = true;
 	}
 }
@@ -51,14 +51,14 @@ void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &ima
 		cudaMallocAsync(&face_mask, sizeof(float) * capacity, stream);
 	}
 
-	std::cout << "Had bad faces addr:" << has_bad_faces << std::endl;
+	std::cout << "Had bad faces addr:" << bad_face_count << std::endl;
 	switch (model.shader)
 	{
 		case RegisteredShaders::Default:
-			analyze_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, has_bad_faces);
+			analyze_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, bad_face_count);
 			break;
 		case RegisteredShaders::Water:
-			analyze_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, has_bad_faces);
+			analyze_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, bad_face_count);
 			break;
 	}
 }
