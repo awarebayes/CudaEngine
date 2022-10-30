@@ -94,7 +94,8 @@ __global__ void draw_faces_mask(DrawCallBaseArgs args, ModelDrawCallArgs model_a
 	bool should_draw = model_args.disabled_faces[position];
 	if (should_draw)
 		return;
-
+	//if (!model.is_virtual)
+	//	return;
 	triangle<ShaderType>(args, model_args, position, image, zbuffer);
 }
 

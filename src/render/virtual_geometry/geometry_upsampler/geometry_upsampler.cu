@@ -43,7 +43,7 @@ __global__ void upsample_faces(ModelRef virtual_model, const ModelDrawCallArgs m
 }
 */
 
-__device__ void add_triangle(ModelRef &virtual_model, glm::ivec3 &face, glm::vec3 vertices[3], glm::vec3 normals[3], glm::vec2 textures[3], bool *disabled_virtual, int *index_position)
+__device__ void add_triangle(ModelRef &virtual_model, glm::vec3 vertices[3], glm::vec3 normals[3], glm::vec2 textures[3], bool *disabled_virtual, int *index_position)
 {
 	int my_position = atomicAdd(index_position, 1);
 
@@ -64,9 +64,33 @@ __device__ void add_triangle(ModelRef &virtual_model, glm::ivec3 &face, glm::vec
 	virtual_model.textures_for_face[my_position] = { my_position * 3, my_position * 3 + 1, my_position * 3 + 2 };
 }
 
-__device__ void upsample(ModelRef &virtual_model, glm::ivec3 &face, glm::vec3 vertices[3], glm::vec3 normals[3], glm::ivec3 &textures_for_face, glm::vec2 *textures, bool *disabled_virtual, int *index_position)
+__device__ void upsample(ModelRef &virtual_model, glm::vec3 vertices[3], glm::vec3 normals[3], glm::vec2 textures[3], bool *disabled_virtual, int *index_position)
 {
+	auto v1 = vertices[0];
+	auto v2 = vertices[1];
+	auto v3 = vertices[2];
+	auto v4 = (v1 + v2) / 2.0f;
+	auto v5 = (v1 + v3) / 2.0f;
+	auto v6 = (v2 + v3) / 2.0f;
 
+	auto n1 = normals[0];
+	auto n2 = normals[1];
+	auto n3 = normals[2];
+	auto n4 = (n1 + n2) / 2.0f;
+	auto n5 = (n1 + n3) / 2.0f;
+	auto n6 = (n2 + n3) / 2.0f;
+
+	auto t1 = textures[0];
+	auto t2 = textures[1];
+	auto t3 = textures[2];
+	auto t4 = (t1 + t2) / 2.0f;
+	auto t5 = (t1 + t3) / 2.0f;
+	auto t6 = (t2 + t3) / 2.0f;
+
+	add_triangle(virtual_model, (glm::vec3[3]){v1, v4, v5}, (glm::vec3[3]){n1, n4, n5}, (glm::vec2[3]){t1, t4, t5}, disabled_virtual, index_position);
+	add_triangle(virtual_model, (glm::vec3[3]){v4, v2, v6}, (glm::vec3[3]){n4, n2, n6}, (glm::vec2[3]){t4, t2, t6}, disabled_virtual, index_position);
+	add_triangle(virtual_model, (glm::vec3[3]){v5, v6, v3}, (glm::vec3[3]){n5, n6, n3}, (glm::vec2[3]){t5, t6, t3}, disabled_virtual, index_position);
+	add_triangle(virtual_model, (glm::vec3[3]){v4, v6, v5}, (glm::vec3[3]){n4, n6, n5}, (glm::vec2[3]){t4, t6, t5}, disabled_virtual, index_position);
 }
 
 __global__ void upsample_faces(ModelRef virtual_model, const ModelDrawCallArgs model_args, bool *disabled_original, bool *disabled_virtual, int *index_position) {
@@ -98,7 +122,7 @@ __global__ void upsample_faces(ModelRef virtual_model, const ModelDrawCallArgs m
 		model.textures[model.textures_for_face[position][2]],
 	};
 
-	add_triangle(virtual_model, face, vertices, normals, textures, disabled_virtual, index_position);
+	upsample(virtual_model, vertices, normals, textures, disabled_virtual, index_position);
 }
 
 
