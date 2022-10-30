@@ -9,13 +9,13 @@
 #include "../../misc/draw_caller_args.cuh"
 
 class GeometryUpsampler {
-	ModelRef virtual_model;
+	ModelRef &virtual_model;
 	cudaStream_t stream;
 	int *position = nullptr;
 public:
-	GeometryUpsampler(ModelRef virtual_model_, cudaStream_t stream_);
+	GeometryUpsampler(ModelRef &virtual_model_, cudaStream_t stream_);
 	~GeometryUpsampler();
-	void async_upsample_geometry(const ModelDrawCallArgs &model_args, bool *disabled_faces);
+	void async_upsample_geometry(const ModelDrawCallArgs &model_args, bool *disabled_faces_for_original, bool *disabled_faces_for_virtual);
 };
 
 #endif//COURSE_RENDERER_GEOMETRY_UPSAMPLER_H

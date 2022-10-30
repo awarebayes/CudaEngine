@@ -18,6 +18,7 @@ public:
 	void accept_single(const ModelDrawCallArgs &model_args, bool *disabled_faces);
 	void release_unclaimed(const std::vector<int> &model_ids_in_query);
 	std::vector<ModelDrawCallArgs> to_args();
+	bool *get_disabled_faces_for_original(int model_id);
 };
 
 #endif//COURSE_RENDERER_VIRTUAL_GEOMETRY_OBJECT_MANAGER_H

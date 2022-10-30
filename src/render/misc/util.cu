@@ -52,7 +52,7 @@ __device__ void line(Image &image, int x0, int y0, int x1, int y1) {
 ModelDrawCallArgs SceneObject::to_args() {
 	return ModelDrawCallArgs{
 	        model,
-	        glm::translate(glm::mat4(1.0f), position),
+	        glm::rotate(glm::rotate((glm::rotate(glm::translate(glm::mat4(1.0f), position), rotation.x, glm::vec3(1, 0, 0))), rotation.y, glm::vec3(0, 1, 0)), rotation.z, glm::vec3(0, 0, 1)),
 	        nullptr,
 	        id,
 	};

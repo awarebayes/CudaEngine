@@ -36,6 +36,7 @@ struct DrawCallArgs {
 
 struct SceneObject {
 	glm::vec3 position{};
+	glm::vec3 rotation{};
 	ModelRef model{};
 	ModelDrawCallArgs to_args();
 	int id;

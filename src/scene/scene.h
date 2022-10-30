@@ -15,6 +15,8 @@ private:
 	int scene_id = 0;
 	int time = 0;
 	bool sorted = false;
+
+	std::function <void(Scene &)> on_update = [](Scene &) {};
 public:
 	Scene() = default;
 	void display_menu();
@@ -30,8 +32,13 @@ public:
 	void clear();
 	void sort_models();
 	bool allow_culling = true;
-	void tick() { time++; };
+	void tick() { time++; on_update(*this); };
 	int get_time() { return time; };
+
+	void set_on_update(std::function <void(Scene &)> on_update) {
+		this->on_update = on_update;
+	}
+
 };
 
 using SceneSingleton = SingletonCreator<Scene>;

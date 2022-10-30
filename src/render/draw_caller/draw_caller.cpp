@@ -4,7 +4,6 @@
 
 #include "draw_caller.h"
 #include "../../util/stream_manager.h"
-#include "../misc/draw_caller_args.cuh"
 #include <future>
 #include <helper_functions.h>
 #include <helper_math.h>

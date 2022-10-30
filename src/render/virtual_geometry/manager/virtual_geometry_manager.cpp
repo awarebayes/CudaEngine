@@ -9,6 +9,7 @@ VirtualGeometryManager::VirtualGeometryManager() {
 	mesh_analyzer = std::make_shared<MeshAnalyzerPuppeteer>(n_analyzers);
 	virtual_geometry_object_manager = std::make_shared<VirtualGeometryObjectManager>(n_virtual_geometry_objects);
 }
+
 void VirtualGeometryManager::populate_virtual_models(DrawCallArgs &culled_args, const Image &image, const DrawCallArgs &unculled_args)
 {
 	if (!mesh_analyzer->is_analyzing())
@@ -38,8 +39,8 @@ void VirtualGeometryManager::populate_virtual_models(DrawCallArgs &culled_args, 
 		auto original_id_model = std::find_if(culled_args.models.begin(), culled_args.models.end(), [i](ModelDrawCallArgs const& a) { return a.scene_object_id == i.scene_object_id; });
 		if (original_id_model == culled_args.models.end())
 			continue;
-		original_id_model->disabled_faces = i.disabled_faces;
+		original_id_model->disabled_faces = virtual_geometry_object_manager->get_disabled_faces_for_original(i.scene_object_id);
 		i.model_matrix = original_id_model->model_matrix;
-		// culled_args.models.push_back(i);
+		culled_args.models.push_back(i);
 	}
 }

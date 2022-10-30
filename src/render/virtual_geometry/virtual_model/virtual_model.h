@@ -18,11 +18,13 @@ private:
 	std::optional<int> scene_object_id = std::nullopt;
 	std::chrono::time_point<std::chrono::system_clock> last_updated{};
 	ModelRef vmodel;
-	bool *disabled_faces = nullptr;
+	bool *disabled_faces_for_original = nullptr;
+	bool *disabled_faces_for_virtual = nullptr;
 	size_t m_allocated_disabled_faces = 0;
 	size_t n_bad_faces = 1000;
 	size_t n_bad_vertices = 1000;
 	void free();
+	void clear();
 	void update_virtual_model(ModelDrawCallArgs original_model, bool *disabled_faces_to_copy);
 
 public:
@@ -33,9 +35,9 @@ public:
 	void update(ModelDrawCallArgs model, bool *disabled_faces_to_copy);
 	void release();
 	int get_model_id();
-	bool *get_disabled_faces();
+	bool *get_disabled_faces_original();
 	bool holds_nothing() { return !scene_object_id.has_value(); };
-	ModelDrawCallArgs to_args();
+	ModelDrawCallArgs get_virtual_updated();
 };
 
 #endif//COURSE_RENDERER_VIRTUAL_MODEL_H

@@ -44,13 +44,18 @@ void VirtualGeometryObjectManager::release_unclaimed(const std::vector<int> &mod
 		}
 	}
 }
+
 std::vector<ModelDrawCallArgs> VirtualGeometryObjectManager::to_args() {
-std::vector<ModelDrawCallArgs> args;
+	std::vector<ModelDrawCallArgs> args;
 	for (auto &model: virtual_models)
 	{
 		if (model->holds_nothing())
 			continue;
-		args.push_back(model->to_args());
+		args.push_back(model->get_virtual_updated());
 	}
 	return args;
+}
+
+bool *VirtualGeometryObjectManager::get_disabled_faces_for_original(int model_id) {
+	return virtual_models_map[model_id]->get_disabled_faces_original();
 }
