@@ -5,6 +5,16 @@
 #include "../../../util/const.h"
 #include "mesh_analyzer.h"
 
+__device__ int get_subdivision_count(float area, int threshold) {
+	float unit = area;
+	int count = 1;
+	while (unit > threshold) {
+		unit /= 4;
+		count *= 4;
+	}
+	return count;
+}
+
 template <typename ShaderType>
 __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, const Image image, int threshold, bool *face_mask, int n_faces, int *new_virtual_faces) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
@@ -21,7 +31,7 @@ __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_arg
 	if (pts[0].y==pts[1].y && pts[0].y==pts[2].y) return;
 
 	glm::vec2 bboxmin{float(image.width-1),  float(image.height-1)};
-	glm::vec2 bboxmax{0., 0.};
+	glm::vec2 bboxmax{0.01, 0.01};
 	glm::vec2 clamp{float(image.width-1), float(image.height-1)};
 	for (auto &pt : pts) {
 		bboxmin.x = max(0.0f, min(bboxmin.x, pt.x));
@@ -31,9 +41,11 @@ __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_arg
 		bboxmax.y = min(clamp.y, max(bboxmax.y, pt.y));
 	}
 
-	float area = (bboxmax.x - pts[0].x) * (bboxmax.y - pts[0].y);
+
+	float area = (bboxmax.x - bboxmin.x) * (bboxmax.y - bboxmin.y);
 	if (area > threshold) {
-		atomicAdd(new_virtual_faces, ceil(area / (float)threshold));
+		auto count = get_subdivision_count(area, threshold);
+		atomicAdd(new_virtual_faces, count);
 		face_mask[position] = true;
 	}
 }

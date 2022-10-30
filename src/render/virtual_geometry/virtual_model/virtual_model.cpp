@@ -34,8 +34,9 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy, 
 
 	int max_texture_index = args.model.max_texture_index;
 
-	auto multiplier = 9;
+	auto multiplier = 3;
 	auto vvert_count = multiplier * vface_count;
+
 
 	if (vface_count > n_allocated_faces)
 	{
