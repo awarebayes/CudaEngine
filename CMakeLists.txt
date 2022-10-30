@@ -50,7 +50,15 @@ add_executable(course_renderer
         src/render/culler/culler.cpp
         src/model/src/bounding_volume.cpp
         src/render/logger/logger.cpp
-        src/scene/scene_loader.cpp src/scene/predefined_scenes.cpp src/scene/predefined_scenes.h src/shader/base_shader.cuh src/shader/registered_shaders.h src/render/virtual_geometry/analyzer/mesh_analyzer.h src/render/virtual_geometry/analyzer/mesh_analyzer.cu src/shader/all.h src/render/virtual_geometry/analyzer/mesh_analyzer_puppeteer.h src/render/virtual_geometry/analyzer/mesh_analyzer_puppeteer.cpp src/render/virtual_geometry/manager/virtual_geometry_manger.h src/render/virtual_geometry/manager/virtual_geometry_manager.cpp src/render/virtual_geometry/virtual_model/virtual_model.cpp src/render/virtual_geometry/virtual_model/virtual_model.h src/render/virtual_geometry/object_manager/virtual_geometry_object_manager.h src/render/virtual_geometry/object_manager/virtual_geometry_object_manager.cpp src/render/virtual_geometry/geometry_upsampler/geometry_upsampler.h src/render/virtual_geometry/geometry_upsampler/geometry_upsampler.cu)
+        src/scene/scene_loader.cpp 
+        src/scene/predefined_scenes.cpp
+        src/render/virtual_geometry/analyzer/mesh_analyzer.cu
+        src/render/virtual_geometry/analyzer/mesh_analyzer_puppeteer.cpp
+        src/render/virtual_geometry/manager/virtual_geometry_manager.cpp
+        src/render/virtual_geometry/virtual_model/virtual_model.cpp
+        src/render/virtual_geometry/object_manager/virtual_geometry_object_manager.cpp
+        src/render/virtual_geometry/geometry_upsampler/geometry_upsampler.cu src/shader/shader_vgeom.cuh
+        )
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES
