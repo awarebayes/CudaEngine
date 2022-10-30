@@ -84,3 +84,6 @@ std::vector<ZBuffer> DrawCaller::get_z_buffers() {
 ZBuffer DrawCaller::get_final_z_buffer() {
 	return zfillers[0]->get_zbuffer();
 }
+bool DrawCaller::can_load_scene() {
+	return !interface->is_virtual_geometry_enabled();
+}

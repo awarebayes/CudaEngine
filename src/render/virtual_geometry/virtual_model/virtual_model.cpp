@@ -28,7 +28,7 @@ VirtualModel::~VirtualModel() {
 }
 
 void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy, int vface_count) {
-	assert(!scene_object_id.has_value());
+	// assert(!scene_object_id.has_value());
 
 	scene_object_id = args.scene_object_id;
 
@@ -103,7 +103,6 @@ void VirtualModel::update_virtual_model(ModelDrawCallArgs original_model, bool *
 
 void VirtualModel::update(ModelDrawCallArgs model, bool *disabled_faces_to_copy, int vface_count) {
 	using namespace std::chrono_literals;
-
 
 	assert(scene_object_id.has_value());
 	assert(scene_object_id.value() == model.scene_object_id);

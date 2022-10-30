@@ -13,11 +13,13 @@
 class SceneLoader {
 private:
 	std::unordered_map<std::string, std::function<void()>> load_callbacks;
+	std::function<bool()> can_load_scene = []() { return false; };
 public:
 	SceneLoader() = default;
 	void display_widget();
 	void load_scene(const std::string &name);
 	void register_load_scene(const std::string &name, const std::function<void()> &callback);
+	void register_can_load_scene(const std::function<bool()> &callback);
 };
 
 

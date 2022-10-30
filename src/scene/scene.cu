@@ -102,6 +102,7 @@ void Scene::display_menu() {
 			triangles += model.model.n_faces;
 		}
 
+		ImGui::Text("Non virtual statistics");
 		ImGui::Text("Vertices: %s", thousandSeparator(vertices).c_str());
 		ImGui::Text("Triangles: %s", thousandSeparator(triangles).c_str());
 
@@ -177,6 +178,7 @@ void Scene::clear() {
 	scene_id += 1;
 	allow_culling = true;
 	time = 0;
+	on_update = [](Scene &){};
 }
 void Scene::sort_models() {
 	std::sort(models.begin(), models.end(), [](const SceneObject &a, const SceneObject &b) {

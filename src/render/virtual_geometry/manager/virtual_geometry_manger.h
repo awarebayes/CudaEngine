@@ -15,12 +15,14 @@ private:
 	int n_analyzers = 64;
 	int n_virtual_geometry_objects = 16;
 	int threshold = 5000;
+	int analyzing_scene_id = -1;
 	std::shared_ptr<MeshAnalyzerPuppeteer> mesh_analyzer{};
 	std::shared_ptr<VirtualGeometryObjectManager> virtual_geometry_object_manager{};
 public:
 	VirtualGeometryManager();
 	void populate_virtual_models(DrawCallArgs& culled_args, const Image &image, const DrawCallArgs& unculled_args);
 	int &get_threshold_mut() { return threshold; }
+	void assure_analyzing_scene_id(int scene_id);
 };
 
 #endif//COURSE_RENDERER_VIRTUAL_GEOMETRY_MANGER_H

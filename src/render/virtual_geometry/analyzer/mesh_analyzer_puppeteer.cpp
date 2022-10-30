@@ -37,6 +37,7 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 		analyzing_scene_id = args.scene_id;
 		model_analysis_queue = std::queue<int>();
 		m_busy = false;
+
 		std::cout << "MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING: scene changed, clearing queue" << std::endl;
 		return;
 	}
@@ -81,7 +82,6 @@ std::vector<int> MeshAnalyzerPuppeteer::get_model_ids_for_analysis(const std::ve
 	assert(models_with_bad_faces.size() < n_analyzers);
 	std::vector<int> model_indices = models_with_bad_faces;
 	int max_index = std::min(n_analyzers, static_cast<int>(model_analysis_queue.size()));
-	max_index - model_indices.size();
 
 	for (int i = 0; i < max_index; ++i) {
 		if (std::find(model_indices.begin(), model_indices.end(), model_analysis_queue.front()) == model_indices.end()) {
@@ -112,4 +112,8 @@ int MeshAnalyzerPuppeteer::get_vface_count(int id)
 	}
 	assert(index != -1);
 	return new_vfaces_found_host[index];
+}
+void MeshAnalyzerPuppeteer::reset() {
+	analyzing_scene_id = -1;
+	model_analysis_queue = std::queue<int>();
 }

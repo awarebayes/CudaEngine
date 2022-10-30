@@ -42,6 +42,7 @@ public:
 			model_analysis_queue.push(model_id);
 	}
 	int get_vface_count(int id);
+	void reset();
 };
 
 #endif//COURSE_RENDERER_MESH_ANALYZER_PUPPETEER_H

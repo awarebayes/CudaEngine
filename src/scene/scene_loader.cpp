@@ -9,8 +9,14 @@
 #include <imgui/imgui.h>
 
 void SceneLoader::display_widget() {
+
 	if (ImGui::CollapsingHeader("Load Scene"))
 	{
+		if (!can_load_scene())
+		{
+			ImGui::Text("To load scene:\n 1. Disable virtual geometry");
+			return;
+		}
 		for (auto &callback : this->load_callbacks) {
 			if (ImGui::Button(callback.first.c_str())) {
 				SceneSingleton().get()->clear();
@@ -25,4 +31,7 @@ void SceneLoader::register_load_scene(const std::string &name, const std::functi
 }
 void SceneLoader::load_scene(const std::string &name) {
 	load_callbacks[name]();
+}
+void SceneLoader::register_can_load_scene(const std::function<bool()> &callback) {
+	can_load_scene = callback;
 }

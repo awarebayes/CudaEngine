@@ -48,11 +48,15 @@ __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_arg
 		atomicAdd(new_virtual_faces, count);
 		face_mask[position] = true;
 	}
+
 }
 
-void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &image, int model_index)
+void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &image, int model_id)
 {
-	auto &model_args = args.models[model_index];
+	auto model_args_it = std::find_if(args.models.begin(), args.models.end(), [model_id](const ModelDrawCallArgs &args) { return args.scene_object_id == model_id; });
+	if (model_args_it == args.models.end())
+		return;
+	auto &model_args = *model_args_it;
 	auto &model = model_args.model;
 	auto n_grid = model.n_faces / 32 + 1;
 	auto n_block = dim3(32);

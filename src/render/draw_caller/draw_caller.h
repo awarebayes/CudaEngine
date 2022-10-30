@@ -32,6 +32,7 @@ public:
 	void draw(DrawCallArgs args, Image &image);
 	std::vector<ZBuffer> get_z_buffers();
 	ZBuffer get_final_z_buffer();
+	bool can_load_scene();
 };
 
 using DrawCallerSigleton = SingletonCreator<DrawCaller>;

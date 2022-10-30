@@ -25,7 +25,7 @@ private:
 public:
 	explicit MeshAnalyzer(int capacity, int &threshold);
 	~MeshAnalyzer() override;
-	void async_analyze_mesh(const DrawCallArgs &args, const Image &image, int model_index);
+	void async_analyze_mesh(const DrawCallArgs &args, const Image &image, int model_id);
 };
 
 #endif//COURSE_RENDERER_MESH_ANALYZER_H

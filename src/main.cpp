@@ -338,7 +338,11 @@ void initGL(int argc, char **argv) {
 
 void init_my_classes() {
 	register_predefined_scenes();
-	SceneLoaderSingleton().get()->load_scene("default");
+
+	auto draw_caller = DrawCallerSigleton().get();
+	auto scene_loader = SceneLoaderSingleton().get();
+	scene_loader->load_scene("default");
+	scene_loader->register_can_load_scene([draw_caller](){return draw_caller->can_load_scene(); });
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -62,5 +62,19 @@ std::vector<ModelDrawCallArgs> VirtualGeometryObjectManager::to_args() {
 }
 
 bool *VirtualGeometryObjectManager::get_disabled_faces_for_original(int model_id) {
+	if (virtual_models_map.find(model_id) == virtual_models_map.end())
+		assert(0);
 	return virtual_models_map[model_id]->get_disabled_faces_original();
+}
+
+void VirtualGeometryObjectManager::reset() {
+	for (auto &model: virtual_models)
+	{
+		if (!model->holds_nothing())
+		{
+			virtual_models_map.erase(model->get_model_id());
+			model->release();
+		}
+	}
+	virtual_models_map.clear();
 }
