@@ -12,6 +12,7 @@ __global__ void upsample_faces(ModelRef virtual_model, const ModelDrawCallArgs m
 	int max_pos = model.n_faces;
 	if (position >= max_pos)
 		return;
+
 	bool is_disabled = disabled_original[position];
 	if (!is_disabled)
 		return;
@@ -40,12 +41,8 @@ void GeometryUpsampler::async_upsample_geometry(const ModelDrawCallArgs &model_a
 	auto n_block = dim3(32);
 
 	cudaMemsetAsync(position, 0, sizeof(int), stream);
-	cudaMemsetAsync(disabled_faces_for_virtual, 0, sizeof(bool) * virtual_model.n_faces, stream);
+	cudaMemsetAsync(disabled_faces_for_virtual, 1, sizeof(bool) * virtual_model.n_faces, stream);
 	upsample_faces<<<n_grid, n_block, 0, stream>>>(virtual_model, model_args, disabled_faces_for_original, disabled_faces_for_virtual, position);
-
-	//char *temp = (char *)malloc(100000);
-	//cudaMemcpyAsync(temp, disabled_faces_for_virtual, sizeof(bool) * virtual_model.n_faces, cudaMemcpyDeviceToHost, stream);
-	//free(temp);
 }
 
 GeometryUpsampler::GeometryUpsampler(ModelRef &virtual_model_, cudaStream_t stream_)  : virtual_model(virtual_model_), stream(stream_)

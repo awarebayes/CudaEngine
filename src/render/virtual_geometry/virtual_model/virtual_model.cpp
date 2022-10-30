@@ -19,6 +19,7 @@ ModelDrawCallArgs VirtualModel::get_virtual_updated() {
 VirtualModel::VirtualModel() {
 	vmodel.n_faces = 0;
 	vmodel.n_vertices = 0;
+	vmodel.is_virtual = true;
 	geometry_upsampler = std::make_unique<GeometryUpsampler>(vmodel, stream);
 }
 
@@ -33,23 +34,24 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) 
 
 	int max_texture_index = args.model.max_texture_index;
 
-	if (n_bad_faces > vmodel.n_faces)
+
+	if (args.model.n_faces > vmodel.n_faces)
 	{
-		cudaFree(vmodel.faces);
-		cudaFree(vmodel.textures_for_face);
-		checkCudaErrors(cudaMalloc((void **) (&vmodel.faces), sizeof(glm::ivec3) * n_bad_faces));
-		checkCudaErrors(cudaMalloc((void **) (&vmodel.textures_for_face), sizeof(glm::ivec3) * n_bad_faces));
-		vmodel.n_faces = n_bad_faces;
+		n_allocated_faces = args.model.n_faces;
+		cudaFreeAsync(vmodel.faces, stream);
+		cudaFreeAsync(vmodel.textures_for_face, stream);
+		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.faces), sizeof(glm::ivec3) * n_allocated_faces, stream));
+		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.textures_for_face), sizeof(glm::ivec3) * n_allocated_faces, stream));
 	}
-	if (n_bad_vertices > vmodel.n_vertices)
+	if (n_allocated_vertices > vmodel.n_vertices)
 	{
-		checkCudaErrors(cudaMalloc((void **) (&vmodel.vertices), sizeof(glm::vec3) * n_bad_vertices));
-		checkCudaErrors(cudaMalloc((void **) (&vmodel.normals), sizeof(glm::vec3) * n_bad_vertices));
-		vmodel.n_vertices = n_bad_vertices;
+		n_allocated_vertices = args.model.n_vertices;
+		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.vertices), sizeof(glm::vec3) * n_allocated_vertices, stream));
+		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.normals), sizeof(glm::vec3) *  n_allocated_vertices, stream));
 	}
 	if (max_texture_index > vmodel.max_texture_index)
 	{
-		checkCudaErrors(cudaMalloc((void **) (&vmodel.textures), sizeof(glm::vec2) * max_texture_index));
+		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.textures), sizeof(glm::vec2) * max_texture_index, stream));
 		vmodel.max_texture_index = max_texture_index;
 	}
 	if (args.model.n_faces > m_allocated_disabled_faces)
@@ -58,12 +60,14 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) 
 		checkCudaErrors(cudaMalloc((void **) (&disabled_faces_for_virtual), sizeof(glm::ivec3) * args.model.n_faces));
 		m_allocated_disabled_faces = args.model.n_faces;
 	}
+
+	vmodel.n_faces = args.model.n_faces;
+	vmodel.n_vertices = args.model.n_vertices;
 	vmodel.texture = args.model.texture;
 	vmodel.shader = args.model.shader;
 	vmodel.bounding_volume = args.model.bounding_volume;
 
 	cudaMemcpyAsync(vmodel.textures, args.model.textures, sizeof(glm::vec2) * max_texture_index, cudaMemcpyDeviceToDevice, stream);
-
 
 	update_virtual_model(args, disabled_faces_to_copy);
 }

@@ -28,6 +28,7 @@ struct ModelRef {
 	int id = 0;
 	Sphere *bounding_volume{};
 	RegisteredShaders shader = RegisteredShaders::Default;
+	bool is_virtual = false;
 };
 
 struct Model {

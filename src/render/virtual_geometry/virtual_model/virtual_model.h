@@ -21,8 +21,10 @@ private:
 	bool *disabled_faces_for_original = nullptr;
 	bool *disabled_faces_for_virtual = nullptr;
 	size_t m_allocated_disabled_faces = 0;
-	size_t n_bad_faces = 1000;
-	size_t n_bad_vertices = 1000;
+	size_t n_allocated_faces = 1000;
+	size_t n_allocated_vertices = 3000;
+
+
 	void free();
 	void clear();
 	void update_virtual_model(ModelDrawCallArgs original_model, bool *disabled_faces_to_copy);

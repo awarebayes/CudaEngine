@@ -91,8 +91,10 @@ __global__ void draw_faces_mask(DrawCallBaseArgs args, ModelDrawCallArgs model_a
 	auto model = model_args.model;
 	if (position >= model.n_faces)
 		return;
-	if (model_args.disabled_faces[position])
+	bool should_draw = model_args.disabled_faces[position];
+	if (should_draw)
 		return;
+
 	triangle<ShaderType>(args, model_args, position, image, zbuffer);
 }
 
