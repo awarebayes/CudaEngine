@@ -14,6 +14,8 @@ std::vector<ModelDrawCallArgs> Scene::get_models() {
 	auto model_args = std::vector<ModelDrawCallArgs>(models.size());
 	for (int i = 0; i < models.size(); i++) {
 		model_args[i] = models[i].to_args();
+		if (override_shader_enabled)
+			model_args[i].model.shader = override_shader;
 	}
 	return model_args;
 }
@@ -88,7 +90,6 @@ std::string thousandSeparator(size_t n)
 
 
 void Scene::display_menu() {
-
 	if (ImGui::CollapsingHeader("Scene")) {
 		ImGui::SliderFloat3("Light dir", &light_dir.x, -1, 1);
 
@@ -103,6 +104,26 @@ void Scene::display_menu() {
 
 		ImGui::Text("Vertices: %s", thousandSeparator(vertices).c_str());
 		ImGui::Text("Triangles: %s", thousandSeparator(triangles).c_str());
+
+		ImGui::Checkbox("Override shader", &override_shader_enabled);
+		if (override_shader_enabled) {
+			const char* current_item = registered_shaders_string.at(override_shader).data();
+			if (ImGui::BeginCombo("Shader", current_item))
+			{
+				for (const auto &shader : registered_shaders_enum) {
+					bool is_selected = (current_item == shader.first);
+					if (ImGui::Selectable(shader.first.data(), is_selected)) {
+						current_item = shader.first.data();
+						override_shader = shader.second;
+					}
+					if (is_selected) {
+						ImGui::SetItemDefaultFocus();
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+		}
 
 		if (ImGui::CollapsingHeader("Models")) {
 			for (int i = 0; i < models.size(); i++) {

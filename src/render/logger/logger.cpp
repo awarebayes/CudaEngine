@@ -34,6 +34,10 @@ void RenderInterface::draw_widget() {
 	}
 	if (ImGui::CollapsingHeader("Virtual Geometry")) {
 		ImGui::Checkbox("Enable Virtual Geometry", &virtual_geometry_enabled);
+		if (threshold_ptr != nullptr)
+		{
+			ImGui::SliderInt("Threshold", threshold_ptr, 50, 10000);
+		}
 	}
 }
 void RenderInterface::log_fps() {

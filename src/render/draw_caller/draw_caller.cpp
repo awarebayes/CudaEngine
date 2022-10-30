@@ -72,6 +72,7 @@ DrawCaller::DrawCaller() {
 		zfillers.emplace_back(std::make_shared<ZFiller>());
 		z_mergers.emplace_back(std::make_shared<ZMerger>());
 	}
+	interface->register_vgeometry_manager(*virtual_geometry_manager);
 }
 
 std::vector<ZBuffer> DrawCaller::get_z_buffers() {

@@ -6,6 +6,7 @@
 #define COURSE_RENDERER_SCENE_H
 
 #include "../render/misc/draw_caller_args.cuh"
+#include <optional>
 class Scene {
 private:
 	std::vector<SceneObject> models{};
@@ -15,8 +16,11 @@ private:
 	int scene_id = 0;
 	int time = 0;
 	bool sorted = false;
-
 	std::function <void(Scene &)> on_update = [](Scene &) {};
+
+	RegisteredShaders override_shader = RegisteredShaders::Default;
+	bool override_shader_enabled = false;
+
 public:
 	Scene() = default;
 	void display_menu();
