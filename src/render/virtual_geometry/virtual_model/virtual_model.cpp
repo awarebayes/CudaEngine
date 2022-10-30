@@ -37,7 +37,6 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy, 
 	auto multiplier = 3;
 	auto vvert_count = multiplier * vface_count;
 
-
 	if (vface_count > n_allocated_faces)
 	{
 		n_allocated_faces = vface_count;
@@ -104,11 +103,20 @@ void VirtualModel::update_virtual_model(ModelDrawCallArgs original_model, bool *
 
 void VirtualModel::update(ModelDrawCallArgs model, bool *disabled_faces_to_copy, int vface_count) {
 	using namespace std::chrono_literals;
+
+
 	assert(scene_object_id.has_value());
 	assert(scene_object_id.value() == model.scene_object_id);
 	auto since_update = (std::chrono::system_clock::now() - last_updated) / 1ms;
 	if (since_update < UPDATE_VIRTUAL_MODEL_EVERY_MS)
 		return;
+
+	if (vface_count > n_allocated_faces)
+	{
+		accept(model, disabled_faces_to_copy, vface_count);
+		return;
+	}
+
 	vmodel.shader = model.model.shader;
 	update_virtual_model(model, disabled_faces_to_copy, vface_count);
 }

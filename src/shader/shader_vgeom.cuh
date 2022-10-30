@@ -35,6 +35,7 @@ struct ShaderVGeom : BaseShader<ShaderVGeom> {
 		proj.y = (proj.y + 1.0f) * screen_size.y / proj.w;
 		proj.z = (proj.z + 1.0f) / proj.w;
 		pts[nthvert] = glm::vec3{proj.x, proj.y, proj.z};
+		position = (int)(proj.x + proj.y);
 		return float4{ pts[nthvert].x, pts[nthvert].y, pts[nthvert].z, 1.0f};
 	}
 
