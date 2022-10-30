@@ -6,5 +6,6 @@
 
 #include "shader_impl.cuh"
 #include "shader_water.cuh"
+#include "shader_vgeom.cuh"
 
 

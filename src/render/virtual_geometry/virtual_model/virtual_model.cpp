@@ -34,15 +34,17 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) 
 
 	int max_texture_index = args.model.max_texture_index;
 
-	if (args.model.n_faces > vmodel.n_faces)
+	auto multiplier = 9;
+
+	if (args.model.n_faces * multiplier > n_allocated_faces)
 	{
-		n_allocated_faces = args.model.n_faces;
+		n_allocated_faces = args.model.n_faces * multiplier;
 		cudaFreeAsync(vmodel.faces, stream);
 		cudaFreeAsync(vmodel.textures_for_face, stream);
 		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.faces), sizeof(glm::ivec3) * n_allocated_faces, stream));
 		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.textures_for_face), sizeof(glm::ivec3) * n_allocated_faces, stream));
 	}
-	if (n_allocated_vertices > vmodel.n_vertices)
+	if (args.model.n_vertices * multiplier > n_allocated_vertices)
 	{
 		n_allocated_vertices = args.model.n_vertices;
 		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.vertices), sizeof(glm::vec3) * n_allocated_vertices, stream));
@@ -60,8 +62,8 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) 
 		m_allocated_disabled_faces = args.model.n_faces;
 	}
 
-	vmodel.n_faces = args.model.n_faces;
-	vmodel.n_vertices = args.model.n_vertices;
+	vmodel.n_faces = n_allocated_faces;
+	vmodel.n_vertices = n_allocated_vertices;
 	vmodel.texture = args.model.texture;
 	vmodel.shader = args.model.shader;
 	vmodel.bounding_volume = args.model.bounding_volume;
@@ -107,6 +109,7 @@ void VirtualModel::update(ModelDrawCallArgs model, bool *disabled_faces_to_copy)
 	auto since_update = (std::chrono::system_clock::now() - last_updated) / 1ms;
 	if (since_update < UPDATE_VIRTUAL_MODEL_EVERY_MS)
 		return;
+	vmodel.shader = model.model.shader;
 	update_virtual_model(model, disabled_faces_to_copy);
 }
 

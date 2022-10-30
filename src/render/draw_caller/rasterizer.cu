@@ -2,8 +2,7 @@
 // Created by dev on 8/27/22.
 //
 
-#include "../../shader/shader_impl.cuh"
-#include "../../shader/shader_water.cuh"
+#include "../../shader/all.h"
 #include "../../util/const.h"
 #include "../misc/image.cuh"
 #include "rasterizer.h"
@@ -15,7 +14,7 @@ __forceinline__ __device__ void triangle(DrawCallBaseArgs &args, ModelDrawCallAr
 	auto light_dir = args.light_dir;
 	auto &model = model_args.model;
 
-	auto sh = BaseShader<ShaderType>(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args);
+	auto sh = BaseShader<ShaderType>(model, light_dir, args.projection, args.view, model_args.model_matrix, args.screen_size, args, position);
 
 	for (int i = 0; i < 3; i++)
 		sh.vertex(position, i, true);
@@ -114,6 +113,9 @@ void Rasterizer::async_rasterize(DrawCallArgs &args, int model_index, Image imag
 			case RegisteredShaders::Water:
 				draw_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
 				break;
+			case RegisteredShaders::VGeom:
+				draw_faces<ShaderVGeom><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+				break;
 		}
 	}
 	else {
@@ -123,6 +125,9 @@ void Rasterizer::async_rasterize(DrawCallArgs &args, int model_index, Image imag
 				break;
 			case RegisteredShaders::Water:
 				draw_faces_mask<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
+				break;
+			case RegisteredShaders::VGeom:
+				draw_faces_mask<ShaderVGeom><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, zbuffer);
 				break;
 		}
 	}

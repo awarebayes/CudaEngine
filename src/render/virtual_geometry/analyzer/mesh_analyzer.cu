@@ -60,6 +60,9 @@ void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &ima
 		case RegisteredShaders::Water:
 			analyze_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, bad_face_count);
 			break;
+		case RegisteredShaders::VGeom:
+			analyze_faces<ShaderVGeom><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, bad_face_count);
+			break;
 	}
 }
 MeshAnalyzer::MeshAnalyzer(int capacity_, int threshold_) : capacity(capacity_), threshold(threshold_), Synchronizable() {

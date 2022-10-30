@@ -56,6 +56,7 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 
 	copy_bad_faces();
 	await();
+
 	n_calls++;
 	analyzing_scene_id = args.scene_id;
 

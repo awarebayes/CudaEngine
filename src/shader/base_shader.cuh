@@ -9,8 +9,8 @@
 template <typename T>
 struct BaseShader
 {
-	__device__ explicit BaseShader(ModelRef &mod, glm::vec3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_, glm::vec2 screen_size_, const DrawCallBaseArgs &base_args_)
-	: model(mod), light_dir(light_dir_), projection(projection_), view(view_), model_matrix(model_matrix_), screen_size(screen_size_), base_args(base_args_) {};
+	__device__ explicit BaseShader(ModelRef &mod, glm::vec3 light_dir_, const glm::mat4 &projection_, const glm::mat4 &view_, const glm::mat4 &model_matrix_, glm::vec2 screen_size_, const DrawCallBaseArgs &base_args_, int position_=0)
+	: model(mod), light_dir(light_dir_), projection(projection_), view(view_), model_matrix(model_matrix_), screen_size(screen_size_), base_args(base_args_), position(position_) {};
 
 	glm::mat4 projection;
 	glm::mat4 view;
@@ -24,6 +24,7 @@ struct BaseShader
 	glm::vec2 textures[3]{};
 	glm::vec3 light_dir{};
 	glm::vec2 screen_size{};
+	int position = 0;
 
 	__device__ __forceinline__ float4 vertex(int iface, int nthvert, bool load_tex)
 	{

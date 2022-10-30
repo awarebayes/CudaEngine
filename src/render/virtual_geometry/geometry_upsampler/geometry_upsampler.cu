@@ -6,50 +6,14 @@
 #include "../../misc/image.cuh"
 #include "geometry_upsampler.h"
 
-/*
-__global__ void upsample_faces(ModelRef virtual_model, const ModelDrawCallArgs model_args, bool *disabled_original, bool *disabled_virtual, int *index_position) {
-	int position = blockIdx.x * blockDim.x + threadIdx.x;
-	auto &model = model_args.model;
-	int max_pos = model.n_faces;
-	if (position >= max_pos)
-		return;
-
-	bool is_disabled = disabled_original[position];
-	if (!is_disabled)
-		return;
-	int my_position = atomicAdd(index_position, 1);
-
-	if (my_position * 4 >= virtual_model.n_faces || my_position * 9 >= virtual_model.n_vertices)
-	{
-		printf("exceed model capacity! my_position: %d, virtual_model.n_faces: %d\n", my_position, virtual_model.n_faces);
-		return;
-	}
-
-	disabled_virtual[my_position] = false;
-	auto &face = model.faces[position];
-	for (int i = 0; i < 3; i++) {
-		int index = face[i];
-		virtual_model.vertices[my_position * 3 + i] = model.vertices[index];
-		virtual_model.normals[my_position * 3 + i] = model.normals[index];
-	}
-	virtual_model.faces[my_position] = {my_position * 3, my_position * 3 + 1, my_position * 3 + 2};
-	virtual_model.textures_for_face[my_position] = model.textures_for_face[position];
-
-	auto virtual_index = virtual_model.textures_for_face[my_position];
-	auto original_index = model.textures_for_face[position];
-	for (int i = 0; i < 3; i++) {
-		virtual_model.textures[virtual_index[i]] = model.textures[original_index[i]];
-	}
-}
-*/
-
 __device__ void add_triangle(ModelRef &virtual_model, glm::vec3 vertices[3], glm::vec3 normals[3], glm::vec2 textures[3], bool *disabled_virtual, int *index_position)
 {
 	int my_position = atomicAdd(index_position, 1);
 
-	if (my_position * 4 >= virtual_model.n_faces || my_position * 9 >= virtual_model.n_vertices)
+	if (my_position >= virtual_model.n_faces || my_position * 3 >= virtual_model.n_vertices)
 	{
-		printf("exceed model capacity! my_position: %d, virtual_model.n_faces: %d\n", my_position, virtual_model.n_faces);
+		printf("exceed model capacity! my_position: %d, virtual_model.n_faces: %d, virtual_model.n_vertices %d \n", my_position, virtual_model.n_faces, virtual_model.n_vertices);
+		*index_position = 0;
 		return;
 	}
 

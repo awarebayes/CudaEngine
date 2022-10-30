@@ -1,10 +1,8 @@
 //
 // Created by dev on 8/27/22.
 //
-#include "../../shader/shader_impl.cuh"
-#include "../../shader/shader_water.cuh"
+#include "../../shader/all.h"
 #include "../../util/const.h"
-#include "../misc/util.cuh"
 #include "zbuffer.h"
 #include "zfiller.h"
 #include <glm/glm.hpp>
@@ -93,6 +91,9 @@ void ZFiller::async_zbuf(DrawCallArgs &args, int model_index) {
 			break;
 		case RegisteredShaders::Water:
 			fill_zbuffer<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, zbuffer);
+			break;
+		case RegisteredShaders::VGeom:
+			fill_zbuffer<ShaderVGeom><<<n_grid, n_block, 0, stream>>>(args.base, model_args, zbuffer);
 			break;
 	}
 }

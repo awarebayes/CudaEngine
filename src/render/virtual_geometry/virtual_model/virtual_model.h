@@ -21,8 +21,8 @@ private:
 	bool *disabled_faces_for_original = nullptr;
 	bool *disabled_faces_for_virtual = nullptr;
 	size_t m_allocated_disabled_faces = 0;
-	size_t n_allocated_faces = 1000;
-	size_t n_allocated_vertices = 3000;
+	size_t n_allocated_faces = 0;
+	size_t n_allocated_vertices = 0;
 
 
 	void free();
