@@ -33,6 +33,12 @@ __global__ void upsample_faces(ModelRef virtual_model, const ModelDrawCallArgs m
 	}
 	virtual_model.faces[my_position] = {my_position * 3, my_position * 3 + 1, my_position * 3 + 2};
 	virtual_model.textures_for_face[my_position] = model.textures_for_face[position];
+
+	auto virtual_index = virtual_model.textures_for_face[my_position];
+	auto original_index = model.textures_for_face[position];
+	for (int i = 0; i < 3; i++) {
+		virtual_model.textures[virtual_index[i]] = model.textures[original_index[i]];
+	}
 }
 
 void GeometryUpsampler::async_upsample_geometry(const ModelDrawCallArgs &model_args, bool *disabled_faces_for_original, bool *disabled_faces_for_virtual) {

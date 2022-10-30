@@ -29,7 +29,7 @@ void VirtualGeometryObjectManager::accept_single(const ModelDrawCallArgs &model_
 		virtual_models_map[id]->update(model_args, disabled_faces);
 	}
 }
-void VirtualGeometryObjectManager::release_unclaimed(const std::vector<int> &model_ids_in_query) {
+void VirtualGeometryObjectManager::release_unclaimed(const std::vector<int> &model_ids_in_query, const std::vector<int> &culled_ids) {
 	if (model_ids_in_query.empty())
 		return;
 	for (const auto &model: virtual_models)
@@ -41,6 +41,10 @@ void VirtualGeometryObjectManager::release_unclaimed(const std::vector<int> &mod
 				model->release();
 				virtual_models_map.erase(model_id);
 			}
+		}
+		if (!model->holds_nothing() && std::find(culled_ids.begin(), culled_ids.end(), model->get_model_id()) != culled_ids.end()) {
+			virtual_models_map.erase(model->get_model_id());
+			model->release();// model is culled
 		}
 	}
 }

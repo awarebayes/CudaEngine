@@ -34,7 +34,6 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) 
 
 	int max_texture_index = args.model.max_texture_index;
 
-
 	if (args.model.n_faces > vmodel.n_faces)
 	{
 		n_allocated_faces = args.model.n_faces;
@@ -67,7 +66,7 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) 
 	vmodel.shader = args.model.shader;
 	vmodel.bounding_volume = args.model.bounding_volume;
 
-	cudaMemcpyAsync(vmodel.textures, args.model.textures, sizeof(glm::vec2) * max_texture_index, cudaMemcpyDeviceToDevice, stream);
+	// cudaMemcpyAsync(vmodel.textures, args.model.textures, sizeof(glm::vec2) * max_texture_index, cudaMemcpyDeviceToDevice, stream);
 
 	update_virtual_model(args, disabled_faces_to_copy);
 }
@@ -85,6 +84,7 @@ void VirtualModel::free() {
 void VirtualModel::release() {
 	assert(scene_object_id.has_value());
 	scene_object_id = std::nullopt;
+	clear();
 	last_updated = std::chrono::system_clock::now();
 }
 
@@ -114,11 +114,12 @@ bool *VirtualModel::get_disabled_faces_original() {
 	await();
 	return disabled_faces_for_original;
 }
+
 void VirtualModel::clear() {
 	cudaMemsetAsync(disabled_faces_for_original, 0, sizeof(bool) * m_allocated_disabled_faces, stream);
 	cudaMemsetAsync(disabled_faces_for_virtual, 0, sizeof(bool) * m_allocated_disabled_faces, stream);
 	cudaMemsetAsync(vmodel.faces, 0, sizeof(glm::ivec3) * vmodel.n_faces, stream);
 	cudaMemsetAsync(vmodel.vertices, 0, sizeof(glm::vec3) * vmodel.n_vertices, stream);
 	cudaMemsetAsync(vmodel.normals, 0, sizeof(glm::vec3) * vmodel.n_vertices, stream);
-	cudaMemsetAsync(vmodel.textures, 0, sizeof(glm::vec2) * vmodel.max_texture_index, stream);
+	// cudaMemsetAsync(vmodel.textures, 0, sizeof(glm::vec2) * vmodel.max_texture_index, stream);
 }

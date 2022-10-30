@@ -23,7 +23,23 @@ void VirtualGeometryManager::populate_virtual_models(DrawCallArgs &culled_args, 
 		// get analysis results
 		auto models_with_bad_faces = mesh_analyzer->get_ids_with_bad_faces();
 
-		virtual_geometry_object_manager->release_unclaimed(models_with_bad_faces);
+		std::vector<int> culled_ids = {};
+		for (const auto &any_model: unculled_args.models)
+		{
+			bool on_scene = false;
+			for (const auto& model_in_scene : culled_args.models)
+			{
+				if (model_in_scene.model.id == any_model.model.id)
+				{
+					on_scene = true;
+					break;
+				}
+			}
+			if (!on_scene)
+				culled_ids.push_back(any_model.model.id);
+		}
+
+		virtual_geometry_object_manager->release_unclaimed(models_with_bad_faces, culled_ids);
 
 		for (auto bad_face_model_id : models_with_bad_faces)
 		{
