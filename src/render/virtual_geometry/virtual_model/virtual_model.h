@@ -27,14 +27,14 @@ private:
 
 	void free();
 	void clear();
-	void update_virtual_model(ModelDrawCallArgs original_model, bool *disabled_faces_to_copy);
+	void update_virtual_model(ModelDrawCallArgs original_model, bool *disabled_faces_to_copy, int vface_count);
 
 public:
 	VirtualModel();
 	~VirtualModel() override;
 
-	void accept(ModelDrawCallArgs model, bool *disabled_faces_to_copy);
-	void update(ModelDrawCallArgs model, bool *disabled_faces_to_copy);
+	void accept(ModelDrawCallArgs model, bool *disabled_faces_to_copy, int vface_count);
+	void update(ModelDrawCallArgs model, bool *disabled_faces_to_copy, int vface_count);
 	void release();
 	int get_model_id();
 	bool *get_disabled_faces_original();

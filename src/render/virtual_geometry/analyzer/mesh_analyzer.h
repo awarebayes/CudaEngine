@@ -16,13 +16,14 @@ class MeshAnalyzer : public Synchronizable
 private:
 	int capacity = 0;
 	int size = 0;
-	int threshold = 0;
 
 	bool *face_mask = nullptr;
-	int *bad_face_count = nullptr;
+	int *new_vfaces_count = nullptr;
+	float *area = nullptr;
+	int &area_threshold;
 
 public:
-	explicit MeshAnalyzer(int capacity, int threshold);
+	explicit MeshAnalyzer(int capacity, int &threshold);
 	~MeshAnalyzer() override;
 	void async_analyze_mesh(const DrawCallArgs &args, const Image &image, int model_index);
 };

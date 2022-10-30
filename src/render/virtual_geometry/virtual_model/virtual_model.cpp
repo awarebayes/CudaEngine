@@ -27,7 +27,7 @@ VirtualModel::~VirtualModel() {
 	free();
 }
 
-void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) {
+void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy, int vface_count) {
 	assert(!scene_object_id.has_value());
 
 	scene_object_id = args.scene_object_id;
@@ -35,18 +35,19 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) 
 	int max_texture_index = args.model.max_texture_index;
 
 	auto multiplier = 9;
+	auto vvert_count = multiplier * vface_count;
 
-	if (args.model.n_faces * multiplier > n_allocated_faces)
+	if (vface_count > n_allocated_faces)
 	{
-		n_allocated_faces = args.model.n_faces * multiplier;
+		n_allocated_faces = vface_count;
 		cudaFreeAsync(vmodel.faces, stream);
 		cudaFreeAsync(vmodel.textures_for_face, stream);
 		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.faces), sizeof(glm::ivec3) * n_allocated_faces, stream));
 		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.textures_for_face), sizeof(glm::ivec3) * n_allocated_faces, stream));
 	}
-	if (args.model.n_vertices * multiplier > n_allocated_vertices)
+	if (vvert_count > n_allocated_vertices)
 	{
-		n_allocated_vertices = args.model.n_vertices;
+		n_allocated_vertices = vvert_count;
 		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.vertices), sizeof(glm::vec3) * n_allocated_vertices, stream));
 		checkCudaErrors(cudaMallocAsync((void **) (&vmodel.normals), sizeof(glm::vec3) *  n_allocated_vertices, stream));
 	}
@@ -68,9 +69,7 @@ void VirtualModel::accept(ModelDrawCallArgs args, bool *disabled_faces_to_copy) 
 	vmodel.shader = args.model.shader;
 	vmodel.bounding_volume = args.model.bounding_volume;
 
-	// cudaMemcpyAsync(vmodel.textures, args.model.textures, sizeof(glm::vec2) * max_texture_index, cudaMemcpyDeviceToDevice, stream);
-
-	update_virtual_model(args, disabled_faces_to_copy);
+	update_virtual_model(args, disabled_faces_to_copy, vface_count);
 }
 
 void VirtualModel::free() {
@@ -95,14 +94,14 @@ int VirtualModel::get_model_id() {
 	return vmodel.id;
 }
 
-void VirtualModel::update_virtual_model(ModelDrawCallArgs original_model, bool *disabled_faces_to_copy)
+void VirtualModel::update_virtual_model(ModelDrawCallArgs original_model, bool *disabled_faces_to_copy, int vface_count)
 {
 	cudaMemcpyAsync(disabled_faces_for_original, disabled_faces_to_copy, sizeof(bool) * m_allocated_disabled_faces, cudaMemcpyDeviceToDevice);
 	geometry_upsampler->async_upsample_geometry(original_model, disabled_faces_for_original, disabled_faces_for_virtual);
 	last_updated = std::chrono::system_clock::now();
 }
 
-void VirtualModel::update(ModelDrawCallArgs model, bool *disabled_faces_to_copy) {
+void VirtualModel::update(ModelDrawCallArgs model, bool *disabled_faces_to_copy, int vface_count) {
 	using namespace std::chrono_literals;
 	assert(scene_object_id.has_value());
 	assert(scene_object_id.value() == model.scene_object_id);
@@ -110,7 +109,7 @@ void VirtualModel::update(ModelDrawCallArgs model, bool *disabled_faces_to_copy)
 	if (since_update < UPDATE_VIRTUAL_MODEL_EVERY_MS)
 		return;
 	vmodel.shader = model.model.shader;
-	update_virtual_model(model, disabled_faces_to_copy);
+	update_virtual_model(model, disabled_faces_to_copy, vface_count);
 }
 
 bool *VirtualModel::get_disabled_faces_original() {

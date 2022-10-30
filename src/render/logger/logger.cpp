@@ -32,6 +32,9 @@ void RenderInterface::draw_widget() {
 		ImGui::Text("Culling Percentage: %.1f", culling_percentage.back());
 		ImGui::PlotLines("Culling Percentage", culling_percentage.data(), culling_percentage.size(), 0, nullptr, 0.0f, 100.0f, ImVec2(0, 80));
 	}
+	if (ImGui::CollapsingHeader("Virtual Geometry")) {
+		ImGui::Checkbox("Enable Virtual Geometry", &virtual_geometry_enabled);
+	}
 }
 void RenderInterface::log_fps() {
 	fps.push_back(ImGui::GetIO().Framerate);
@@ -54,4 +57,10 @@ bool RenderInterface::is_culling_enabled() const {
 	if (SceneSingleton().get()->allow_culling)
 		return culling_enabled;
 	return false;
+}
+bool RenderInterface::is_virtual_geometry_enabled() const {
+	return virtual_geometry_enabled;
+}
+void RenderInterface::register_vgeometry_manager(VirtualGeometryManager &manager) {
+	threshold_ptr = &manager.get_threshold_mut();
 }

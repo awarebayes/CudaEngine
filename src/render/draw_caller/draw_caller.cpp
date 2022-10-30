@@ -24,7 +24,9 @@ void DrawCaller::draw(DrawCallArgs args_unculled, Image &image)
 	}
 	interface->log_after_culling(args.models.size());
 
-	virtual_geometry_manager->populate_virtual_models(args, image, args_unculled);
+	if (interface->is_virtual_geometry_enabled()) {
+		virtual_geometry_manager->populate_virtual_models(args, image, args_unculled);
+	}
 
 	// dispatch
 	image_resetter->async_reset(image);

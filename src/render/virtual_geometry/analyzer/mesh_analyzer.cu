@@ -6,7 +6,7 @@
 #include "mesh_analyzer.h"
 
 template <typename ShaderType>
-__global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, const Image image, int threshold, bool *face_mask, int n_faces, int *has_bad_faces) {
+__global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_args, const Image image, int threshold, bool *face_mask, int n_faces, int *new_virtual_faces) {
 	int position = blockIdx.x * blockDim.x + threadIdx.x;
 	auto &model = model_args.model;
 	int max_pos = model.n_faces;
@@ -33,7 +33,7 @@ __global__ void analyze_faces(DrawCallBaseArgs args, ModelDrawCallArgs model_arg
 
 	float area = (bboxmax.x - pts[0].x) * (bboxmax.y - pts[0].y);
 	if (area > threshold) {
-		*has_bad_faces = 1;
+		atomicAdd(new_virtual_faces, ceil(area / (float)threshold));
 		face_mask[position] = true;
 	}
 }
@@ -55,17 +55,17 @@ void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &ima
 	switch (model.shader)
 	{
 		case RegisteredShaders::Default:
-			analyze_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, bad_face_count);
+			analyze_faces<ShaderDefault><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, area_threshold, face_mask, capacity, new_vfaces_count);
 			break;
 		case RegisteredShaders::Water:
-			analyze_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, bad_face_count);
+			analyze_faces<ShaderWater><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, area_threshold, face_mask, capacity, new_vfaces_count);
 			break;
 		case RegisteredShaders::VGeom:
-			analyze_faces<ShaderVGeom><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, threshold, face_mask, capacity, bad_face_count);
+			analyze_faces<ShaderVGeom><<<n_grid, n_block, 0, stream>>>(args.base, model_args, image, area_threshold, face_mask, capacity, new_vfaces_count);
 			break;
 	}
 }
-MeshAnalyzer::MeshAnalyzer(int capacity_, int threshold_) : capacity(capacity_), threshold(threshold_), Synchronizable() {
+MeshAnalyzer::MeshAnalyzer(int capacity_, int &threshold_) : capacity(capacity_), area_threshold(threshold_), Synchronizable() {
 	cudaMalloc(&face_mask, sizeof(bool) * capacity);
 }
 MeshAnalyzer::~MeshAnalyzer() {

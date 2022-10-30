@@ -7,23 +7,23 @@
 #include "../../../util/const.h"
 #include <cuda_runtime_api.h>
 
-MeshAnalyzerPuppeteer::MeshAnalyzerPuppeteer(int n_analyzers_) : Synchronizable() {
+MeshAnalyzerPuppeteer::MeshAnalyzerPuppeteer(int n_analyzers_, int &area_threshold_) : area_threshold(area_threshold_), Synchronizable() {
 	n_analyzers = n_analyzers_;
-	cudaMalloc(reinterpret_cast<void **>(&bad_faces_found_device), sizeof(int) * n_analyzers);
-	cudaMallocHost(reinterpret_cast<void **>(&bad_faces_found_host), sizeof(int) * n_analyzers);
+	cudaMalloc(reinterpret_cast<void **>(&new_vfaces_count_device), sizeof(int) * n_analyzers);
+	cudaMallocHost(reinterpret_cast<void **>(&new_vfaces_found_host), sizeof(int) * n_analyzers);
 	for (int i = 0; i < n_analyzers; ++i) {
-		analyzers.emplace_back(std::make_shared<MeshAnalyzer>(VIRTUAL_GEOMETRY_VERTICES, 5000));
-		analyzers[i]->bad_face_count = bad_faces_found_device + i;
+		analyzers.emplace_back(std::make_shared<MeshAnalyzer>(VIRTUAL_GEOMETRY_VERTICES, area_threshold));
+		analyzers[i]->new_vfaces_count = new_vfaces_count_device + i;
 	}
 }
 
 MeshAnalyzerPuppeteer::~MeshAnalyzerPuppeteer() {
-	cudaFree(bad_faces_found_device);
-	cudaFreeHost(bad_faces_found_host);
+	cudaFree(new_vfaces_count_device);
+	cudaFreeHost(new_vfaces_found_host);
 }
 
-void MeshAnalyzerPuppeteer::copy_bad_faces() {
-	cudaMemcpyAsync(bad_faces_found_host, bad_faces_found_device, sizeof(int) * n_analyzers, cudaMemcpyDeviceToHost, stream);
+void MeshAnalyzerPuppeteer::copy_new_vfaces_found() {
+	cudaMemcpyAsync(new_vfaces_found_host, new_vfaces_count_device, sizeof(int) * n_analyzers, cudaMemcpyDeviceToHost, stream);
 }
 
 void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args, const Image &image, const std::vector<int> &models_with_bad_faces) {
@@ -41,12 +41,13 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 		return;
 	}
 
-	cudaMemsetAsync(bad_faces_found_device, 0, sizeof(int) * n_analyzers, stream);
+	memset(new_vfaces_found_host, 0, sizeof(int) * n_analyzers);
+	cudaMemsetAsync(new_vfaces_count_device, 0, sizeof(int) * n_analyzers, stream);
 
 	models_in_analysis = get_model_ids_for_analysis(models_with_bad_faces);
 
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
-		bad_faces_found_host[i] = 0;
+		new_vfaces_found_host[i] = 0;
 		analyzers[i]->async_analyze_mesh(args, image, models_in_analysis[i]);
 	}
 
@@ -54,7 +55,7 @@ void MeshAnalyzerPuppeteer::analyze_from_queue_BLOCKING(const DrawCallArgs &args
 		analyzers[i]->await();
 	}
 
-	copy_bad_faces();
+	copy_new_vfaces_found();
 	await();
 
 	n_calls++;
@@ -67,7 +68,7 @@ std::vector<int> MeshAnalyzerPuppeteer::get_ids_with_bad_faces() {
 	assert(!m_busy);
 	std::vector<int> bad_models{};
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
-		if (bad_faces_found_host[i]) {
+		if (new_vfaces_found_host[i]) {
 			bad_models.push_back(models_in_analysis[i]);
 		}
 	}
@@ -91,10 +92,24 @@ std::vector<int> MeshAnalyzerPuppeteer::get_model_ids_for_analysis(const std::ve
 	return  model_indices;
 }
 
-bool *MeshAnalyzerPuppeteer::get_bad_faces(int id) {
+bool *MeshAnalyzerPuppeteer::get_disabled_faces(int id) {
 	for (int i = 0; i < models_in_analysis.size(); ++i) {
 		if (models_in_analysis[i] == id) {
 			return analyzers[i]->face_mask;
 		}
 	}
+}
+
+int MeshAnalyzerPuppeteer::get_vface_count(int id)
+{
+	await();
+	int index = -1;
+	for (int i = 0; i < models_in_analysis.size(); ++i) {
+		if (models_in_analysis[i] == id) {
+			index = i;
+			break;
+		}
+	}
+	assert(index != -1);
+	return new_vfaces_found_host[index];
 }
