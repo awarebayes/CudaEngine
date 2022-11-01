@@ -82,8 +82,8 @@ __global__ void set_kernel(ZBuffer buffer, float set_to)
 void ZFiller::async_zbuf(DrawCallArgs &args, int model_index) {
 	auto &model_args = args.models[model_index];
 	auto &model = model_args.model;
-	auto n_grid = model.n_faces / 32 + 1;
-	auto n_block = 32;
+	auto n_grid = get_grid_size(model.n_faces);
+	auto n_block = get_block_size(model.n_faces);
 	switch (model.shader)
 	{
 		case RegisteredShaders::Default:

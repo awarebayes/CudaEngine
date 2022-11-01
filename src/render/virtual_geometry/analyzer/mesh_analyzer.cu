@@ -58,8 +58,8 @@ void MeshAnalyzer::async_analyze_mesh(const DrawCallArgs &args, const Image &ima
 		return;
 	auto &model_args = *model_args_it;
 	auto &model = model_args.model;
-	auto n_grid = model.n_faces / 32 + 1;
-	auto n_block = dim3(32);
+	auto n_grid = get_grid_size(model.n_faces);
+	auto n_block = get_block_size(model.n_faces);
 
 	if (model.n_faces > capacity) {
 		capacity = model.n_faces;

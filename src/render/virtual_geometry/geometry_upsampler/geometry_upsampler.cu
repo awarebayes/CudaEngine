@@ -3,6 +3,7 @@
 //
 
 #include "../../../shader/all.h"
+#include "../../../util/const.h"
 #include "../../misc/image.cuh"
 #include "geometry_upsampler.h"
 
@@ -92,8 +93,8 @@ __global__ void upsample_faces(ModelRef virtual_model, const ModelDrawCallArgs m
 
 void GeometryUpsampler::async_upsample_geometry(const ModelDrawCallArgs &model_args, bool *disabled_faces_for_original, bool *disabled_faces_for_virtual) {
 	auto &model = model_args.model;
-	auto n_grid = model.n_faces / 32 + 1;
-	auto n_block = dim3(32);
+	auto n_grid = get_grid_size(model.n_faces);
+	auto n_block = get_block_size(model.n_faces);
 
 	cudaMemsetAsync(position, 0, sizeof(int), stream);
 	cudaMemsetAsync(disabled_faces_for_virtual, 1, sizeof(bool) * virtual_model.n_faces, stream);

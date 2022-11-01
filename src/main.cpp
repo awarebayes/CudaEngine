@@ -58,6 +58,7 @@
 
 #include "imgui_impl_glut.h"
 #include "imgui_impl_opengl3.h"
+#include "util/implot.h"
 
 StopWatchInterface *timer = NULL;
 unsigned int width, height;
@@ -321,6 +322,7 @@ void initGL(int argc, char **argv) {
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
 	(void) io;
+	ImPlot::CreateContext();
 
 	io.DisplaySize.x = width;
 	io.DisplaySize.y = height;

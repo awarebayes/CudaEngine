@@ -7,7 +7,12 @@
 
 const int MAX_PIXELS_PER_KERNEL = 5000;
 
-const int VIRTUAL_GEOMETRY_VERTICES = 10000;
-const int VIRTUAL_GEOMETRY_FACES = 100000;
+const int VIRTUAL_GEOMETRY_VERTICES = 1000;
+
+extern int USE_THREADS;
+
+int get_grid_size(int n);
+
+int get_block_size(int n);
 
 #endif//COURSE_RENDERER_CONST_H

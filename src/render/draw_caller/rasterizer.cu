@@ -102,8 +102,8 @@ void Rasterizer::async_rasterize(DrawCallArgs &args, int model_index, Image imag
 {
 	auto &model_args = args.models[model_index];
 	auto &model = model_args.model;
-	auto n_grid = model.n_faces / 32 + 1;
-	auto n_block = dim3(32);
+	auto n_grid = get_grid_size(model.n_faces);
+	auto n_block = get_block_size(model.n_faces);
 
 	if (model_args.disabled_faces == nullptr) {
 		switch (model.shader) {
