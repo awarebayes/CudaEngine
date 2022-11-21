@@ -155,7 +155,7 @@ void Scene::display_menu() {
 
 	}
 }
-void Scene::add_model(const SceneObject &model) {
+void Scene::add_object(const SceneObject &model) {
 	SceneObject model_copy = model;
 	model_copy.id = id_counter++;
 	models.push_back(model_copy);

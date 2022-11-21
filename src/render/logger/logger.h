@@ -8,6 +8,33 @@
 #include <vector>
 #include <fstream>
 
+class Clock
+{
+	std::chrono::time_point<std::chrono::high_resolution_clock> start;
+	std::chrono::time_point<std::chrono::high_resolution_clock> end;
+	float last_measurement;
+
+public:
+	void reset()
+	{
+		start = std::chrono::high_resolution_clock::now();
+	}
+
+	void stop()
+	{
+		end = std::chrono::high_resolution_clock::now();
+		last_measurement = get_elapsed_time();
+	}
+
+	float get_elapsed_time() {
+		return std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+	}
+
+	float get_last_measurement() const {
+		return last_measurement;
+	}
+};
+
 class AverageLogger {
 private:
 	std::ofstream file{};
@@ -18,6 +45,7 @@ private:
 	std::vector<float> keys;
 	std::vector<float> values;
 	std::vector<std::pair<float, float>> sorted;
+
 public:
 
 	void log_to(const std::string &filename_) {
@@ -34,7 +62,6 @@ public:
 	void clear();
 };
 
-
 class RenderInterface {
 protected:
 	bool culling_enabled = true;
@@ -45,9 +72,12 @@ protected:
 	int n_models_after_culling;
 	int *threshold_ptr = nullptr;
 	AverageLogger avg_fps_per_nthreads{};
+	std::shared_ptr<Clock> clock{};
 
 public:
 	RenderInterface();
+	void start();
+	void stop();
 	bool is_culling_enabled() const;
 	bool is_virtual_geometry_enabled() const;
 	void register_vgeometry_manager(VirtualGeometryManager &manager);

@@ -24,7 +24,7 @@ private:
 public:
 	Scene() = default;
 	void display_menu();
-	void add_model(const SceneObject &model);
+	void add_object(const SceneObject &model);
 	void set_light_dir(const glm::vec3 &dir);
 	SceneObject &get_model(int index);
 	std::shared_ptr<Camera> get_camera();

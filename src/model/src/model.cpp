@@ -25,7 +25,7 @@ Sphere generateSphereBV(const std::vector<glm::vec3> &vertices)
 }
 
 
-Model::Model(const tinyobj::ObjReader &reader, int index) {
+Model::Model(const tinyobj::ObjReader &reader, int index, const std::string &texture_search_path) {
 	if (!reader.Warning().empty()) {
 		std::cout << "TinyObjReader: " << reader.Warning();
 	}
@@ -33,13 +33,25 @@ Model::Model(const tinyobj::ObjReader &reader, int index) {
 	auto &attrib = reader.GetAttrib();
 	auto &shapes = reader.GetShapes();
 
+	auto material_idx = shapes[index].mesh.material_ids[0];
+	if (material_idx >= 0) {
+		auto &material = reader.GetMaterials()[material_idx];
+		if (!material.diffuse_texname.empty()) {
+			std::string texture_filename = texture_search_path + material.diffuse_texname;
+			texture = std::make_shared<Texture>(texture_filename);
+		}
+	}
+	else
+	{
+		std::cout << "No material found for shape " << index << std::endl;
+	}
+
 	n_vertices = 0;
 	for (auto i : shapes[index].mesh.indices)
 		n_vertices = std::max(n_vertices, i.vertex_index);
 	n_vertices += 1;
 
 	n_faces = shapes[index].mesh.num_face_vertices.size();
-
 	size_t uvertices = n_vertices;
 	std::vector<glm::vec3> vertices_host{uvertices};
 	std::vector<glm::vec3> normals_host{uvertices};
@@ -48,9 +60,7 @@ Model::Model(const tinyobj::ObjReader &reader, int index) {
 	std::vector<glm::ivec3> textures_for_faces_host{size_t(n_faces)};
 
 	bool has_textures = false;
-
 	size_t index_offset = 0;
-
 	int max_texture_index = 0;
 
 	for (int face_idx = 0; face_idx < n_faces; face_idx ++)

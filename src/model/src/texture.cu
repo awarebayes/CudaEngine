@@ -16,13 +16,33 @@ __device__ uchar3 TextureRef::get_uv(float u, float v) const {
 
 	return data[x_pos + y_pos * x];
 }
+
+void rgba_to_rgb(unsigned char *rgb, const unsigned char *rgba, int width, int height) {
+	for (int i = 0; i < width * height; i++) {
+		rgb[3 * i] = rgba[4 * i];
+		rgb[3 * i + 1] = rgba[4 * i + 1];
+		rgb[3 * i + 2] = rgba[4 * i + 2];
+	}
+}
+
 Texture::Texture(const std::string &filename) {
 	unsigned char *data_host = stbi_load(filename.c_str(), &x, &y, &n, 3);
+	assert(data_host != nullptr);
 	size_t size = x * y * n * sizeof(unsigned char);
-	assert(n == 3);
-	checkCudaErrors(cudaMalloc(&data, size));
-	checkCudaErrors(cudaMemcpy(data, data_host, size, cudaMemcpyHostToDevice));
-	stbi_image_free(data_host);
+	if (n == 4)
+	{
+		unsigned char *rgb = new unsigned char[x * y * 3];
+		rgba_to_rgb(rgb, data_host, x, y);
+		checkCudaErrors(cudaMalloc(&data, x * y * 3 * sizeof(unsigned char)));
+		checkCudaErrors(cudaMemcpy(data, rgb, x * y * 3 * sizeof(unsigned char), cudaMemcpyHostToDevice));
+		delete[] rgb;
+	}
+	else
+	{
+		assert(n == 3);
+		checkCudaErrors(cudaMalloc(&data, size));
+		checkCudaErrors(cudaMemcpy(data, data_host, size, cudaMemcpyHostToDevice));
+	}
 }
 
 TextureRef Texture::get_ref() const {

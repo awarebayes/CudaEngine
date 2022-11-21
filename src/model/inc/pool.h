@@ -24,8 +24,10 @@ public:
 	ModelRef get(const std::string &name);
 	std::shared_ptr<Model> get_mut(const std::string &name);
 
-	void load_all_from_obj_file(const std::string &filename);
+	void load_all_from_obj_file(const std::string &filename, const std::string &mtl_search_path = "./", const std::string &texture_search_path = "./");
 	void assign_single_texture_to_obj_file(const std::string &obj_filename, const std::string &texture_filename);
+
+	std::vector<std::string> get_all_names();
 
 	std::vector<ModelRef> get_all();
 };

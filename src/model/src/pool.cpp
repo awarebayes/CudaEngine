@@ -15,9 +15,9 @@ std::shared_ptr<Model> ModelPool::get_mut(const std::string &name) {
 	return pool.at(name);
 }
 
-void ModelPool::load_all_from_obj_file(const std::string &filename) {
+void ModelPool::load_all_from_obj_file(const std::string &filename, const std::string &mtl_search_path, const std::string &texture_search_path) {
 	tinyobj::ObjReaderConfig reader_config;
-	reader_config.mtl_search_path = "./";
+	reader_config.mtl_search_path = mtl_search_path; // Path to material files
 	tinyobj::ObjReader reader;
 
 	if (!reader.ParseFromFile(filename, reader_config)) {
@@ -28,7 +28,7 @@ void ModelPool::load_all_from_obj_file(const std::string &filename) {
 	}
 
 	for (int i = 0; i < reader.GetShapes().size(); i++) {
-		auto model = std::make_shared<Model>(reader, i);
+		auto model = std::make_shared<Model>(reader, i, texture_search_path);
 		model->id = id_counter++;
 		std::string model_name = filename + ":" + reader.GetShapes()[i].name;
 		pool.insert(std::make_pair(model_name, model));
@@ -55,7 +55,8 @@ void ModelPool::assign_single_texture_to_obj_file(const std::string &obj_filenam
 std::vector<ModelRef> ModelPool::get_all() {
 	std::vector<ModelRef> models;
 	for (auto &model : pool) {
-		models.push_back(model.second->get_ref());
+		if (model.second->texture)
+			models.push_back(model.second->get_ref());
 	}
 	return models;
 }
@@ -65,4 +66,10 @@ void ModelPool::clear() {
 ModelPool::ModelPool() {
 	default_texture = std::make_shared<Texture>(Texture::get_default());
 }
-
+std::vector<std::string> ModelPool::get_all_names() {
+	std::vector<std::string> result;
+	for (auto &model : pool) {
+		result.push_back(model.first);
+	}
+	return result;
+}

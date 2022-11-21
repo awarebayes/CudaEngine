@@ -47,7 +47,7 @@ struct Model {
 	int id = 0;
 	int m_max_texture_index;
 
-	Model(const tinyobj::ObjReader &reader, int index);
+	Model(const tinyobj::ObjReader &reader, int index, const std::string &texture_search_path = "./");
 	static Model from_file(const std::string &filename, int index=0);
 	void load_texture(const std::string &filename);
 	~Model();

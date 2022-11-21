@@ -20,7 +20,7 @@ void load_rungholt()
 	camera.pitch = 0;
 
 	for (const auto ref: mp->get_all()) {
-		scene->add_model(SceneObject{glm::vec3{0, -100, -50}, {}, ref});
+		scene->add_object(SceneObject{glm::vec3{0, -100, -50}, {}, ref});
 	}
 
 	scene->set_camera(camera);
@@ -47,7 +47,7 @@ void load_test_single_head()
 	mut->shader = RegisteredShaders::Default;
 
 	const auto ref =  mp->get("obj/african_head.obj:head");
-	scene->add_model(SceneObject{glm::vec3{0, 0, -5}, {}, ref});
+	scene->add_object(SceneObject{glm::vec3{0, 0, -5}, {}, ref});
 
 
 	scene->set_camera(camera);
@@ -72,10 +72,10 @@ void load_test_many()
 	auto mut = mp->get_mut("obj/african_head.obj:head");
 	mut->shader = RegisteredShaders::Default;
 	auto ref = mp->get("obj/african_head.obj:head");
-	scene->add_model(SceneObject{glm::vec3{0, 0, -5}, {}, ref});
+	scene->add_object(SceneObject{glm::vec3{0, 0, -5}, {}, ref});
 	for (int i = 0; i < 100; i++)
 		for (int j = 0; j < 100; j++)
-			scene->add_model(SceneObject{glm::vec3{float(i-50) * 1.5f, float(j / 2), -10.0f * j - 10}, {}, ref});
+			scene->add_object(SceneObject{glm::vec3{float(i - 50) * 1.5f, float(j / 2), -10.0f * j - 10}, {}, ref});
 
 
 	scene->set_camera(camera);
@@ -103,7 +103,7 @@ void load_scene_diablo()
 	mut->shader = RegisteredShaders::Default;
 
 	auto ref = mp->get("obj/diablo_pose/diablo_pose.obj:objDiablo3");
-	scene->add_model(SceneObject{glm::vec3{0, 0, -5}, {}, ref});
+	scene->add_object(SceneObject{glm::vec3{0, 0, -5}, {}, ref});
 
 	scene->set_camera(camera);
 	scene->sort_models();
@@ -135,7 +135,7 @@ void load_scene_water()
 	{
 		for (int j = 0; j < 8; j++)
 		{
-			scene->add_model(SceneObject{glm::vec3{float(i) * 2.0f, 0 , float(j) * 2.0f}, {}, ref});
+			scene->add_object(SceneObject{glm::vec3{float(i) * 2.0f, 0, float(j) * 2.0f}, {}, ref});
 		}
 	}
 
@@ -167,13 +167,41 @@ void load_scene_spinning_rat()
 	mut->shader = RegisteredShaders::Default;
 
 	auto ref = mp->get(objname);
-	scene->add_model(SceneObject{glm::vec3{0, 0, 0}, {}, ref});
+	scene->add_object(SceneObject{glm::vec3{0, 0, 0}, {}, ref});
 
 	scene->set_on_update([](Scene&scene)
 	{
 		auto &obj = scene.get_model(0);
 		obj.rotation.y += 0.1;
 	});
+
+	scene->set_camera(camera);
+	scene->sort_models();
+	//scene->allow_culling = false;
+}
+
+
+void load_sponza()
+{
+	auto mp = ModelPoolCreator().get();
+
+	mp->load_all_from_obj_file("obj/sponza/models/sponza.obj", "obj/sponza/models/", "./obj/sponza/");
+
+	auto scene = SceneSingleton().get();
+	scene->clear();
+
+	auto names = mp->get_all_names();
+
+	Camera camera;
+	camera.position = glm::vec3{-3, -1, 6};
+	camera.yaw = -90;
+	camera.pitch = -0;
+	camera.fov = 80;
+
+	scene->set_light_dir(glm::vec3{0, 0, 1});
+	for (const auto ref: mp->get_all()) {
+		scene->add_object(SceneObject{glm::vec3{0, -100, -50}, {}, ref});
+	}
 
 	scene->set_camera(camera);
 	scene->sort_models();
@@ -188,6 +216,7 @@ void register_predefined_scenes()
 	scene_loader->register_load_scene("diablo", load_scene_diablo);
 	scene_loader->register_load_scene("water", load_scene_water);
 	scene_loader->register_load_scene("spinning_rat", load_scene_spinning_rat);
+	scene_loader->register_load_scene("sponza", load_sponza);
 	// scene_loader->register_load_scene("rungholt", load_rungholt);
 
 	scene_loader->register_load_scene("default", load_test_single_head);

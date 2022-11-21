@@ -13,6 +13,7 @@ void DrawCaller::draw(DrawCallArgs args_unculled, Image &image)
 {
 	// interface
 	interface->log_fps();
+	interface->start();
 	interface->log_before_culling(args_unculled.models.size());
 
 	DrawCallArgs args;
@@ -59,6 +60,7 @@ void DrawCaller::draw(DrawCallArgs args_unculled, Image &image)
 		rasterizers[i]->await();
 
 	interface->draw_widget();
+	interface->stop();
 }
 
 DrawCaller::DrawCaller() {

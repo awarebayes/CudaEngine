@@ -58,7 +58,7 @@ add_executable(course_renderer
         src/render/virtual_geometry/virtual_model/virtual_model.cpp
         src/render/virtual_geometry/object_manager/virtual_geometry_object_manager.cpp
         src/render/virtual_geometry/geometry_upsampler/geometry_upsampler.cu src/shader/shader_vgeom.cuh
-        )
+        src/util/const.cpp src/util/implot.h src/util/implot.cpp src/util/implot_internal.h src/util/implot_items.cpp)
 target_include_directories(course_renderer PRIVATE ./Common)
 
 set_target_properties(course_renderer PROPERTIES

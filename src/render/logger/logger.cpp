@@ -26,7 +26,7 @@ void RenderInterface::draw_widget() {
 		{
 			avg_fps_per_nthreads.clear();
 		}
-		avg_fps_per_nthreads.display("FPS per nthreads");
+		avg_fps_per_nthreads.display("Frame milliseconds to display per nthreads");
 	}
 
 	if (ImGui::CollapsingHeader("Culling")) {
@@ -61,7 +61,7 @@ void RenderInterface::log_fps() {
 	if (fps.size() > 100) {
 		fps.erase(fps.begin());
 	}
-	avg_fps_per_nthreads.log(USE_THREADS, ImGui::GetIO().Framerate);
+	avg_fps_per_nthreads.log(USE_THREADS, clock->get_elapsed_time());
 }
 void RenderInterface::log_before_culling(int n_models) {
 	n_models_before_culling = n_models;
@@ -88,6 +88,13 @@ void RenderInterface::register_vgeometry_manager(VirtualGeometryManager &manager
 
 RenderInterface::RenderInterface() {
 	avg_fps_per_nthreads.log_to("logs/avg_fps_per_nthreads.csv");
+	clock = std::make_shared<Clock>();
+}
+void RenderInterface::start() {
+	clock->reset();
+}
+void RenderInterface::stop() {
+	clock->stop();
 }
 
 void AverageLogger::log(float key, float value) {
@@ -124,13 +131,10 @@ void AverageLogger::display(const std::string &title)
 		values.push_back(p.second);
 	}
 
-	if (ImPlot::BeginPlot(title.data())) {
-		ImPlot::SetupAxes("x","f(x)");
-		ImPlot::PlotLine("sin(x)", (float *)keys.data(), values.data(), sorted.size());
-		ImPlot::EndPlot();
-	}
-
-
+	ImPlot::BeginPlot(title.data());
+	ImPlot::SetupAxes("x","y");
+	ImPlot::PlotLine("y", (float *)keys.data(), values.data(), sorted.size());
+	ImPlot::EndPlot();
 }
 void AverageLogger::clear() {
 	sum.clear();
