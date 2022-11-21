@@ -67,6 +67,7 @@ protected:
 	bool culling_enabled = true;
 	bool virtual_geometry_enabled = true;
 	std::vector<float> fps;
+	std::vector<float> ms;
 	std::vector<float> culling_percentage;
 	int n_models_before_culling;
 	int n_models_after_culling;

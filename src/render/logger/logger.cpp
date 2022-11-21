@@ -18,9 +18,13 @@ void RenderInterface::draw_widget() {
 		ImGui::Text("FPS: %f", fps.back());
 		ImGui::PlotLines("Framerate", &fps[0], fps.size(), 0, nullptr, 0.0f, 100.0f, ImVec2(300, 100));
 
+		ImGui::Text("Frame time: %f", ms.back());
+		ImGui::PlotLines("Frame time in ms", &ms[0], ms.size(), 0, nullptr, 0.0f, 100.0f, ImVec2(300, 100));
+
 		if (ImGui::Button("Clear average fps"))
 		{
 			fps.clear();
+			ms.clear();
 		}
 		if (ImGui::Button("Clear average fps per nthreads"))
 		{
@@ -62,6 +66,10 @@ void RenderInterface::log_fps() {
 		fps.erase(fps.begin());
 	}
 	avg_fps_per_nthreads.log(USE_THREADS, clock->get_elapsed_time());
+	ms.push_back(clock->get_last_measurement());
+	if (ms.size() > 100) {
+		ms.erase(ms.begin());
+	}
 }
 void RenderInterface::log_before_culling(int n_models) {
 	n_models_before_culling = n_models;

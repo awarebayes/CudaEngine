@@ -73,9 +73,11 @@ void load_test_many()
 	mut->shader = RegisteredShaders::Default;
 	auto ref = mp->get("obj/african_head.obj:head");
 	scene->add_object(SceneObject{glm::vec3{0, 0, -5}, {}, ref});
-	for (int i = 0; i < 100; i++)
-		for (int j = 0; j < 100; j++)
-			scene->add_object(SceneObject{glm::vec3{float(i - 50) * 1.5f, float(j / 2), -10.0f * j - 10}, {}, ref});
+	int n = 100;
+	int m = 100;
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < m; j++)
+			scene->add_object(SceneObject{glm::vec3{float(i - n / 2) * 1.5f, float(j / 2), -10.0f * j - 10}, {}, ref});
 
 
 	scene->set_camera(camera);
@@ -216,8 +218,5 @@ void register_predefined_scenes()
 	scene_loader->register_load_scene("diablo", load_scene_diablo);
 	scene_loader->register_load_scene("water", load_scene_water);
 	scene_loader->register_load_scene("spinning_rat", load_scene_spinning_rat);
-	scene_loader->register_load_scene("sponza", load_sponza);
-	// scene_loader->register_load_scene("rungholt", load_rungholt);
-
 	scene_loader->register_load_scene("default", load_test_single_head);
 }
